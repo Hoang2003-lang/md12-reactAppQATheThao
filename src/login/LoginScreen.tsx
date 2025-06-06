@@ -8,8 +8,11 @@ import {
     StyleSheet,
     Switch,
     Pressable,
+    Alert
 } from 'react-native';
 import { useState } from 'react';
+import API from '../api';
+
 
 export default function LoginScreen({ navigation }: any) {
     const [rememberMe, setRememberMe] = React.useState(false);
@@ -17,12 +20,114 @@ export default function LoginScreen({ navigation }: any) {
 
     const [agreeTerms, setAgreeTerms] = useState(false);
 
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
 
     const handleDK = () => {
         navigation.navigate('Register');
     }
 
-    return (
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
+            return;
+        }
+
+        try {
+            const res = await API.post('/login', {
+                email,
+                password,
+            });
+
+            const { token, user } = res.data;
+            console.log('Đăng nhập thành công:', user);
+
+            Alert.alert('Thành công', 'Đăng nhập thành công');
+
+            // TODO: Lưu token vào AsyncStorage nếu cần
+            navigation.navigate('Home'); // hoặc màn hình chính của bạn
+        } catch (err: any) {
+            const message = err.response?.data?.message || 'Đăng nhập thất bại';
+            Alert.alert('Lỗi', message);
+        }
+    };
+
+    // return (
+    //     <View style={styles.container}>
+    //         <Image
+    //             source={require('../assets/banner1.png')}
+    //             style={styles.image}
+    //             resizeMode="cover"
+    //         />
+
+    //         <View style={styles.formContainer}>
+    //             <Text style={styles.title}>Đăng nhập</Text>
+
+    //             <View style={styles.inputContainer}>
+
+    //                 <TextInput
+    //                     style={styles.input}
+    //                     placeholder="Tên tài khoản hoặc email"
+    //                     placeholderTextColor="#aaa"
+    //                     // value={name}
+    //                 />
+    //             </View>
+
+    //             <View style={styles.inputContainer}>
+
+    //                 <TextInput
+    //                     style={styles.input}
+    //                     placeholder="Mật khẩu"
+    //                     placeholderTextColor="#aaa"
+    //                     secureTextEntry={!passwordVisible}
+    //                 />
+    //                 <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
+
+    //                 </TouchableOpacity>
+    //             </View>
+
+    //             <View style={styles.checkboxContainer}>
+    //                 <Pressable onPress={() => setRememberMe(!rememberMe)} style={styles.checkbox}>
+    //                     <View style={[styles.checkboxBox, agreeTerms && styles.checkboxChecked]} />
+    //                     <Text style={styles.checkboxText}>Nhớ tài khoản</Text>
+    //                 </Pressable>
+    //             </View>
+
+    //             <TouchableOpacity style={styles.loginButton}>
+    //                 <Text style={styles.loginText}>Đăng nhập</Text>
+    //             </TouchableOpacity>
+
+    //             <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+
+    //             <View style={styles.dividerContainer}>
+    //                 <View style={styles.line} />
+    //                 <Text style={styles.orText}>Đăng nhập bằng</Text>
+    //                 <View style={styles.line} />
+    //             </View>
+
+    //             <View style={styles.socialContainer}>
+    //                 <TouchableOpacity >
+    //                     <Image style={styles.faceB}
+    //                         source={require(`../assets/faceb.jpg`)} />
+    //                 </TouchableOpacity>
+    //                 <TouchableOpacity >
+    //                     <Image
+    //                         style={styles.googleIcon}
+    //                         source={require(`../assets/gg1.png`)}
+    //                     />
+    //                 </TouchableOpacity>
+    //             </View>
+
+    //             <Text style={styles.signupText}>
+    //                 Bạn không có tài khoản?{' '}
+    //                 <Text style={{ color: '#ff6600', fontWeight: 'bold' }} onPress={handleDK} >tạo tài khoản</Text>
+    //             </Text>
+    //         </View>
+    //     </View>
+    // );
+
+     return (
         <View style={styles.container}>
             <Image
                 source={require('../assets/banner1.png')}
@@ -34,25 +139,26 @@ export default function LoginScreen({ navigation }: any) {
                 <Text style={styles.title}>Đăng nhập</Text>
 
                 <View style={styles.inputContainer}>
-
                     <TextInput
                         style={styles.input}
                         placeholder="Tên tài khoản hoặc email"
                         placeholderTextColor="#aaa"
-                        // value={name}
+                        value={email}
+                        onChangeText={setEmail}
                     />
                 </View>
 
                 <View style={styles.inputContainer}>
-
                     <TextInput
                         style={styles.input}
                         placeholder="Mật khẩu"
                         placeholderTextColor="#aaa"
                         secureTextEntry={!passwordVisible}
+                        value={password}
+                        onChangeText={setPassword}
                     />
                     <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
-
+                        {/* Bạn có thể thêm icon mắt nếu muốn */}
                     </TouchableOpacity>
                 </View>
 
@@ -63,7 +169,7 @@ export default function LoginScreen({ navigation }: any) {
                     </Pressable>
                 </View>
 
-                <TouchableOpacity style={styles.loginButton}>
+                <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
                     <Text style={styles.loginText}>Đăng nhập</Text>
                 </TouchableOpacity>
 
@@ -76,11 +182,13 @@ export default function LoginScreen({ navigation }: any) {
                 </View>
 
                 <View style={styles.socialContainer}>
-                    <TouchableOpacity >
-                        <Image style={styles.faceB}
-                            source={require(`../assets/faceb.jpg`)} />
+                    <TouchableOpacity>
+                        <Image
+                            style={styles.faceB}
+                            source={require(`../assets/faceb.jpg`)}
+                        />
                     </TouchableOpacity>
-                    <TouchableOpacity >
+                    <TouchableOpacity>
                         <Image
                             style={styles.googleIcon}
                             source={require(`../assets/gg1.png`)}
@@ -90,11 +198,16 @@ export default function LoginScreen({ navigation }: any) {
 
                 <Text style={styles.signupText}>
                     Bạn không có tài khoản?{' '}
-                    <Text style={{ color: '#ff6600', fontWeight: 'bold' }} onPress={handleDK} >tạo tài khoản</Text>
+                    <Text style={{ color: '#ff6600', fontWeight: 'bold' }} onPress={handleDK}>
+                        tạo tài khoản
+                    </Text>
                 </Text>
             </View>
         </View>
     );
+
+
+
 }
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },

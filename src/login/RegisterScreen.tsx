@@ -9,18 +9,146 @@ import {
   TouchableOpacity,
   Image,
   Pressable,
-
+  Alert
 } from 'react-native';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import API from '../api';
 
 export default function RegisterScreen({ navigation }: any) {
 
   const [agreeTerms, setAgreeTerms] = useState(false);
 
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleRegister = async () => {
+    if (!username || !email || !password || !confirmPassword) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Lỗi', 'Mật khẩu không khớp');
+      return;
+    }
+
+    if (!agreeTerms) {
+      Alert.alert('Lỗi', 'Bạn cần đồng ý với điều khoản');
+      return;
+    }
+
+    try {
+      const response = await API.post('/register', {
+        name: username,
+        email,
+        password,
+      });
+
+      Alert.alert('Thành công', response.data.message, [
+        {
+          text: 'Đăng nhập',
+          onPress: () => navigation.navigate('Login'),
+        },
+      ]);
+    } catch (error) {
+      const message = 'Đăng ký thất bại';
+      Alert.alert('Lỗi', message);
+      
+    }
+  };
+
   const LoginScreen =()=>{
     navigation.navigate('Login')
   }
+  // return (
+  //   <ImageBackground
+  //     source={require('../assets/backgroundR.png')}
+  //     style={styles.background}
+  //     resizeMode="cover"
+  //   >
+  //     <View style={styles.container}>
+  //       <Text style={styles.title}>Đăng ký</Text>
+
+
+  //       <View style={styles.inputContainer}>
+  //         <TextInput
+  //           placeholder="Tên tài khoản"
+  //           placeholderTextColor="#666"
+  //           style={styles.input}
+  //         />
+  //       </View>
+
+
+  //       <View style={styles.inputContainer}>
+  //         <TextInput
+  //           placeholder="Email"
+  //           placeholderTextColor="#666"
+  //           style={styles.input}
+  //           keyboardType="email-address"
+  //         />
+  //       </View>
+
+  //       <View style={styles.inputContainer}>
+  //         <TextInput
+  //           placeholder="Mật khẩu"
+  //           placeholderTextColor="#666"
+  //           style={styles.input}
+  //           secureTextEntry
+  //         />
+  //       </View>
+
+  //       <View style={styles.inputContainer}>
+  //         <TextInput
+  //           placeholder="Xác nhận mật khẩu"
+  //           placeholderTextColor="#666"
+  //           style={styles.input}
+  //           secureTextEntry
+  //         />
+  //       </View>
+  //       <View style={styles.checkboxContainer}>
+  //         <Pressable onPress={() => setAgreeTerms(!agreeTerms)} style={styles.checkbox}>
+  //           <View style={[styles.checkboxBox, agreeTerms && styles.checkboxChecked]} />
+  //           <Text style={styles.checkboxText}>Tôi đồng ý</Text>
+  //           <Text style={styles.checkboxText1}> với điều khoản dịch vụ của F7Shop</Text>
+  //         </Pressable>
+  //       </View>
+  //     </View>
+
+  //     <View style={styles.loginButton} >
+  //       <TouchableOpacity style={styles.loginButton1}>
+  //         <Text style={styles.loginText}>Đăng Ký</Text>
+  //       </TouchableOpacity>
+  //     </View>
+
+
+  //     <View style={styles.dividerContainer}>
+  //       <View style={styles.line} />
+  //       <Text style={styles.orText}>Đăng ký bằng</Text>
+  //       <View style={styles.line} />
+  //     </View>
+  //     <View style={styles.socialContainer}>
+  //       <TouchableOpacity >
+  //         <Image style={styles.faceB}
+  //           source={require(`../assets/faceb.jpg`)} />
+  //       </TouchableOpacity>
+  //       <TouchableOpacity >
+  //         <Image
+  //           style={styles.googleIcon}
+  //           source={require(`../assets/gg1.png`)}
+  //         />
+  //       </TouchableOpacity>
+  //     </View>
+
+  //     <Text style={styles.signupText}>
+  //       Tôi đã có tài khoản {' '}
+  //       <Text style={{ color: '#ff6600', fontWeight: 'bold' }} onPress={LoginScreen} >Đăng nhập</Text>
+  //     </Text>
+  //   </ImageBackground>
+  // );
+
   return (
     <ImageBackground
       source={require('../assets/backgroundR.png')}
@@ -30,15 +158,15 @@ export default function RegisterScreen({ navigation }: any) {
       <View style={styles.container}>
         <Text style={styles.title}>Đăng ký</Text>
 
-
         <View style={styles.inputContainer}>
           <TextInput
             placeholder="Tên tài khoản"
             placeholderTextColor="#666"
             style={styles.input}
+            value={username}
+            onChangeText={setUsername}
           />
         </View>
-
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -46,6 +174,8 @@ export default function RegisterScreen({ navigation }: any) {
             placeholderTextColor="#666"
             style={styles.input}
             keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
           />
         </View>
 
@@ -55,6 +185,8 @@ export default function RegisterScreen({ navigation }: any) {
             placeholderTextColor="#666"
             style={styles.input}
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
         </View>
 
@@ -64,35 +196,48 @@ export default function RegisterScreen({ navigation }: any) {
             placeholderTextColor="#666"
             style={styles.input}
             secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
         </View>
+
         <View style={styles.checkboxContainer}>
-          <Pressable onPress={() => setAgreeTerms(!agreeTerms)} style={styles.checkbox}>
-            <View style={[styles.checkboxBox, agreeTerms && styles.checkboxChecked]} />
+          <Pressable
+            onPress={() => setAgreeTerms(!agreeTerms)}
+            style={styles.checkbox}
+          >
+            <View
+              style={[
+                styles.checkboxBox,
+                agreeTerms && styles.checkboxChecked,
+              ]}
+            />
             <Text style={styles.checkboxText}>Tôi đồng ý</Text>
-            <Text style={styles.checkboxText1}> với điều khoản dịch vụ của F7Shop</Text>
+            <Text style={styles.checkboxText1}>
+              {' '}
+              với điều khoản dịch vụ của F7Shop
+            </Text>
           </Pressable>
         </View>
       </View>
 
-      <View style={styles.loginButton} >
-        <TouchableOpacity style={styles.loginButton1}>
+      <View style={styles.loginButton}>
+        <TouchableOpacity style={styles.loginButton1} onPress={handleRegister}>
           <Text style={styles.loginText}>Đăng Ký</Text>
         </TouchableOpacity>
       </View>
-
 
       <View style={styles.dividerContainer}>
         <View style={styles.line} />
         <Text style={styles.orText}>Đăng ký bằng</Text>
         <View style={styles.line} />
       </View>
+
       <View style={styles.socialContainer}>
-        <TouchableOpacity >
-          <Image style={styles.faceB}
-            source={require(`../assets/faceb.jpg`)} />
+        <TouchableOpacity>
+          <Image style={styles.faceB} source={require(`../assets/faceb.jpg`)} />
         </TouchableOpacity>
-        <TouchableOpacity >
+        <TouchableOpacity>
           <Image
             style={styles.googleIcon}
             source={require(`../assets/gg1.png`)}
@@ -101,11 +246,17 @@ export default function RegisterScreen({ navigation }: any) {
       </View>
 
       <Text style={styles.signupText}>
-        Tôi đã có tài khoản {' '}
-        <Text style={{ color: '#ff6600', fontWeight: 'bold' }} onPress={LoginScreen} >Đăng nhập</Text>
+        Tôi đã có tài khoản{' '}
+        <Text
+          style={{ color: '#ff6600', fontWeight: 'bold' }}
+          onPress={LoginScreen}
+        >
+          Đăng nhập
+        </Text>
       </Text>
     </ImageBackground>
   );
+
 }
 const styles = StyleSheet.create({
   background: {
