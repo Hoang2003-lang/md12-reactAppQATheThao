@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 const SplashScreen = ({ navigation }: any) => {
   useEffect(() => {
     const timeout = setTimeout(() => {
-      navigation.replace('Home'); // chuyển đến Home sau 2.5s
+      navigation.replace('Login'); // chuyển đến Home sau 2.5s
     }, 2500);
 
     return () => clearTimeout(timeout); // xóa timeout khi unmount
