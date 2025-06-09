@@ -13,6 +13,8 @@ import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
 import ForgotPassword from './src/login/ForgotPassword';
 
+import TabNavigator from './src/TabNavigatior/TabNavigator';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -20,7 +22,7 @@ const Stack = createNativeStackNavigator();
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+      {/* <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Search" component={SearchScreen} />
@@ -29,7 +31,10 @@ const App = () => {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotP" component={ForgotPassword} />
-      </Stack.Navigator>
+      </Stack.Navigator> */}
+      
+      <TabNavigator />
+    
     </NavigationContainer>
   );
 };

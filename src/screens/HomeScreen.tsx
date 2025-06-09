@@ -4,9 +4,10 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image,
 import Icon from 'react-native-vector-icons/Ionicons'
 import { useState } from 'react';
 
+import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
 
-const { width } = Dimensions.get('window');
+const { width  } = Dimensions.get('window');
 
 
 
@@ -34,7 +35,7 @@ const HomeScreen = ({ navigation }: any) => {
   ];
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const handleScroll = (event) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / width);
     setActiveIndex(index);
   };
