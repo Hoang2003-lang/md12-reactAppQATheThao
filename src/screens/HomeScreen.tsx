@@ -1,32 +1,24 @@
 // src/screens/HomeScreen.tsx
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, Dimensions, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
 
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import API from '../api';
 
 
-const { width  } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 
 
 const HomeScreen = ({ navigation }: any) => {
 
-  const [selected, setSelected] = useState('home');
-
-  const handlePress = (iconName: 'home' | 'search' | 'heart' | 'user') => {
-    setSelected(iconName);
-    if (iconName === 'home') {
-      navigation.navigate('Home');
-    } else if (iconName === 'search') {
-      navigation.navigate('Search');
-    } else if (iconName === 'heart') {
-      navigation.navigate('Favorite');
-    } else if (iconName === 'user') {
-      navigation.navigate('Account');
-    }
-  };
+  const [products, setProducts] = useState([]);
+  useEffect(() => {
+    getProducts();
+  }, []);
 
   const banners = [
     { id: '1', image: require('../assets/bannerc1.png') },
@@ -35,10 +27,47 @@ const HomeScreen = ({ navigation }: any) => {
   ];
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const categories = [
+    { id: 'psg', image: require('../assets/psg.png') },
+    { id: 'arsenal', image: require('../assets/arsenal.png') },
+    { id: 'chelsea', image: require('../assets/chelsea.png') },
+    { id: 'vietnam', image: require('../assets/vietnam.png') },
+    { id: 'japan', image: require('../assets/japan.png') },
+  ];
+
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / width);
     setActiveIndex(index);
   };
+
+  // Xem thêm
+  const handleKM = () => {
+    navigation.navigate('')
+  }
+
+  // get API sản phẩm :))
+  const getProducts = async () => {
+    try {
+      const response = await API.get('/products');
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Lỗi khi lấy sản phẩm:', error);
+    }
+  };
+  // Item SP
+  // const renderItem = ({ item }: any) => {
+  //   return (
+  //     <View style={{ alignItems: 'center', margin: 10 }}>
+  //       <Image
+  //         source={{ uri: item.image }}
+  //         style={{ width: 150, height: 150, borderRadius: 10 }}
+  //       />
+  //       <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
+  //       <Text style={{ color: 'gray' }}>{item.price} đ</Text>
+  //     </View>
+  //   );
+  // };
+
 
   return (
     <View style={styles.container}>
@@ -64,62 +93,122 @@ const HomeScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.bannerWrapper}>
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-        >
-          {banners.map((banner) => (
-            <View key={banner.id} style={styles.bannerItem}>
-              <Image source={banner.image} style={styles.bannerImage} />
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        <View style={styles.bannerWrapper}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
+            {banners.map((banner) => (
+              <View key={banner.id} style={styles.bannerItem}>
+                <Image source={banner.image} style={styles.bannerImage} />
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.dotsContainer}>
+            {banners.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  { backgroundColor: index === activeIndex ? '#000' : '#ccc' },
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
+        <Text style={styles.textKM}>Khuyến mãi</Text>
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' }}>
+          {products.slice(0, 4).map((item: any) => (
+            <View key={item._id} style={{ alignItems: 'center', margin: 10 }}>
+              <Image
+                source={{ uri: item.image }}
+                style={{ width: 150, height: 150, borderRadius: 10 }}
+              />
+              <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
+              <Text style={{ color: 'gray' }}>{item.price} đ</Text>
             </View>
           ))}
-        </ScrollView>
 
-        <View style={styles.dotsContainer}>
-          {banners.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                { backgroundColor: index === activeIndex ? '#000' : '#ccc' },
-              ]}
-            />
+          <Text style={{ color: 'orange' }} onPress={handleKM} >Xem thêm..</Text>
+        </View>
+
+
+        <Text style={styles.textKM}>Áo Câu Lạc Bộ</Text>
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' }}>
+          {products
+            .filter((item: any) => item.name.includes('Áo Đấu')) // lọc sản phẩm theo danh mục
+            .slice(0, 4)
+            .map((item: any) => (
+              <View key={item._id} style={{ alignItems: 'center', margin: 10 }}>
+                <Image
+                  source={{ uri: item.image }}
+                  style={{ width: 150, height: 150, borderRadius: 10 }}
+                />
+                <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
+                <Text style={{ color: 'gray' }}>{item.price} đ</Text>
+              </View>
+            ))}
+
+          <Text style={{ color: 'orange' }}>Xem thêm..</Text>
+        </View>
+
+        <Text style={styles.textKM}>Áo đội tuyển quốc gia</Text>
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' }}>
+          {products
+            .filter((item: any) => item.name.includes('Áo Đấu')) // lọc sản phẩm theo danh mục
+            .slice(0, 4)
+            .map((item: any) => (
+              <View key={item._id} style={{ alignItems: 'center', margin: 10 }}>
+                <Image
+                  source={{ uri: item.image }}
+                  style={{ width: 150, height: 150, borderRadius: 10 }}
+                />
+                <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
+                <Text style={{ color: 'gray' }}>{item.price} đ</Text>
+              </View>
+            ))}
+
+          <Text style={{ color: 'orange' }}>Xem thêm..</Text>
+        </View>
+
+        <Text style={styles.textKM}>Danh mục</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat.id}
+              onPress={() => console.log('Clicked:', cat.id)} // xử lý sự kiện nhấn
+              style={{
+                backgroundColor: '#eee',
+                borderRadius: 50,
+                width: 70,
+                height: 70,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Image
+                source={cat.image}
+                style={{ width: 40, height: 40, resizeMode: 'contain' }}
+              />
+            </TouchableOpacity>
           ))}
         </View>
-      </View>
 
 
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        <Icon
-          name="home"
-          size={24}
-          color={selected === 'home' ? '#66CC00' : '#333333'}
-          onPress={() => handlePress('home')}
-        />
-        <Icon
-          name="search"
-          size={24}
-          color={selected === 'search' ? '#66CC00' : '#333333'}
-          onPress={() => handlePress('search')}
-        />
-        <Icon
-          name="heart"
-          size={24}
-          color={selected === 'heart' ? '#66CC00' : '#333333'}
-          onPress={() => handlePress('heart')}
-        />
-        <Icon
-          name="user"
-          size={24}
-          color={selected === 'user' ? '#66CC00' : '#333333'}
-          onPress={() => handlePress('user')}
-        />
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -214,6 +303,11 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
+  textKM: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    margin: 10
+  }
 });
 
 

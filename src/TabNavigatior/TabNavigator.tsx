@@ -35,13 +35,13 @@ const TabNavigator = () => {
           else if (route.name === 'Favorite') iconName = 'heart';
           else if (route.name === 'Account') iconName = 'person';
 
-          return <Icon name={iconName} size={24} color={focused ? '#66CC00' : '#333'} />;
+          return <Icon name={iconName} size={24} color={focused ? '#FFCC66' : '#333'} />;
         },
         tabBarLabelStyle: {
         fontSize: 12,
         fontWeight: '500',
         },
-        tabBarActiveTintColor: '#66CC00',
+        tabBarActiveTintColor: '#FFCC66',
         tabBarInactiveTintColor: '#333',
         tabBarShowLabel: true,
         headerShown: false,
