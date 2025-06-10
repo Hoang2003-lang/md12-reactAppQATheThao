@@ -28,6 +28,10 @@ export default function LoginScreen({ navigation }: any) {
         navigation.navigate('Register');
     }
 
+    const handleForgot = () => {
+        navigation.navigate('ForgotP')
+    }
+
     const handleLogin = async () => {
         if (!email || !password) {
             Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
@@ -127,7 +131,7 @@ export default function LoginScreen({ navigation }: any) {
     //     </View>
     // );
 
-     return (
+    return (
         <View style={styles.container}>
             <Image
                 source={require('../assets/banner1.png')}
@@ -173,7 +177,7 @@ export default function LoginScreen({ navigation }: any) {
                     <Text style={styles.loginText}>Đăng nhập</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+                <Text style={styles.forgotText} onPress={handleForgot} >Quên mật khẩu?</Text>
 
                 <View style={styles.dividerContainer}>
                     <View style={styles.line} />
@@ -271,7 +275,7 @@ const styles = StyleSheet.create({
     },
     forgotText: {
         textAlign: 'center',
-        color: '#666',
+        color: 'orange',
         fontSize: 13,
         marginBottom: 20
     },

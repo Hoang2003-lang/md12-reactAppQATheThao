@@ -5,29 +5,9 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import { useState } from 'react';
 
 
-
 const { width } = Dimensions.get('window');
 
-
-
-const HomeScreen = ({ navigation }: any) => {
-
-    const [selected, setSelected] = useState('home');
-
-    const handlePress = (iconName: 'home' | 'search' | 'heart' | 'user') => {
-        setSelected(iconName);
-        if (iconName === 'home') {
-            navigation.navigate('Home');
-        } else if (iconName === 'search') {
-            navigation.navigate('Search');
-        } else if (iconName === 'heart') {
-            navigation.navigate('Favorite');
-        } else if (iconName === 'user') {
-            navigation.navigate('Account');
-        }
-    };
-
-
+const FavoriteScreen = ({ navigation }: any) => {
 
     return (
         <View style={styles.container}>
@@ -36,39 +16,11 @@ const HomeScreen = ({ navigation }: any) => {
                 <Text style={styles.title1} > Màn Favorite  </Text>
             </TouchableOpacity>
 
-
-            {/* Bottom Nav */}
-            <View style={styles.bottomNav}>
-                <Icon
-                    name="home"
-                    size={24}
-                    color={selected === 'home' ? '#66CC00' : '#333333'}
-                    onPress={() => handlePress('home')}
-                />
-                <Icon
-                    name="search"
-                    size={24}
-                    color={selected === 'search' ? '#66CC00' : '#333333'}
-                    onPress={() => handlePress('search')}
-                />
-                <Icon
-                    name="heart"
-                    size={24}
-                    color={selected === 'heart' ? '#66CC00' : '#333333'}
-                    onPress={() => handlePress('heart')}
-                />
-                <Icon
-                    name="user"
-                    size={24}
-                    color={selected === 'user' ? '#66CC00' : '#333333'}
-                    onPress={() => handlePress('user')}
-                />
-            </View>
         </View>
     );
 };
 
-export default HomeScreen;
+export default FavoriteScreen;
 
 const styles = StyleSheet.create({
     container: {
