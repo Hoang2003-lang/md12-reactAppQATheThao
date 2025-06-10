@@ -7,6 +7,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import FavoriteScreen from './src/screens/FavoriteScreen';
 import AccountScreen from './src/screens/AccountScreen';
+import CartScreen from './src/screens/CartScreen'
 
 
 import LoginScreen from './src/login/LoginScreen';
@@ -20,7 +21,7 @@ const Stack = createNativeStackNavigator();
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Search" component={SearchScreen} />
@@ -29,6 +30,8 @@ const App = () => {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotP" component={ForgotPassword} />
+        <Stack.Screen name="Cart" component={CartScreen} />
+        
       </Stack.Navigator>
     </NavigationContainer>
   );
