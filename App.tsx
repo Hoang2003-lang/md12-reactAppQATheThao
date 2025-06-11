@@ -9,7 +9,9 @@ import FavoriteScreen from './src/screens/FavoriteScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import SeemoreScreen from './src/screens/semore/SeemoreScreen';
-
+import CartScreen from './src/screens/cart/CartScreen';
+import ChatScreen from './src/screens/chat/ChatScreen';
+import Logomore from './src/screens/semore/LogoMoreScreen';
 
 
 
@@ -25,8 +27,8 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
-     <NavigationContainer>
-       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
         {/* thanh điều hướng, không xoá */}
         <Stack.Screen name="Home" component={TabNavigator} />
 
@@ -36,9 +38,13 @@ const App = () => {
         <Stack.Screen name="ForgotP" component={ForgotPassword} />
         <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
         <Stack.Screen name="Promotion" component={SeemoreScreen} />
-        
+        <Stack.Screen name="Cart" component={CartScreen} />
+        <Stack.Screen name="Chat" component={ChatScreen} />
+        <Stack.Screen name="Category" component={Logomore} />
+
+
       </Stack.Navigator>
-      
+
     </NavigationContainer>
   );
 };
