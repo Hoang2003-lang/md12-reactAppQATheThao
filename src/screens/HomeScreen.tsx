@@ -442,6 +442,7 @@ const HomeScreen = ({ navigation }: any) => {
             <Text style={styles.seeMore}>Xem thêm...</Text>
           </TouchableOpacity>
         </Section>
+
       </ScrollView>
     </View>
   );
