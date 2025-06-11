@@ -15,6 +15,7 @@ const TabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           position: 'absolute',
           bottom: 0,
