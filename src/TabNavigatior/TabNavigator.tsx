@@ -6,6 +6,7 @@ import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
 import FavoriteScreen from '../screens/FavoriteScreen';
 import AccountScreen from '../screens/AccountScreen';
+import CartScreen from '../screens/CartScreen'
 import { TouchableOpacity } from 'react-native';
 
 
@@ -15,6 +16,7 @@ const TabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           position: 'absolute',
           bottom: 0,
@@ -34,6 +36,7 @@ const TabNavigator = () => {
           else if (route.name === 'Search') iconName = 'search';
           else if (route.name === 'Favorite') iconName = 'heart';
           else if (route.name === 'Account') iconName = 'person';
+          // else if (route.name === 'Cart') iconName = 'cart'
 
           return <Icon name={iconName} size={24} color={focused ? '#FFCC66' : '#333'} />;
         },
@@ -51,6 +54,7 @@ const TabNavigator = () => {
       <Tab.Screen name="Search" component={SearchScreen}  options={{ tabBarLabel: 'Tìm kiếm'}} />
       <Tab.Screen name="Favorite" component={FavoriteScreen}  options={{ tabBarLabel: 'Yêu thích'}} />
       <Tab.Screen name="Account" component={AccountScreen}  options={{ tabBarLabel: 'Tài khoản'}} />
+      {/* <Tab.Screen name="Cart" component={CartScreen}  options={{ tabBarLabel: 'Giỏ Hàng'}} /> */}
     </Tab.Navigator>
   );
 };

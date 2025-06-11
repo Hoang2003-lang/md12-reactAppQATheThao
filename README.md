@@ -12,3 +12,8 @@ npm install @react-navigation/native-stack
 --
 
 // 6/4/2025  mới chỉ code màn SplashScreen và HomeScreen_____ và App.tsx dùng để điều hướng  
+
+// sửa lỗi
+cd android
+./gradlew clean
+xong chạy lại

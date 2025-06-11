@@ -312,38 +312,74 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  Image,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }: any) => {
   const [products, setProducts] = useState<any[]>([]);
-  const [banners] = useState([
+  const [cartCount, setCartCount] = useState<number>(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const banners = [
     { id: '1', image: require('../assets/bannerc1.png') },
     { id: '2', image: require('../assets/bannerc2.png') },
     { id: '3', image: require('../assets/bannerc3.png') },
-  ]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [categories] = useState([
+  ];
+
+  const categories = [
     { id: 'psg', image: require('../assets/psg.png') },
     { id: 'arsenal', image: require('../assets/arsenal.png') },
     { id: 'chelsea', image: require('../assets/chelsea.png') },
     { id: 'vietnam', image: require('../assets/vietnam.png') },
     { id: 'japan', image: require('../assets/japan.png') },
-  ]);
+  ];
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await API.get('/products');
-        setProducts(res.data);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      }
-    })();
+    loadProducts();
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadCartCount(); // reload cart count every time HomeScreen is focused
+    });
+
+    loadCartCount(); // initial load
+
+    return unsubscribe;
   }, []);
+
+  const loadProducts = async () => {
+    try {
+      const res = await API.get('/products');
+      setProducts(res.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const loadCartCount = async () => {
+    try {
+      const cart = await AsyncStorage.getItem('cart');
+      const parsed = cart ? JSON.parse(cart) : [];
+      const count = parsed.reduce((total: number, item: any) => total + item.quantity, 0);
+      setCartCount(count);
+    } catch (err) {
+      console.error('Lỗi khi lấy dữ liệu giỏ hàng:', err);
+    }
+  };
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -367,25 +403,34 @@ const HomeScreen = ({ navigation }: any) => {
       <TouchableOpacity style={styles.header}>
         <Text style={styles.text}>F7 Shop</Text>
       </TouchableOpacity>
+
+      {/* Top Bar */}
       <View style={styles.topBar}>
         <View style={styles.searchBox}>
           <Icon name="search" size={18} color="#999" style={{ marginHorizontal: 10 }} />
-          <TextInput
-            placeholder="Tìm kiếm ở đây"
-            placeholderTextColor="#999"
-            style={styles.input}
-          />
+          <TextInput placeholder="Tìm kiếm ở đây" placeholderTextColor="#999" style={styles.input} />
         </View>
+
+        {/* Cart icon with badge */}
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Cart')}>
-          <Icon name="cart-outline" size={24} color="#000" />
+          <View style={{ position: 'relative' }}>
+            <Icon name="cart-outline" size={26} color="orange" />
+            {cartCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{cartCount}</Text>
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
+
+        {/* Chat */}
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Chat')}>
-          <Icon name="chatbubble-ellipses-outline" size={24} color="#000" />
+          <Icon name="chatbubble-ellipses-outline" size={26} color="#000" />
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Banner */}
+        {/* Banners */}
         <ScrollView
           horizontal
           pagingEnabled
@@ -461,13 +506,45 @@ const styles = StyleSheet.create({
   header: { backgroundColor: 'orange', padding: 10, alignItems: 'center' },
   text: { fontSize: 23, fontWeight: 'bold' },
   topBar: { flexDirection: 'row', margin: 10, alignItems: 'center' },
-  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 19, borderWidth: 1, paddingHorizontal: 10, height: 40 },
+  searchBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 19,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    height: 40,
+  },
   input: { flex: 1, fontSize: 14 },
   iconButton: { marginLeft: 10, padding: 6 },
+  badge: {
+    position: 'absolute',
+    top: -5,
+    right: -8,
+    backgroundColor: 'red',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
   bannerWrapper: { height: width * 0.6, marginTop: 10 },
-  bannerImage: { width, height: width * 0.6, resizeMode: 'cover', borderRadius: 10, marginHorizontal: width * 0.05 },
+  bannerImage: {
+    width,
+    height: width * 0.6,
+    resizeMode: 'cover',
+    borderRadius: 10,
+    marginHorizontal: width * 0.05,
+  },
   dotsContainer: { flexDirection: 'row', justifyContent: 'center', marginVertical: 10 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ccc', marginHorizontal: 4 },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ccc',
+    marginHorizontal: 4,
+  },
   activeDot: { backgroundColor: '#000' },
   section: { marginVertical: 10 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', marginLeft: 10, marginBottom: 5 },
@@ -476,9 +553,21 @@ const styles = StyleSheet.create({
   productImage: { width: 150, height: 150, borderRadius: 10 },
   productName: { fontSize: 12, textAlign: 'center', marginTop: 5 },
   productPrice: { color: 'gray' },
-  categoryRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
-  categoryItem: { backgroundColor: '#eee', borderRadius: 50, width: 70, height: 70, alignItems: 'center', justifyContent: 'center', margin: 10 },
+  categoryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+    flexWrap: 'wrap',
+  },
+  categoryItem: {
+    backgroundColor: '#eee',
+    borderRadius: 50,
+    width: 70,
+    height: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 10,
+  },
   categoryImage: { width: 40, height: 40 },
-  seeMore: { color: 'orange', marginLeft: 15, marginTop: 5 }
+  seeMore: { color: 'orange', marginLeft: 15, marginTop: 5 },
 });
-
