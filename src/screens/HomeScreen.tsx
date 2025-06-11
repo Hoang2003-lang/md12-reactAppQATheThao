@@ -406,40 +406,40 @@ const HomeScreen = ({ navigation }: any) => {
         {/* Sections */}
         <Section title="Khuyến mãi">
           {products.slice(0, 4).map(renderProduct)}
-          <TouchableOpacity onPress={() => navigation.navigate('Promotion',{ title: 'Khuyến mãi', type: 'promotion' })}>
+          <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Khuyến mãi', type: 'promotion' })}>
             <Text style={styles.seeMore}>Xem thêm...</Text>
           </TouchableOpacity>
         </Section>
 
         <Section title="Áo Câu Lạc Bộ">
           {products.filter(p => p.name.includes('Áo Đấu')).slice(0, 4).map(renderProduct)}
-          <TouchableOpacity onPress={() => navigation.navigate('Promotion',{ title: 'Áo Câu Lạc Bộ', type: 'club' })}>
+          <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Áo Câu Lạc Bộ', type: 'club' })}>
             <Text style={styles.seeMore}>Xem thêm...</Text>
           </TouchableOpacity>
         </Section>
 
         <Section title="Áo đội tuyển quốc gia">
           {products.filter(p => p.name.includes('Manchester')).slice(0, 4).map(renderProduct)}
-          <TouchableOpacity onPress={() => navigation.navigate('Promotion',{ title: 'Áo Đội Tuyển Quốc Gia', type: 'national' })}>
+          <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Áo Đội Tuyển Quốc Gia', type: 'national' })}>
             <Text style={styles.seeMore}>Xem thêm...</Text>
           </TouchableOpacity>
         </Section>
 
         <Section title="Danh mục">
-          <View style={styles.categoryRow}>
-            {categories.map(cat => (
-              <TouchableOpacity
-                key={cat.id}
-                style={styles.categoryItem}
-                onPress={() => navigation.navigate('Category', { categoryId: cat.id })}
-              >
-                <Image source={cat.image} style={styles.categoryImage} />
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Categories')}>
-            <Text style={styles.seeMore}>Xem thêm...</Text>
-          </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.categoryRow}>
+              {categories.map(cat => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={styles.categoryItem}
+                  onPress={() => navigation.navigate('Category', { categoryId: cat.id })}
+                >
+                  <Image source={cat.image} style={styles.categoryImage} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
         </Section>
 
       </ScrollView>
@@ -468,7 +468,8 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 23,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: '#fff'
   },
   topBar: {
     flexDirection: 'row'
@@ -539,7 +540,7 @@ const styles = StyleSheet.create({
 
   productImage: { width: 150, height: 150, borderRadius: 10 },
   productName: { fontSize: 12, textAlign: 'center', marginTop: 5 },
-  productPrice: { color: 'gray' },
+  productPrice: { color: 'red' },
   categoryRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
   categoryItem: { backgroundColor: '#eee', borderRadius: 50, width: 70, height: 70, alignItems: 'center', justifyContent: 'center', margin: 10 },
   categoryImage: { width: 40, height: 40 },
