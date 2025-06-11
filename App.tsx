@@ -8,7 +8,7 @@ import SearchScreen from './src/screens/SearchScreen';
 import FavoriteScreen from './src/screens/FavoriteScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
-
+import SeemoreScreen from './src/screens/semore/SeemoreScreen';
 
 
 
@@ -35,7 +35,7 @@ const App = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotP" component={ForgotPassword} />
         <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-        
+        <Stack.Screen name="Promotion" component={SeemoreScreen} />
         
       </Stack.Navigator>
       

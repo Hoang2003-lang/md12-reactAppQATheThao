@@ -310,7 +310,6 @@
 //   }
 // });
 
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -384,96 +383,47 @@ const HomeScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        <View style={styles.bannerWrapper}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-          >
-            {banners.map((banner) => (
-              <View key={banner.id} style={styles.bannerItem}>
-                <Image source={banner.image} style={styles.bannerImage} />
-              </View>
-            ))}
-          </ScrollView>
-
-          <View style={styles.dotsContainer}>
-            {banners.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  { backgroundColor: index === activeIndex ? '#000' : '#ccc' },
-                ]}
-              />
-            ))}
-          </View>
-        </View>
-
-        <Text style={styles.textKM}>Khuyến mãi</Text>
-
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' }}>
-          {products.slice(0, 4).map((item: any) => (
-            <View key={item._id} style={{ alignItems: 'center', margin: 10 }}>
-              <Image
-                source={{ uri: item.image }}
-                style={{ width: 150, height: 150, borderRadius: 10 }}
-              />
-              <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
-              <Text style={{ color: 'gray' }}>{item.price} đ</Text>
-            </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Banner */}
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          style={styles.bannerWrapper}
+        >
+          {banners.map(b => (
+            <Image key={b.id} source={b.image} style={styles.bannerImage} />
           ))}
-
-          <Text style={{ color: 'orange' }} onPress={handleKM} >Xem thêm..</Text>
+        </ScrollView>
+        <View style={styles.dotsContainer}>
+          {banners.map((_, i) => (
+            <View key={i} style={[styles.dot, i === activeIndex && styles.activeDot]} />
+          ))}
         </View>
 
+        {/* Sections */}
+        <Section title="Khuyến mãi">
+          {products.slice(0, 4).map(renderProduct)}
+          <TouchableOpacity onPress={() => navigation.navigate('Promotion',{ title: 'Khuyến mãi', type: 'promotion' })}>
+            <Text style={styles.seeMore}>Xem thêm...</Text>
+          </TouchableOpacity>
+        </Section>
 
-        <Text style={styles.textKM}>Áo Câu Lạc Bộ</Text>
+        <Section title="Áo Câu Lạc Bộ">
+          {products.filter(p => p.name.includes('Áo Đấu')).slice(0, 4).map(renderProduct)}
+          <TouchableOpacity onPress={() => navigation.navigate('Promotion',{ title: 'Áo Câu Lạc Bộ', type: 'club' })}>
+            <Text style={styles.seeMore}>Xem thêm...</Text>
+          </TouchableOpacity>
+        </Section>
 
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' }}>
-          {products
-            .filter((item: any) => item.name.includes('Áo Đấu')) // lọc sản phẩm theo danh mục
-            .slice(0, 4)
-            .map((item: any) => (
-              <View key={item._id} style={{ alignItems: 'center', margin: 10 }}>
-                <Image
-                  source={{ uri: item.image }}
-                  style={{ width: 150, height: 150, borderRadius: 10 }}
-                />
-                <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
-                <Text style={{ color: 'gray' }}>{item.price} đ</Text>
-              </View>
-            ))}
-
-          <Text style={{ color: 'orange' }}>Xem thêm..</Text>
-        </View>
-
-        <Text style={styles.textKM}>Áo đội tuyển quốc gia</Text>
-
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' }}>
-          {products
-            .filter((item: any) => item.name.includes('Áo Đấu')) // lọc sản phẩm theo danh mục
-            .slice(0, 4)
-            .map((item: any) => (
-              <View key={item._id} style={{ alignItems: 'center', margin: 10 }}>
-                <Image
-                  source={{ uri: item.image }}
-                  style={{ width: 150, height: 150, borderRadius: 10 }}
-                />
-                <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
-                <Text style={{ color: 'gray' }}>{item.price} đ</Text>
-              </View>
-            ))}
-
-          <Text style={{ color: 'orange' }}>Xem thêm..</Text>
-        </View>
+        <Section title="Áo đội tuyển quốc gia">
+          {products.filter(p => p.name.includes('Manchester')).slice(0, 4).map(renderProduct)}
+          <TouchableOpacity onPress={() => navigation.navigate('Promotion',{ title: 'Áo Đội Tuyển Quốc Gia', type: 'national' })}>
+            <Text style={styles.seeMore}>Xem thêm...</Text>
+          </TouchableOpacity>
+        </Section>
 
         <Section title="Danh mục">
           <View style={styles.categoryRow}>
@@ -509,95 +459,89 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  text: {
-    fontSize: 23,
-    fontWeight: 'bold',
-    color: 'black'
+    backgroundColor: '#fff'
   },
   header: {
     backgroundColor: 'orange',
-    paddingVertical: 10,
-    paddingHorizontal: 100,
-    alignItems: 'center',
+    padding: 10,
+    alignItems: 'center'
+  },
+  text: {
+    fontSize: 23,
+    fontWeight: 'bold'
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 10,
-    marginTop: 10,
+    flexDirection: 'row'
+    , margin: 10,
+    alignItems: 'center'
   },
   searchBox: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 19,
-    borderColor: 'black',
     borderWidth: 1,
     paddingHorizontal: 10,
-    height: 40,
-    backgroundColor: '#fff',
+    height: 40
   },
   input: {
     flex: 1,
-    fontSize: 14,
-    color: '#000',
-    paddingVertical: 0,
+    fontSize: 14
   },
   iconButton: {
     marginLeft: 10,
-    padding: 6,
+    padding: 6
   },
-
   bannerWrapper: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  bannerItem: {
-    width: width * 0.9,
-    height: width * 0.8, // vuông
-    borderRadius: 10,
-    borderWidth: 2,
-    overflow: 'hidden',
-    marginHorizontal: width * 0.1 / 2,
+    height: width * 0.6,
+    marginTop: 10
   },
   bannerImage: {
-    width: '100%',
-    height: '100%',
+    width, height: width * 0.6,
     resizeMode: 'cover',
+    borderRadius: 10,
+    // marginHorizontal: width * 0.01
   },
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 10,
+    marginVertical: 10
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginHorizontal: 4,
+    backgroundColor: '#ccc',
+    marginHorizontal: 4
   },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 10,
-    borderRadius: 10,
-    position: 'absolute',
-    bottom: 10,
-    left: 20,
-    right: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+  activeDot: {
+    backgroundColor: '#000'
   },
-  textKM: {
-    fontWeight: 'bold',
+  section: {
+    marginVertical: 10
+  },
+  sectionTitle: {
     fontSize: 16,
-    margin: 10
-  }
-});
+    fontWeight: 'bold',
+    marginLeft: 10,
+    marginBottom: 5
+  },
+  wrapRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-evenly'
+  },
+  productItem: {
+    width: '45%', // hoặc Dimensions.get('window').width / 2 - margin
+    alignItems: 'center',
+    marginVertical: 10,
+  },
 
+  productImage: { width: 150, height: 150, borderRadius: 10 },
+  productName: { fontSize: 12, textAlign: 'center', marginTop: 5 },
+  productPrice: { color: 'gray' },
+  categoryRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
+  categoryItem: { backgroundColor: '#eee', borderRadius: 50, width: 70, height: 70, alignItems: 'center', justifyContent: 'center', margin: 10 },
+  categoryImage: { width: 40, height: 40 },
+  seeMore: { color: 'orange', marginLeft: 15, marginTop: 5 }
+});
