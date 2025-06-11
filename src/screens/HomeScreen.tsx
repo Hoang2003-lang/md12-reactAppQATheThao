@@ -136,7 +136,7 @@ const HomeScreen = ({ navigation }: any) => {
                 style={{ width: 150, height: 150, borderRadius: 10 }}
               />
               <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
-              <Text style={{ color: 'gray' }}>{item.price} đ</Text>
+              <Text style={{ color: 'red' }}>{item.price} đ</Text>
             </View>
           ))}
 
@@ -157,7 +157,7 @@ const HomeScreen = ({ navigation }: any) => {
                   style={{ width: 150, height: 150, borderRadius: 10 }}
                 />
                 <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
-                <Text style={{ color: 'gray' }}>{item.price} đ</Text>
+                <Text style={{ color: 'red' }}>{item.price} đ</Text>
               </View>
             ))}
 
@@ -177,7 +177,7 @@ const HomeScreen = ({ navigation }: any) => {
                   style={{ width: 150, height: 150, borderRadius: 10 }}
                 />
                 <Text style={{ marginTop: 5, fontSize: 10 }}>{item.name}</Text>
-                <Text style={{ color: 'gray' }}>{item.price} đ</Text>
+                <Text style={{ color: 'red' }}>{item.price} đ</Text>
               </View>
             ))}
 
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 23,
     fontWeight: 'bold',
-    color: 'black'
+    color: '#fff'
   },
   header: {
     backgroundColor: 'orange',
