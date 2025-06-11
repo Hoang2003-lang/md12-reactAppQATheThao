@@ -11,11 +11,8 @@ const FavoriteScreen = ({ navigation }: any) => {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Icon name="chevron-back" size={24} color="#000" />
-                <Text style={styles.title1} > Màn Favorite  </Text>
-            </TouchableOpacity>
-
+            <Text style={styles.header}>Yêu thích</Text>
+            <Text style={styles.textNull}>Hiện tại chưa có sản phẩm yêu thích nào</Text>
         </View>
     );
 };
@@ -53,6 +50,23 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 3,
     },
+    header:{
+        backgroundColor: "#EC761E",
+        height: 70,
+        color: "#FFFFFF",
+        textAlign: "center",
+        textAlignVertical: "center",
+        fontSize: 32,
+        fontFamily: "Lora-Bold"
+    },
+    textNull:{
+        textAlign: "center",
+        textAlignVertical: "center",
+        height: 800,
+        fontFamily: "Lora-Regular",
+        fontSize: 16
+    }
+
 });
 
 
