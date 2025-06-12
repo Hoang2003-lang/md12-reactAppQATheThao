@@ -19,13 +19,15 @@ import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
 import ForgotPassword from './src/login/ForgotPassword';
 
-import TabNavigator from './src/TabNavigatior/TabNavigator';
+import TabNavigator from './src/TabNavigator/TabNavigator';
 
 
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+
+  
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
