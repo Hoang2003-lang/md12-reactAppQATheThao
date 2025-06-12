@@ -139,9 +139,6 @@ const SearchScreen = ({ navigation }: any) => {
                     </View>
                 </Modal>
 
-
-//
-
             </View>
 
 
