@@ -31,7 +31,7 @@ const TabNavigator = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName = '';
 
-          if (route.name === 'Home') iconName = 'home';
+          if (route.name === 'HomeTab') iconName = 'home';
           else if (route.name === 'Search') iconName = 'search';
           else if (route.name === 'Favorite') iconName = 'heart';
           else if (route.name === 'Account') iconName = 'person';
@@ -48,7 +48,7 @@ const TabNavigator = () => {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Trang chủ'}} />
+      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: 'Trang chủ'}} />
       <Tab.Screen name="Search" component={SearchScreen}  options={{ tabBarLabel: 'Tìm kiếm'}} />
       <Tab.Screen name="Favorite" component={FavoriteScreen}  options={{ tabBarLabel: 'Yêu thích'}} />
       <Tab.Screen name="Account" component={AccountScreen}  options={{ tabBarLabel: 'Tài khoản'}} />
