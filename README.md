@@ -17,3 +17,14 @@ npm install @react-navigation/native-stack
 cd android
 ./gradlew clean
 xong chạy lại
+
+// 12/6: Lệnh font chữ
+--
+npm react-native-asset
+--
+
+Để áp dụng font sử dụng: 
+- fontFamily: "Lora-Regular"
+- fontFamily: "Lora-Bold"
+
+*Vì sử dụng font ko dùng đc fontWeight nên sử dụng Bold/Regular để thay thế

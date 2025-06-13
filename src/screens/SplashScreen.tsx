@@ -1,6 +1,6 @@
 // src/screens/SplashScreen.tsx
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
 
 const SplashScreen = ({ navigation }: any) => {
   useEffect(() => {
@@ -12,26 +12,39 @@ const SplashScreen = ({ navigation }: any) => {
   }, []);
 
   return (
-    <View style={styles.container}>
-  <Image
-    source={{
-      uri: 'https://rubicmarketing.com/wp-content/uploads/2022/07/y-nghia-logo-fpt-lan-3.jpg',
-    }}
-    style={styles.logo}
-  />
-  <Text style={styles.title}>Chào mừng đến với app bán quần áo thể thao!</Text>
-</View>
+    <ImageBackground
+      source={require('../assets/images/backgroundSplsah.png')}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.content}>
+
+        <Image
+          source={
+            require('../assets/images/logf7shop.png')
+          }
+          style={styles.logo}
+        />
+        {/* <Text style={styles.title}>Chào mừng đến với app bán quần áo thể thao!</Text> */}
+      </View>
+    </ImageBackground>
+
   );
 };
 
 export default SplashScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: '#007AFF',
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  content: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logo: {
     width: 120,
@@ -40,8 +53,10 @@ const styles = StyleSheet.create({
     borderRadius: 60,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     color: '#fff',
     fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
 });

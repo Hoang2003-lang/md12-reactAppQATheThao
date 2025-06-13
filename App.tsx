@@ -8,8 +8,6 @@ import SearchScreen from './src/screens/SearchScreen';
 import FavoriteScreen from './src/screens/FavoriteScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
-import CartScreen from './src/screens/CartScreen';
-
 
 
 
@@ -20,13 +18,15 @@ import RegisterScreen from './src/login/RegisterScreen';
 import ForgotPassword from './src/login/ForgotPassword';
 
 
-import TabNavigator from './src/TabNavigatior/TabNavigator';
+import TabNavigator from './src/TabNavigator/TabNavigator';
 
 
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+
+  
   return (
      <NavigationContainer>
        <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
@@ -38,12 +38,10 @@ const App = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotP" component={ForgotPassword} />
         <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-         <Stack.Screen name="Cart" component={CartScreen} />
-       
         
         
       </Stack.Navigator>
-      
+
     </NavigationContainer>
   );
 };
