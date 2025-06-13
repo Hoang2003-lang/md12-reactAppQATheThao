@@ -6,7 +6,7 @@ import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
 import FavoriteScreen from '../screens/FavoriteScreen';
 import AccountScreen from '../screens/AccountScreen';
-import { TouchableOpacity } from 'react-native';
+import { Image, TouchableOpacity } from 'react-native';
 
 
 const Tab = createBottomTabNavigator();
@@ -21,29 +21,41 @@ const TabNavigator = () => {
           bottom: 0,
           left: 20,
           right: 20,
-          borderRadius: 10,
+          borderTopLeftRadius: 30,
+          borderTopRightRadius:30,
           backgroundColor: '#fff',
-          elevation: 5,
-          height: 60,
+          elevation: 15,
+          height: 55,
           zIndex: 100,
+          shadowOffset: {
+            width: 0,
+            height: 12,
+          },
+          shadowRadius: 40,
+          
         },
         
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName = '';
+          let iconSource;
 
-          if (route.name === 'HomeTab') iconName = 'home';
-          else if (route.name === 'Search') iconName = 'search';
-          else if (route.name === 'Favorite') iconName = 'heart';
-          else if (route.name === 'Account') iconName = 'person';
-
-          return <Icon name={iconName} size={24} color={focused ? '#FFCC66' : '#333'} />;
+          if (route.name === 'HomeTab'){
+            iconSource= focused ? require("../assets/images/check_home.png") : require("../assets/images/uncheck_home.png");
+          }else if (route.name === 'Search'){
+            iconSource= focused ? require("../assets/images/check_search.png") : require("../assets/images/uncheck_search.png");
+          }else if (route.name === 'Favorite'){
+            iconSource= focused ? require("../assets/images/check_heart.png") : require("../assets/images/uncheck_heart.png");
+          }
+          else if (route.name === 'Account'){
+            iconSource= focused ? require("../assets/images/check_user.png") : require("../assets/images/uncheck_user.png");
+          }
+          return <Image source={iconSource} style={{ width: 25, height: 25}} />;
         },
         tabBarLabelStyle: {
         fontSize: 12,
         fontWeight: '500',
         },
-        tabBarActiveTintColor: '#FFCC66',
-        tabBarInactiveTintColor: '#333',
+        tabBarActiveTintColor: '#EC761E',
+        tabBarInactiveTintColor: '#9299A3',
         tabBarShowLabel: true,
         headerShown: false,
       })}
@@ -51,7 +63,7 @@ const TabNavigator = () => {
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: 'Trang chủ'}} />
       <Tab.Screen name="Search" component={SearchScreen}  options={{ tabBarLabel: 'Tìm kiếm'}} />
       <Tab.Screen name="Favorite" component={FavoriteScreen}  options={{ tabBarLabel: 'Yêu thích'}} />
-      <Tab.Screen name="Account" component={AccountScreen}  options={{ tabBarLabel: 'Tài khoản'}} />
+      <Tab.Screen name="Account" component={AccountScreen}  options={{ tabBarLabel: 'Hồ sơ'}} />
     </Tab.Navigator>
   );
 };

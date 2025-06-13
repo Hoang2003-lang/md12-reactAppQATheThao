@@ -320,17 +320,17 @@ const { width } = Dimensions.get('window');
 const HomeScreen = ({ navigation }: any) => {
   const [products, setProducts] = useState<any[]>([]);
   const [banners] = useState([
-    { id: '1', image: require('../assets/bannerc1.png') },
-    { id: '2', image: require('../assets/bannerc2.png') },
-    { id: '3', image: require('../assets/bannerc3.png') },
+    { id: '1', image: require('../assets/images/bannerc1.png') },
+    { id: '2', image: require('../assets/images/bannerc2.png') },
+    { id: '3', image: require('../assets/images/bannerc3.png') },
   ]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [categories] = useState([
-    { id: 'psg', image: require('../assets/psg.png') },
-    { id: 'arsenal', image: require('../assets/arsenal.png') },
-    { id: 'chelsea', image: require('../assets/chelsea.png') },
-    { id: 'vietnam', image: require('../assets/vietnam.png') },
-    { id: 'japan', image: require('../assets/japan.png') },
+    { id: 'psg', image: require('../assets/images/psg.png') },
+    { id: 'arsenal', image: require('../assets/images/arsenal.png') },
+    { id: 'chelsea', image: require('../assets/images/chelsea.png') },
+    { id: 'vietnam', image: require('../assets/images/vietnam.png') },
+    { id: 'japan', image: require('../assets/images/japan.png') },
   ]);
 
   useEffect(() => {
@@ -363,9 +363,9 @@ const HomeScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.header}>
-        <Text style={styles.text}>F7 Shop</Text>
-      </TouchableOpacity>
+      
+      <Text style={styles.header}>F7 Shop</Text>
+      
       <View style={styles.topBar}>
         <View style={styles.searchBox}>
           <Icon name="search" size={18} color="#999" style={{ marginHorizontal: 10 }} />
@@ -461,11 +461,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff'
   },
-  header: {
-    backgroundColor: 'orange',
-    padding: 10,
-    alignItems: 'center'
-  },
+  header:{
+    backgroundColor: "#EC761E",
+    padding: 8,
+    color: "#FFFFFF",
+    textAlign: "center",
+    textAlignVertical: "center",
+    fontSize: 32,
+    fontFamily: "Lora-Bold",
+},
   text: {
     fontSize: 23,
     fontWeight: 'bold',

@@ -60,7 +60,7 @@ export default function LoginScreen({ navigation }: any) {
     // return (
     //     <View style={styles.container}>
     //         <Image
-    //             source={require('../assets/banner1.png')}
+    //             source={require('../assets/images/banner1.png')}
     //             style={styles.image}
     //             resizeMode="cover"
     //         />
@@ -113,12 +113,12 @@ export default function LoginScreen({ navigation }: any) {
     //             <View style={styles.socialContainer}>
     //                 <TouchableOpacity >
     //                     <Image style={styles.faceB}
-    //                         source={require(`../assets/faceb.jpg`)} />
+    //                         source={require(`../assets/images/faceb.jpg`)} />
     //                 </TouchableOpacity>
     //                 <TouchableOpacity >
     //                     <Image
     //                         style={styles.googleIcon}
-    //                         source={require(`../assets/gg1.png`)}
+    //                         source={require(`../assets/images/gg1.png`)}
     //                     />
     //                 </TouchableOpacity>
     //             </View>
@@ -134,7 +134,7 @@ export default function LoginScreen({ navigation }: any) {
     return (
         <View style={styles.container}>
             <Image
-                source={require('../assets/banner1.png')}
+                source={require('../assets/images/banner1.png')}
                 style={styles.image}
                 resizeMode="cover"
             />
@@ -189,13 +189,13 @@ export default function LoginScreen({ navigation }: any) {
                     <TouchableOpacity>
                         <Image
                             style={styles.faceB}
-                            source={require(`../assets/faceb.jpg`)}
+                            source={require(`../assets/images/faceb.jpg`)}
                         />
                     </TouchableOpacity>
                     <TouchableOpacity>
                         <Image
                             style={styles.googleIcon}
-                            source={require(`../assets/gg1.png`)}
+                            source={require(`../assets/images/gg1.png`)}
                         />
                     </TouchableOpacity>
                 </View>

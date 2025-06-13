@@ -24,12 +24,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-    backButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 15,
-        marginTop: 10,
-    },
     title1: {
         fontSize: 20,
         marginLeft: 70
@@ -52,7 +46,7 @@ const styles = StyleSheet.create({
     },
     header:{
         backgroundColor: "#EC761E",
-        height: 70,
+        padding: 8,
         color: "#FFFFFF",
         textAlign: "center",
         textAlignVertical: "center",
@@ -62,7 +56,7 @@ const styles = StyleSheet.create({
     textNull:{
         textAlign: "center",
         textAlignVertical: "center",
-        height: 800,
+        height: 600,
         fontFamily: "Lora-Regular",
         fontSize: 16
     }
