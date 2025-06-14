@@ -111,8 +111,8 @@ const styles= StyleSheet.create({
     paddingBottom: 8,
   },
   txt:{
-    fontSize: 17,
-    fontFamily: "Lora-Regular",
+    fontSize: 18,
+    fontFamily: "Lora-Bold",
     width: 295,
     lineHeight: 24,
   },
