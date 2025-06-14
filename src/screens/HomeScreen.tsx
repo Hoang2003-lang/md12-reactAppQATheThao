@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,23 +9,30 @@ import {
   Image,
   Dimensions,
   NativeSyntheticEvent,
-  NativeScrollEvent
+  NativeScrollEvent,
+  Pressable
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
+import { Animated } from 'react-native';
+import ProductCard from './productCard/ProductCard';
+
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }: any) => {
+
+  const scrollRef = useRef<ScrollView>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const banners = [
-    { id: '1', image: require('../assets/images/bannerc1.png') },
-    { id: '2', image: require('../assets/images/bannerc2.png') },
-    { id: '3', image: require('../assets/images/bannerc3.png') },
+    { id: '1', image: require('../assets/images/bannerDATN.jpg') },
+    { id: '2', image: require('../assets/images/bannerDATN3.jpg') },
+    { id: '3', image: require('../assets/images/bannerDATN2.jpg') },
+    { id: '4', image: require('../assets/images/bannerDATN1.jpg') },
   ];
 
   const categories = [
@@ -36,6 +43,20 @@ const HomeScreen = ({ navigation }: any) => {
     { id: 'japan', image: require('../assets/images/japan.png') },
   ];
 
+  // banner chuyển động
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex(prev => {
+        const nextIndex = (prev + 1) % banners.length;
+        scrollRef.current?.scrollTo({ x: nextIndex * width, animated: true });
+        return nextIndex;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // load sp
   useEffect(() => {
     loadProducts();
     const unsubscribe = navigation.addListener('focus', () => {
@@ -45,6 +66,7 @@ const HomeScreen = ({ navigation }: any) => {
     return unsubscribe;
   }, []);
 
+  // call api sp
   const loadProducts = async () => {
     try {
       const res = await API.get('/products');
@@ -81,17 +103,6 @@ const HomeScreen = ({ navigation }: any) => {
     setActiveIndex(idx);
   };
 
-  const renderProduct = (item: any) => (
-    <TouchableOpacity
-      key={item._id}
-      style={styles.productItem}
-      onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}
-    >
-      <Image source={{ uri: item.image }} style={styles.productImage} />
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productPrice}>{item.price.toLocaleString()} đ</Text>
-    </TouchableOpacity>
-  );
 
   const Section = ({ title, children }: any) => (
     <View style={styles.section}>
@@ -136,6 +147,7 @@ const HomeScreen = ({ navigation }: any) => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Banners */}
         <ScrollView
+          ref={scrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -155,16 +167,44 @@ const HomeScreen = ({ navigation }: any) => {
 
         {/* Sản phẩm các loại */}
         <Section title="Khuyến mãi">
-          {products.slice(0, 4).map(renderProduct)}
+          {products.slice(0, 4).map(item => (
+            <View key={item._id} style={styles.productWrapper} >
+
+              <ProductCard key={item._id} item={item} navigation={navigation} />
+            </View>
+          ))}
+
+          <View style={{ paddingHorizontal: 10, alignItems: 'flex-end' }} >
+            <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Khuyến mãi', type: 'promotion' })}>
+              <Text style={styles.seeMore}>Xem thêm...</Text>
+            </TouchableOpacity>
+          </View>
+
         </Section>
 
         <Section title="Áo Câu Lạc Bộ">
-          {products.filter(p => p.name.includes('Áo Đấu')).slice(0, 4).map(renderProduct)}
+          {products.filter(p => p.name.includes('Áo Đấu')).slice(0, 4).map(item => (
+            <View key={item._id} style={styles.productWrapper} >
+              <ProductCard key={item._id} item={item} navigation={navigation} />
+            </View>
+
+          ))}
+          <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Áo Câu Lạc Bộ', type: 'club' })}>
+            <Text style={styles.seeMore}>Xem thêm...</Text>
+          </TouchableOpacity>
         </Section>
 
         <Section title="Áo đội tuyển quốc gia">
-          {products.filter(p => p.name.includes('Manchester')).slice(0, 4).map(renderProduct)}
+          {products.filter(p => p.name.includes('Manchester')).slice(0, 4).map(item => (
+            <View key={item._id} style={styles.productWrapper} >
+              <ProductCard key={item._id} item={item} navigation={navigation} />
+            </View>
+          ))}
+          <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Áo Đội Tuyển Quốc Gia', type: 'national' })}>
+            <Text style={styles.seeMore}>Xem thêm...</Text>
+          </TouchableOpacity>
         </Section>
+
 
         <Section title="Danh mục">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -225,17 +265,68 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginHorizontal: width * 0.05
   },
-  dotsContainer: { flexDirection: 'row', justifyContent: 'center', marginVertical: 10 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ccc', marginHorizontal: 4 },
-  activeDot: { backgroundColor: '#000' },
-  section: { marginVertical: 10 },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', marginLeft: 10, marginBottom: 5 },
-  wrapRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' },
-  productItem: { alignItems: 'center', margin: 10 },
-  productImage: { width: 150, height: 150, borderRadius: 10 },
-  productName: { fontSize: 12, textAlign: 'center', marginTop: 5 },
-  productPrice: { color: 'red' },
-  categoryRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ccc',
+    marginHorizontal: 4
+  },
+  activeDot: {
+    backgroundColor: '#000'
+  },
+  section: {
+    marginVertical: 10
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
+    marginBottom: 5
+  },
+  wrapRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  productItem: {
+    width: (width - 40) / 2,
+    alignItems: 'center',
+    marginVertical: 10,
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  productImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 10
+  },
+  productName: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 5
+  },
+  productPrice: {
+    color: 'red'
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10
+  },
   categoryItem: {
     backgroundColor: '#eee',
     borderRadius: 50,
@@ -245,5 +336,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     margin: 10
   },
-  categoryImage: { width: 40, height: 40 }
+  categoryImage: { width: 40, height: 40 },
+  seeMore: {
+    color: 'orange',
+    marginLeft: 15,
+    marginTop: 5,
+    // alignSelf: 'flex-end'
+  },
+  productItemHover: {
+    transform: [{ scale: 1.03 }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  productWrapper: {
+    width: (width - 40) / 2,
+    marginBottom: 15,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 10,
+
+  }
+
 });
