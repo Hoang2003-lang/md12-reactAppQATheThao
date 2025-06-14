@@ -15,6 +15,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
+import { tokens } from 'react-native-paper/lib/typescript/styles/themes/v3/tokens';
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
@@ -25,6 +26,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [wishList, setWishList]= useState<boolean>(false);
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -143,6 +145,37 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     );
   }
 
+  //Hoang Anh - wishlist
+  const saveWishlist= async (productId: string) => {
+    setWishList(true);
+    await AsyncStorage.getItem("wishlist").then((token) => {
+      const res= JSON.parse(token);
+      if(res !== null){
+        let data= res.find((val: string) => val == productId);
+        if(data == null){
+          res.push(productId);
+          AsyncStorage.setItem("wishlist", JSON.stringify(res));
+          // alert("Product Wishlist");
+        }
+      }else{
+        let wishlist= [];
+        wishlist.push(productId);
+        AsyncStorage.setItem("wishlist", JSON.stringify(wishlist));
+          // alert("Product Wishlist");
+      }
+    })
+  }
+
+  const removeWishList= async (productId: string) => {
+    setWishList(false);
+    const wishlist= await AsyncStorage.getItem("wishlist").then((token) => {
+      const res= JSON.parse(token);
+      return res.filter((id: string) => id !== productId)
+    });
+    await AsyncStorage.setItem("wishlist", JSON.stringify(wishList));
+  }
+
+
   return (
     <ScrollView style={styles.container}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -152,7 +185,17 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
       <Image source={{ uri: product.image }} style={styles.image} />
 
       <View style={styles.content}>
+        <View style={styles.txt}>
+
         <Text style={styles.name}>{product.name}</Text>
+
+        <TouchableOpacity onPress={() => wishList ? removeWishList(product._id) : saveWishlist(product._id)}>
+          <Image source={!wishList ? require("../assets/images/uncheck_fav.png") : require("../assets/images/check_fav.png")} style={styles.heart} />
+        </TouchableOpacity>
+
+        </View>
+
+
         <Text style={styles.price}>Đơn giá: {product.price.toLocaleString()} đ</Text>
         <Text style={styles.price}>Tổng: {totalPrice.toLocaleString()} đ</Text>
         <Text style={styles.stock}>Kho: {product.stock}</Text>
@@ -252,7 +295,7 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   image: { width: '100%', height: 300, resizeMode: 'contain', backgroundColor: '#f9f9f9' },
   content: { padding: 16 },
-  name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
+  name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 , width: 345},
   price: { fontSize: 18, color: 'orange', marginBottom: 4 },
   stock: { fontSize: 14, marginBottom: 12 },
   sizeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
@@ -273,4 +316,12 @@ const styles = StyleSheet.create({
   qtyNumber: { marginHorizontal: 12, fontSize: 16 },
   cartButton: { backgroundColor: 'orange', padding: 14, alignItems: 'center', borderRadius: 5 },
   cartText: { color: '#fff', fontWeight: 'bold' },
+  heart:{
+    width: 20,
+    height: 20,
+
+  },
+  txt:{
+    flexDirection: "row"
+  }
 });

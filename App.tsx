@@ -30,7 +30,7 @@ const App = () => {
   
   return (
      <NavigationContainer>
-       <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
         {/* thanh điều hướng, không xoá */}
         <Stack.Screen name="Home" component={TabNavigator} />
 
