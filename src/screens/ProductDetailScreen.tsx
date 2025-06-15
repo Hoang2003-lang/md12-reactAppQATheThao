@@ -15,7 +15,6 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
-import { tokens } from 'react-native-paper/lib/typescript/styles/themes/v3/tokens';
 import Snackbar from 'react-native-snackbar';
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
@@ -35,6 +34,16 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     fetchProduct();
+    
+  }, [productId]);
+
+  useEffect(() => {
+    if (product) {
+      setTotalPrice(product.price * quantity);
+    }
+  }, [product, quantity]);
+
+  useEffect(() => {
     const checkBookmark = async () => {
       const stored = await AsyncStorage.getItem("bookmark");
       const list = stored ? JSON.parse(stored) : [];
@@ -43,13 +52,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     };
 
     checkBookmark();
-  }, [productId]);
-
-  useEffect(() => {
-    if (product) {
-      setTotalPrice(product.price * quantity);
-    }
-  }, [product, quantity]);
+  },[productId]);
 
   const fetchProduct = async () => {
     try {
@@ -155,6 +158,8 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   }
 
   //Hoang Anh - bookmark
+
+  //save sau khi chuyen man hinh
   const saveBookmark= async (productId: string) => {
     setBookMark(true);
     await AsyncStorage.getItem("bookmark").then((token) => {
@@ -193,6 +198,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     })
   }
 
+  //unsave
   const removeBookmark= async (productId: string) => {
     setBookMark(false);
     const bookmark= await AsyncStorage.getItem("bookmark").then((token) => {
@@ -206,10 +212,23 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     })
   }
 
+  const renderBookmark= async (productId: string) =>{
+    await AsyncStorage.getItem("bookmark").then((token) => {
+      const res= JSON.parse(token);
+      if(res != null){
+        let data= res.find((val: string) => val === productId);
+        return data = null ? setBookMark(false) : setBookMark(true);
+      }
+    })
+  }
+
 
   return (
     <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity onPress={() => {
+        Snackbar.dismiss();
+        navigation.goBack();
+      }} style={styles.backButton}>
         <Icon name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
