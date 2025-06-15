@@ -1,13 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
 import FavoriteScreen from '../screens/FavoriteScreen';
 import AccountScreen from '../screens/AccountScreen';
 import { Image, TouchableOpacity } from 'react-native';
-
+import CartScreen from '../screens/CartScreen'
 
 const Tab = createBottomTabNavigator();
 
@@ -48,6 +47,8 @@ const TabNavigator = () => {
           else if (route.name === 'Account'){
             iconSource= focused ? require("../assets/images/check_user.png") : require("../assets/images/uncheck_user.png");
           }
+          // else if (route.name === 'Cart') iconName = 'cart'
+
           return <Image source={iconSource} style={{ width: 25, height: 25}} />;
         },
         tabBarLabelStyle: {
@@ -64,6 +65,8 @@ const TabNavigator = () => {
       <Tab.Screen name="Search" component={SearchScreen}  options={{ tabBarLabel: 'Tìm kiếm'}} />
       <Tab.Screen name="Favorite" component={FavoriteScreen}  options={{ tabBarLabel: 'Yêu thích'}} />
       <Tab.Screen name="Account" component={AccountScreen}  options={{ tabBarLabel: 'Hồ sơ'}} />
+      {/* <Tab.Screen name="Cart" component={CartScreen}  options={{ tabBarLabel: 'Giỏ Hàng'}} /> */}
+
     </Tab.Navigator>
   );
 };

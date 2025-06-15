@@ -16,6 +16,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 import { tokens } from 'react-native-paper/lib/typescript/styles/themes/v3/tokens';
+import Snackbar from 'react-native-snackbar';
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
@@ -26,7 +27,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [wishList, setWishList]= useState<boolean>(false);
+  const [bookmark, setBookMark]= useState<boolean>(false);
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -34,7 +35,15 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     fetchProduct();
-  }, []);
+    const checkBookmark = async () => {
+      const stored = await AsyncStorage.getItem("bookmark");
+      const list = stored ? JSON.parse(stored) : [];
+      const isBookmarked = list.includes(productId);
+      setBookMark(isBookmarked);
+    };
+
+    checkBookmark();
+  }, [productId]);
 
   useEffect(() => {
     if (product) {
@@ -145,34 +154,56 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     );
   }
 
-  //Hoang Anh - wishlist
-  const saveWishlist= async (productId: string) => {
-    setWishList(true);
-    await AsyncStorage.getItem("wishlist").then((token) => {
+  //Hoang Anh - bookmark
+  const saveBookmark= async (productId: string) => {
+    setBookMark(true);
+    await AsyncStorage.getItem("bookmark").then((token) => {
       const res= JSON.parse(token);
       if(res !== null){
         let data= res.find((val: string) => val == productId);
         if(data == null){
           res.push(productId);
-          AsyncStorage.setItem("wishlist", JSON.stringify(res));
-          // alert("Product Wishlist");
+          AsyncStorage.setItem("bookmark", JSON.stringify(res));
+          Snackbar.show({
+            text: "Thêm thành công vào mục Yêu thích!",
+            duration: Snackbar.LENGTH_SHORT,
+            action:{
+              text: "Xem",
+              onPress:() => {
+                navigation.navigate('Home', { screen: 'Favorite' });
+              }
+            }
+          })
         }
       }else{
-        let wishlist= [];
-        wishlist.push(productId);
-        AsyncStorage.setItem("wishlist", JSON.stringify(wishlist));
-          // alert("Product Wishlist");
+        let bookmark= [];
+        bookmark.push(productId);
+        AsyncStorage.setItem("bookmark", JSON.stringify(bookmark));
+        Snackbar.show({
+          text: "Thêm thành công vào mục Yêu thích!",
+          duration: Snackbar.LENGTH_SHORT,
+          action:{
+            text: "Xem",
+            onPress:() => {
+              navigation.navigate('Home', { screen: 'Favorite' });
+            }
+          }
+        })
       }
     })
   }
 
-  const removeWishList= async (productId: string) => {
-    setWishList(false);
-    const wishlist= await AsyncStorage.getItem("wishlist").then((token) => {
+  const removeBookmark= async (productId: string) => {
+    setBookMark(false);
+    const bookmark= await AsyncStorage.getItem("bookmark").then((token) => {
       const res= JSON.parse(token);
       return res.filter((id: string) => id !== productId)
     });
-    await AsyncStorage.setItem("wishlist", JSON.stringify(wishList));
+    await AsyncStorage.setItem("bookmark", JSON.stringify(bookmark));
+    Snackbar.show({
+      text: "Xoá thành công khỏi mục Yêu thích!",
+      duration: Snackbar.LENGTH_SHORT
+    })
   }
 
 
@@ -189,8 +220,8 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
         <Text style={styles.name}>{product.name}</Text>
 
-        <TouchableOpacity onPress={() => wishList ? removeWishList(product._id) : saveWishlist(product._id)}>
-          <Image source={!wishList ? require("../assets/images/uncheck_fav.png") : require("../assets/images/check_fav.png")} style={styles.heart} />
+        <TouchableOpacity onPress={() => bookmark ? removeBookmark(product._id) : saveBookmark(product._id)}>
+          <Image source={!bookmark ? require("../assets/images/uncheck_fav.png") : require("../assets/images/check_fav.png")} style={styles.heart} />
         </TouchableOpacity>
 
         </View>
