@@ -1,13 +1,42 @@
 // src/screens/HomeScreen.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'
 import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const { width } = Dimensions.get('window');
 
 const FavoriteScreen = ({ navigation }: any) => {
+    useEffect(() => {
+        fetchBookmark();
+    }, []);
+
+    const [bookmarkedItems, setBookmarkedItems] = useState([]);
+
+const fetchBookmark = async () => {
+  try {
+    const token = await AsyncStorage.getItem("bookmark");
+    console.log("Raw bookmark token:", token);
+
+    if (token) {
+      const bookmarkedIds = JSON.parse(token);
+
+      
+      const response = await fetch("http://192.168.8.121:3001/api/products");
+      const allProducts = await response.json();
+
+      const filtered = allProducts.filter((product: any) =>
+        bookmarkedIds.includes(String(product._id))
+      );
+
+      console.log("Bookmark result:", filtered);
+      setBookmarkedItems(filtered);
+    }
+  } catch (error) {
+    console.error("Lỗi khi fetch bookmark:", error);
+  }
+};
 
     return (
         <View style={styles.container}>
