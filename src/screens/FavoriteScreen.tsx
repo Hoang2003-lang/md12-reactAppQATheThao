@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, ScrollView} from 'react-native';
+  View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, ScrollView,
+  Animated} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
@@ -8,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 //TODO:
 // - Item ko mất trong màn hình yêu thích khi uncheck wishlist "X"
 // - Hiển thị màn hình khác khi không có sản phẩm "X"
-// - Chưa hiển thị được sản phẩm chi tiết khi click vào item
+// - Chưa hiển thị được sản phẩm chi tiết khi click vào item "X"
 // - Click vào còn đang hiển thị lỗi
 
 
@@ -27,6 +28,9 @@ const FavoriteScreen = ({ navigation }: any) => {
       fetchBookmark();
     }, [])
   );
+
+  
+
 
   const fetchBookmark = async () => {
     try {
@@ -80,8 +84,9 @@ const FavoriteScreen = ({ navigation }: any) => {
     renderItem={({ item }) => (
       <View style={{ flex: 1, margin: 8 }}>
         <TouchableOpacity
+          activeOpacity={1}
           onPress={() =>
-            navigation.navigate("ProductDetail", { id: item._id })
+            navigation.navigate("ProductDetail", { productId: item._id })
           }
         >
           <Item item={item} />
@@ -105,7 +110,8 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#EC761E",
-    padding: 8,
+    paddingBottom: 8,
+    paddingTop: 3,
     color: "#FFFFFF",
     textAlign: "center",
     fontSize: 32,
