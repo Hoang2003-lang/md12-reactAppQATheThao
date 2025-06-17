@@ -28,3 +28,8 @@ npm react-native-asset
 - fontFamily: "Lora-Bold"
 
 *Vì sử dụng font ko dùng đc fontWeight nên sử dụng Bold/Regular để thay thế
+
+// 14/6: Lệnh install thư viện
+--
+npm install @react-native-async-storage/async-storage
+--

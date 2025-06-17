@@ -588,7 +588,7 @@ export default function LoginScreen({ navigation }: any) {
     // return (
     //     <View style={styles.container}>
     //         <Image
-    //             source={require('../assets/banner1.png')}
+    //             source={require('../assets/images/banner1.png')}
     //             style={styles.image}
     //             resizeMode="cover"
     //         />
@@ -641,12 +641,12 @@ export default function LoginScreen({ navigation }: any) {
     //             <View style={styles.socialContainer}>
     //                 <TouchableOpacity >
     //                     <Image style={styles.faceB}
-    //                         source={require(`../assets/faceb.jpg`)} />
+    //                         source={require(`../assets/images/faceb.jpg`)} />
     //                 </TouchableOpacity>
     //                 <TouchableOpacity >
     //                     <Image
     //                         style={styles.googleIcon}
-    //                         source={require(`../assets/gg1.png`)}
+    //                         source={require(`../assets/images/gg1.png`)}
     //                     />
     //                 </TouchableOpacity>
     //             </View>
@@ -717,13 +717,13 @@ export default function LoginScreen({ navigation }: any) {
                     <TouchableOpacity>
                         <Image
                             style={styles.faceB}
-                            source={require(`../assets/images/faceb.jpg`)}
+                            source={require(`../assets/images/logo_fb.png`)}
                         />
                     </TouchableOpacity>
                     <TouchableOpacity>
                         <Image
                             style={styles.googleIcon}
-                            source={require(`../assets/images/gg1.png`)}
+                            source={require(`../assets/images/logo_gg.png`)}
                         />
                     </TouchableOpacity>
                 </View>
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
     gap: 20,
     marginBottom: 20
   },
-  faceB: { width: 45, height: 43, resizeMode: 'cover' },
+  faceB: { width: 40, height: 40, resizeMode: 'cover' },
   googleIcon: { width: 40, height: 40 },
   signupText: { textAlign: 'center', fontSize: 14, color: '#555' },
   checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
