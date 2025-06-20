@@ -1,4 +1,3 @@
-// src/screens/AccountScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -8,15 +7,17 @@ import {
   Alert,
 } from 'react-native';
 import MCI from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
 
 interface MenuItem {
   icon: string;
   label: string;
+  screen?: string;
 }
 
 const menuItems: MenuItem[] = [
   { icon: 'cart-outline', label: 'Giỏ hàng' },
-  { icon: 'account-outline', label: 'Thông tin cá nhân' },
+  { icon: 'account-outline', label: 'Thông tin cá nhân', screen: 'PersonalInfo' },
   { icon: 'headset', label: 'Liên hệ với chúng tôi' },
   { icon: 'chat-outline', label: 'Trò chuyện' },
   { icon: 'shield-lock-outline', label: 'Chính sách và bảo mật' },
@@ -24,6 +25,7 @@ const menuItems: MenuItem[] = [
 
 const AccountScreen: React.FC = () => {
   const [confirm, setConfirm] = useState(false);
+  const navigation = useNavigation();
 
   const onLogout = () => setConfirm(true);
   const doLogout = () => {
@@ -36,7 +38,15 @@ const AccountScreen: React.FC = () => {
       <Text style={styles.header}>F7 Shop</Text>
 
       {menuItems.map((m) => (
-        <TouchableOpacity key={m.icon} style={styles.row}>
+        <TouchableOpacity
+          key={m.icon}
+          style={styles.row}
+          onPress={() => {
+            if (m.screen) {
+              // Điều hướng tới màn hình tương ứng
+              navigation.navigate(m.screen as never);
+            }
+          }}>
           <MCI name={m.icon} size={22} />
           <Text style={styles.label}>{m.label}</Text>
         </TouchableOpacity>
@@ -76,7 +86,12 @@ export default AccountScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  header: { fontSize: 22, fontWeight: '700', alignSelf: 'center', marginBottom: 12 },
+  header: {
+    fontSize: 22,
+    fontWeight: '700',
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
