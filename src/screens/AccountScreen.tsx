@@ -8,11 +8,20 @@ import {
 } from 'react-native';
 import MCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// ✅ Import kiểu RootStackParamList
+type RootStackParamList = {
+  Login: undefined;
+  PersonalInfo: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 interface MenuItem {
   icon: string;
   label: string;
-  screen?: string;
+  screen?: keyof RootStackParamList;
 }
 
 const menuItems: MenuItem[] = [
@@ -25,12 +34,19 @@ const menuItems: MenuItem[] = [
 
 const AccountScreen: React.FC = () => {
   const [confirm, setConfirm] = useState(false);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
 
   const onLogout = () => setConfirm(true);
-  const doLogout = () => {
-    setConfirm(false);
-    Alert.alert('Đã đăng xuất!');
+
+  const doLogout = async () => {
+    try {
+      // Xoá dữ liệu user
+      await AsyncStorage.clear();
+      Alert.alert('Đã đăng xuất!');
+      navigation.navigate('Login');
+    } catch (err) {
+      Alert.alert('Lỗi', 'Không thể đăng xuất');
+    }
   };
 
   return (
@@ -43,8 +59,7 @@ const AccountScreen: React.FC = () => {
           style={styles.row}
           onPress={() => {
             if (m.screen) {
-              // Điều hướng tới màn hình tương ứng
-              navigation.navigate(m.screen as never);
+              navigation.navigate(m.screen);
             }
           }}>
           <MCI name={m.icon} size={22} />
@@ -60,7 +75,7 @@ const AccountScreen: React.FC = () => {
       {confirm && (
         <View style={styles.modal}>
           <Text style={styles.modalText}>
-            Bạn có muốn đăng xuất tài khoản này của bạn không?
+            Bạn có muốn đăng xuất tài khoản này không?
           </Text>
 
           <View style={styles.btnWrap}>
