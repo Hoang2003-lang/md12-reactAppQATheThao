@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import API from '../../api';
+import API from '../../api/api';
 import Icon from 'react-native-vector-icons/Ionicons'
 
 

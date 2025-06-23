@@ -11,6 +11,7 @@ import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import SeemoreScreen from './src/screens/semore/SeemoreScreen';
 import CartScreen from './src/screens/cart/CartScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
+import ChatUserScreen from './src/screens/chat/ChatUserScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
 
 
@@ -30,7 +31,7 @@ const App = () => {
   
   return (
      <NavigationContainer>
-       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
         {/* thanh điều hướng, không xoá */}
         <Stack.Screen name="Home" component={TabNavigator} />
 
@@ -41,7 +42,7 @@ const App = () => {
         <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
         <Stack.Screen name="Promotion" component={SeemoreScreen} />
         <Stack.Screen name="Cart" component={CartScreen} />
-        <Stack.Screen name="Chat" component={ChatScreen} />
+        <Stack.Screen name="Chat" component={ChatUserScreen} />
         <Stack.Screen name="Category" component={Logomore} />
 
 

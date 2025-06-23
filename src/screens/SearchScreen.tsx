@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, Dimensions, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 import { useState } from 'react';
-import API from '../api';
+import API from '../api/api';
 import { Modal } from 'react-native';
 
 

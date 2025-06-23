@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import API from '../api';
+import API from '../api/api';
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
@@ -26,7 +26,14 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
 
-  const [comments, setComments] = useState([]);
+  // const [comments, setComments] = useState([]);
+  const [comments, setComments] = useState<Array<{
+  userName: string;
+  rating: number;
+  content: string;
+}>>([]);
+
+
   const [newComment, setNewComment] = useState('');
   const [rating, setRating] = useState(5);
 

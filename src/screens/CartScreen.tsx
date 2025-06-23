@@ -10,7 +10,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import API from '../api';
+import API from '../api/api';
 import { useIsFocused } from '@react-navigation/native';
 
 export default function CartScreen({ navigation }: any) {

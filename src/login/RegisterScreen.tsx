@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import API from '../api';
+import API from '../api/api';
 
 export default function RegisterScreen({ navigation }: any) {
 

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import API from '../api';
+import API from '../api/api';
 
 const { width } = Dimensions.get('window');
 
