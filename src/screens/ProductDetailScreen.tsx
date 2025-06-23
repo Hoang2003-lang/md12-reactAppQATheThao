@@ -15,6 +15,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
+import Snackbar from 'react-native-snackbar';
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
@@ -25,6 +26,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [bookmark, setBookMark]= useState<boolean>(false);
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -32,13 +34,25 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     fetchProduct();
-  }, []);
+    
+  }, [productId]);
 
   useEffect(() => {
     if (product) {
       setTotalPrice(product.price * quantity);
     }
   }, [product, quantity]);
+
+  useEffect(() => {
+    const checkBookmark = async () => {
+      const stored = await AsyncStorage.getItem("bookmark");
+      const list = stored ? JSON.parse(stored) : [];
+      const isBookmarked = list.includes(productId);
+      setBookMark(isBookmarked);
+    };
+
+    checkBookmark();
+  },[productId]);
 
   const fetchProduct = async () => {
     try {
@@ -143,16 +157,95 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     );
   }
 
+  //Hoang Anh - bookmark
+
+  //save sau khi chuyen man hinh
+  const saveBookmark= async (productId: string) => {
+    setBookMark(true);
+    await AsyncStorage.getItem("bookmark").then((token) => {
+      const res= JSON.parse(token);
+      if(res !== null){
+        let data= res.find((val: string) => val == productId);
+        if(data == null){
+          res.push(productId);
+          AsyncStorage.setItem("bookmark", JSON.stringify(res));
+          Snackbar.show({
+            text: "Thêm thành công vào mục Yêu thích!",
+            duration: Snackbar.LENGTH_SHORT,
+            action:{
+              text: "Xem",
+              onPress:() => {
+                navigation.navigate('Home', { screen: 'Favorite' });
+              }
+            }
+          })
+        }
+      }else{
+        let bookmark= [];
+        bookmark.push(productId);
+        AsyncStorage.setItem("bookmark", JSON.stringify(bookmark));
+        Snackbar.show({
+          text: "Thêm thành công vào mục Yêu thích!",
+          duration: Snackbar.LENGTH_SHORT,
+          action:{
+            text: "Xem",
+            onPress:() => {
+              navigation.navigate('Home', { screen: 'Favorite' });
+            }
+          }
+        })
+      }
+    })
+  }
+
+  //unsave
+  const removeBookmark= async (productId: string) => {
+    setBookMark(false);
+    const bookmark= await AsyncStorage.getItem("bookmark").then((token) => {
+      const res= JSON.parse(token);
+      return res.filter((id: string) => id !== productId)
+    });
+    await AsyncStorage.setItem("bookmark", JSON.stringify(bookmark));
+    Snackbar.show({
+      text: "Xoá thành công khỏi mục Yêu thích!",
+      duration: Snackbar.LENGTH_SHORT
+    })
+  }
+
+  const renderBookmark= async (productId: string) =>{
+    await AsyncStorage.getItem("bookmark").then((token) => {
+      const res= JSON.parse(token);
+      if(res != null){
+        let data= res.find((val: string) => val === productId);
+        return data = null ? setBookMark(false) : setBookMark(true);
+      }
+    })
+  }
+
+
   return (
     <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity onPress={() => {
+        Snackbar.dismiss();
+        navigation.goBack();
+      }} style={styles.backButton}>
         <Icon name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
       <Image source={{ uri: product.image }} style={styles.image} />
 
       <View style={styles.content}>
+        <View style={styles.txt}>
+
         <Text style={styles.name}>{product.name}</Text>
+
+        <TouchableOpacity onPress={() => bookmark ? removeBookmark(product._id) : saveBookmark(product._id)}>
+          <Image source={!bookmark ? require("../assets/images/uncheck_fav.png") : require("../assets/images/check_fav.png")} style={styles.heart} />
+        </TouchableOpacity>
+
+        </View>
+
+
         <Text style={styles.price}>Đơn giá: {product.price.toLocaleString()} đ</Text>
         <Text style={styles.price}>Tổng: {totalPrice.toLocaleString()} đ</Text>
         <Text style={styles.stock}>Kho: {product.stock}</Text>
@@ -214,7 +307,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
             ))
           )}
 
-          <Text style={{ marginTop: 16 }}>Viết bình luận:</Text>
+          {/* <Text style={{ marginTop: 16 }}>Viết bình luận:</Text>
           <TextInput
             placeholder="Nhập bình luận..."
             value={newComment}
@@ -237,7 +330,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
             ))}
           </View>
 
-          <Button title="Gửi bình luận" onPress={handleCommentSubmit} />
+          <Button title="Gửi bình luận" onPress={handleCommentSubmit} /> */}
         </View>
       </View>
     </ScrollView>
@@ -252,7 +345,7 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   image: { width: '100%', height: 300, resizeMode: 'contain', backgroundColor: '#f9f9f9' },
   content: { padding: 16 },
-  name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
+  name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 , width: 345},
   price: { fontSize: 18, color: 'orange', marginBottom: 4 },
   stock: { fontSize: 14, marginBottom: 12 },
   sizeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
@@ -273,4 +366,12 @@ const styles = StyleSheet.create({
   qtyNumber: { marginHorizontal: 12, fontSize: 16 },
   cartButton: { backgroundColor: 'orange', padding: 14, alignItems: 'center', borderRadius: 5 },
   cartText: { color: '#fff', fontWeight: 'bold' },
+  heart:{
+    width: 20,
+    height: 20,
+
+  },
+  txt:{
+    flexDirection: "row"
+  }
 });

@@ -8,6 +8,7 @@ import SearchScreen from './src/screens/SearchScreen';
 import FavoriteScreen from './src/screens/FavoriteScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
+import CartScreen from './src/screens/CartScreen';
 
 
 
@@ -29,7 +30,7 @@ const App = () => {
 
   return (
      <NavigationContainer>
-       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+       <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
         {/* thanh điều hướng, không xoá */}
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Home" component={TabNavigator} />
@@ -37,6 +38,7 @@ const App = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotP" component={ForgotPassword} />
         <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+        <Stack.Screen name="Cart" component={CartScreen} />
         
         
       </Stack.Navigator>

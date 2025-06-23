@@ -32,4 +32,5 @@ npm react-native-asset
 // 14/6: Lệnh install thư viện
 --
 npm install @react-native-async-storage/async-storage
+npm install react-native-snackbar
 --

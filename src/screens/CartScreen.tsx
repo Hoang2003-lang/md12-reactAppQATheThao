@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 
-const API_URL = 'http://192.168.0.103:3001/api/carts'; // Đảm bảo IP đúng
+const API_URL = 'http://192.168.33.4:3001/api/carts'; // Đảm bảo IP đúng
 
 const CartScreen = () => {
   const [cartItems, setCartItems] = useState([]);
