@@ -36,10 +36,11 @@ const FavoriteScreen = ({ navigation }: any) => {
     try {
       const token = await AsyncStorage.getItem("bookmark");
       console.log("Raw bookmark token:", token);
-
+        
+      //Lưu ý: Nhớ thay đổi HTTP
       if (token) {
         const bookmarkedIds = JSON.parse(token);
-        const response = await fetch("http://192.168.8.121:3001/api/products");
+        const response = await fetch("http://192.168.0.9:3001/api/products");
         const allProducts = await response.json();
 
         const filtered = allProducts.filter((product: any) =>
