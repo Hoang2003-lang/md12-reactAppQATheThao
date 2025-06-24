@@ -12,13 +12,11 @@ const ChatScreen = ({ navigation }: any) => {
   const [userId, setUserId] = useState('');
   const [chatId, setChatId] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
-  //   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
-  //   const socketRef = useRef(null);
   const socketRef = useRef<Socket | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
-  const API_URL = 'http://192.168.10.105:3001'; // ⚠️ Đổi thành IP thật nếu test trên điện thoại
+  const API_URL = 'http://10.0.2.2:3001'; // Đổi thành IP thật nếu dùng máy thật
   const adminId = '683e9c91e2aa5ca0fbfb1030';
 
 
@@ -56,31 +54,14 @@ const ChatScreen = ({ navigation }: any) => {
     });
 
     socketRef.current.on('new message', (msg: any) => {
-      setMessages(prev => {
-        // Nếu có _id, kiểm tra theo _id
-        const existsById = msg._id && prev.some(m => m._id === msg._id);
-        if (existsById) return prev;
+      const rawMsg = msg.message;
+      const normalizedMsg = {
+        ...rawMsg,
+        senderId: rawMsg.senderId || rawMsg.sender?._id || rawMsg.sender || '',
+      };
+      setMessages(prev => [...prev, normalizedMsg]);
 
-        // Tìm bản local trùng nội dung + người gửi + chatId
-        const localIndex = prev.findIndex(m =>
-          m._local &&
-          m.senderId === msg.senderId &&
-          m.chatId === msg.chatId &&
-          m.content === msg.content
-        );
-
-        if (localIndex !== -1) {
-          const updated = [...prev];
-          updated[localIndex] = {
-            ...msg,
-            _local: false
-          };
-          return updated;
-        }
-
-        // Nếu không trùng local, thêm mới
-        return [...prev, msg];
-      });
+      console.log('✅ SOCKET MSG:', JSON.stringify(normalizedMsg, null, 2));
 
 
     });
@@ -103,7 +84,6 @@ const ChatScreen = ({ navigation }: any) => {
         const normalized = rawMessages.map((msg: any) => ({
           ...msg,
           senderId: msg.senderId || msg.sender?._id || msg.sender || '',
-          // _fromApi: true // <-- thêm dấu hiệu phân biệt
         }));
 
         setMessages(normalized);
@@ -125,7 +105,7 @@ const ChatScreen = ({ navigation }: any) => {
     };
 
     try {
-      // await axios.post(${API_URL}/api/chats/message, msgData);
+      // await axios.post(`${API_URL}/api/chats/message`, msgData);
 
       const tempMsg = {
         chatId,
@@ -133,9 +113,9 @@ const ChatScreen = ({ navigation }: any) => {
         content: message,
         timestamp: new Date().toISOString(),
         isRead: false,
-        _local: true
+        // _local: true
       };
-      setMessages(prev => [...prev, tempMsg]);
+      // setMessages(prev => [...prev, tempMsg]);
 
 
       socketRef.current?.emit('send message', msgData);
@@ -148,7 +128,12 @@ const ChatScreen = ({ navigation }: any) => {
     }
   };
 
-  
+  // Tự động cuộn xuống cuối danh sách tin nhắn khi có tin mới
+  useEffect(() => {
+  flatListRef.current?.scrollToEnd({ animated: true });
+}, [messages]);
+
+
   if (!userId || !chatId) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -169,7 +154,7 @@ const ChatScreen = ({ navigation }: any) => {
         data={messages}
         removeClippedSubviews={false}
         keyExtractor={(_, index) => index.toString()}
-        // keyExtractor={(item) => ${item.timestamp}-${item.content}}
+        // keyExtractor={(item, index) => `${item.timestamp}-${item.content}-${index}`}
         renderItem={({ item }) => {
           const isUser = item.senderId?.toString() === userId?.toString();
 
