@@ -12,8 +12,7 @@ import SeemoreScreen from './src/screens/semore/SeemoreScreen';
 import CartScreen from './src/screens/cart/CartScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
-
-
+import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
 
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
@@ -33,6 +32,7 @@ const App = () => {
        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
         {/* thanh điều hướng, không xoá */}
         <Stack.Screen name="Home" component={TabNavigator} />
+     
 
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -43,6 +43,8 @@ const App = () => {
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="Category" component={Logomore} />
+
+        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
 
 
       </Stack.Navigator>

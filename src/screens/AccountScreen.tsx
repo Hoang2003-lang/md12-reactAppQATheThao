@@ -1,4 +1,3 @@
-// src/screens/AccountScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -8,15 +7,26 @@ import {
   Alert,
 } from 'react-native';
 import MCI from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// ✅ Import kiểu RootStackParamList
+type RootStackParamList = {
+  Login: undefined;
+  PersonalInfo: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 interface MenuItem {
   icon: string;
   label: string;
+  screen?: keyof RootStackParamList;
 }
 
 const menuItems: MenuItem[] = [
   { icon: 'cart-outline', label: 'Giỏ hàng' },
-  { icon: 'account-outline', label: 'Thông tin cá nhân' },
+  { icon: 'account-outline', label: 'Thông tin cá nhân', screen: 'PersonalInfo' },
   { icon: 'headset', label: 'Liên hệ với chúng tôi' },
   { icon: 'chat-outline', label: 'Trò chuyện' },
   { icon: 'shield-lock-outline', label: 'Chính sách và bảo mật' },
@@ -24,11 +34,19 @@ const menuItems: MenuItem[] = [
 
 const AccountScreen: React.FC = () => {
   const [confirm, setConfirm] = useState(false);
+  const navigation = useNavigation<NavigationProp>();
 
   const onLogout = () => setConfirm(true);
-  const doLogout = () => {
-    setConfirm(false);
-    Alert.alert('Đã đăng xuất!');
+
+  const doLogout = async () => {
+    try {
+      // Xoá dữ liệu user
+      await AsyncStorage.clear();
+      Alert.alert('Đã đăng xuất!');
+      navigation.navigate('Login');
+    } catch (err) {
+      Alert.alert('Lỗi', 'Không thể đăng xuất');
+    }
   };
 
   return (
@@ -36,7 +54,14 @@ const AccountScreen: React.FC = () => {
       <Text style={styles.header}>F7 Shop</Text>
 
       {menuItems.map((m) => (
-        <TouchableOpacity key={m.icon} style={styles.row}>
+        <TouchableOpacity
+          key={m.icon}
+          style={styles.row}
+          onPress={() => {
+            if (m.screen) {
+              navigation.navigate(m.screen);
+            }
+          }}>
           <MCI name={m.icon} size={22} />
           <Text style={styles.label}>{m.label}</Text>
         </TouchableOpacity>
@@ -50,7 +75,7 @@ const AccountScreen: React.FC = () => {
       {confirm && (
         <View style={styles.modal}>
           <Text style={styles.modalText}>
-            Bạn có muốn đăng xuất tài khoản này của bạn không?
+            Bạn có muốn đăng xuất tài khoản này không?
           </Text>
 
           <View style={styles.btnWrap}>
@@ -76,7 +101,12 @@ export default AccountScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  header: { fontSize: 22, fontWeight: '700', alignSelf: 'center', marginBottom: 12 },
+  header: {
+    fontSize: 22,
+    fontWeight: '700',
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
