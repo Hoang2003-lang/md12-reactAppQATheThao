@@ -9,7 +9,7 @@ import FavoriteScreen from './src/screens/FavoriteScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import SeemoreScreen from './src/screens/semore/SeemoreScreen';
-import CartScreen from './src/screens/cart/CartScreen';
+import CartScreen from './src/screens/CartScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
