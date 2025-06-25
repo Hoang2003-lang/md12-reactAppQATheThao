@@ -53,7 +53,7 @@ const SearchScreen = ({ navigation }: any) => {
     };
 
     const renderItem = ({ item }: { item: { _id: string, name: string, price: number, image: string } }) => (
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}>
             <Image source={{ uri: item.image }} style={styles.image} />
             <View>
                 <Text style={styles.productName}>{item.name}</Text>
@@ -138,6 +138,7 @@ const SearchScreen = ({ navigation }: any) => {
                         </View>
                     </View>
                 </Modal>
+
 
             </View>
 
@@ -288,6 +289,5 @@ const styles = StyleSheet.create({
         color: '#333',
     },
 });
-
 
 

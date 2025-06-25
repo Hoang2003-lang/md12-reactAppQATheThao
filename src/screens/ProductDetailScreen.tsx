@@ -1,4 +1,4 @@
-// src/screens/ProductDetailScreen.tsx
+
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -9,9 +9,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  TextInput,
+  Button,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
+import Snackbar from 'react-native-snackbar';
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
@@ -22,22 +26,49 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [bookmark, setBookMark]= useState<boolean>(false);
+
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [rating, setRating] = useState(5);
 
   useEffect(() => {
     fetchProduct();
-  }, []);
+    
+  }, [productId]);
 
-  // Cập nhật tổng giá mỗi khi product hoặc quantity thay đổi
   useEffect(() => {
     if (product) {
       setTotalPrice(product.price * quantity);
     }
   }, [product, quantity]);
 
+  useEffect(() => {
+    const checkBookmark = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+  
+        const res = await API.get(`/favorites/check/${userId}/${productId}`);
+  
+        // Ví dụ backend trả về { isFavorite: true } hoặc { exists: true }
+        const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
+        setBookMark(isFav);
+      } catch (error: any) {
+        console.log('❌ Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
+        setBookMark(false);
+      }
+    };
+  
+    checkBookmark();
+  }, [productId]);
+  
+
   const fetchProduct = async () => {
     try {
-      const res = await API.get(`/products/${productId}`);
-      setProduct(res.data);
+      const res = await API.get(`/products/${productId}/detail`);
+      setProduct(res.data.product);
+      setComments(res.data.comments);
     } catch (error) {
       console.error('Lỗi lấy chi tiết sản phẩm:', error);
     } finally {
@@ -48,11 +79,12 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const increaseQuantity = () => setQuantity(prev => prev + 1);
   const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedSize) {
       Alert.alert('Vui lòng chọn size trước khi thêm vào giỏ hàng.');
       return;
     }
+
     const cartItem = {
       _id: product._id,
       name: product.name,
@@ -60,10 +92,63 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
       size: selectedSize,
       quantity,
       price: product.price,
-      total: totalPrice,
+      total: product.price * quantity,
     };
-    // Điều hướng sang CartScreen, kèm cartItem
-    navigation.navigate('Cart', { cartItem });
+
+    try {
+      const storedCart = await AsyncStorage.getItem('cart');
+      const parsedCart = storedCart ? JSON.parse(storedCart) : [];
+
+      const existingIndex = parsedCart.findIndex(
+        (item: any) => item._id === cartItem._id && item.size === cartItem.size
+      );
+
+      if (existingIndex !== -1) {
+        parsedCart[existingIndex].quantity += cartItem.quantity;
+        parsedCart[existingIndex].total += cartItem.total;
+
+        const updatedItem = parsedCart.splice(existingIndex, 1)[0];
+        parsedCart.unshift(updatedItem);
+      } else {
+        parsedCart.unshift(cartItem);
+      }
+
+      await AsyncStorage.setItem('cart', JSON.stringify(parsedCart));
+      Alert.alert('✅ Sản phẩm đã được thêm vào giỏ hàng!');
+      navigation.navigate('Cart');
+
+    } catch (err) {
+      console.error('Lỗi khi thêm vào giỏ:', err);
+      Alert.alert('❌ Có lỗi xảy ra khi thêm vào giỏ hàng.');
+    }
+  };
+
+  const handleCommentSubmit = async () => {
+    if (!newComment.trim()) {
+      Alert.alert('Vui lòng nhập nội dung bình luận.');
+      return;
+    }
+
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const userName = await AsyncStorage.getItem('userName');
+
+      const res = await API.post('/comments', {
+        productId,
+        userId,
+        userName,
+        content: newComment,
+        rating
+      });
+
+      setComments([res.data, ...comments]);
+      setNewComment('');
+      setRating(5);
+      Alert.alert('✅ Gửi bình luận thành công!');
+    } catch (err) {
+      console.error('Lỗi gửi bình luận:', err);
+      Alert.alert('❌ Gửi bình luận thất bại.');
+    }
   };
 
   if (loading) {
@@ -82,16 +167,97 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     );
   }
 
+  //Hoang Anh - bookmark
+
+  /* ---------- WISHLIST (mới) ---------- */
+// Thêm Yêu thích:  POST  /api/favorites/add
+const saveBookmark = async (productId: string) => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) {
+      return Alert.alert('Bạn cần đăng nhập để dùng tính năng Yêu thích!');
+    }
+
+    // Gửi request
+    const res = await API.post('/favorites/add', { userId, productId });
+
+    setBookMark(true);
+    Snackbar.show({
+      text: 'Thêm thành công vào mục Yêu thích!',
+      duration: Snackbar.LENGTH_SHORT,
+      action: {
+        text: 'Xem',
+        onPress: () => navigation.navigate('Home', { screen: 'Favorite' }),
+      },
+    });
+  } catch (err: any) {
+    // Nếu là lỗi đã tồn tại, vẫn có thể coi là "đang ở trạng thái yêu thích"
+    if (err?.response?.status === 400 && err.response?.data?.message?.includes('Sản phẩm đã có')) {
+      setBookMark(true); // Đảm bảo icon đúng trạng thái
+    } else {
+      console.error('Lỗi thêm favorite:', err);
+      Alert.alert('Không thêm được vào Yêu thích!');
+    }
+  }
+};
+
+// Xoá Yêu thích:  DELETE  /api/favorites/:userId/:productId
+const removeBookmark = async (productId: string) => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) return;
+
+    await API.delete(`/favorites/${userId}/${productId}`);
+    setBookMark(false);
+
+    Snackbar.show({
+      text: 'Xoá thành công khỏi mục Yêu thích!',
+      duration: Snackbar.LENGTH_SHORT,
+    });
+  } catch (err) {
+    console.error('Lỗi xoá favorite:', err);
+    Alert.alert('Không xoá được khỏi Yêu thích!');
+  }
+};
+
+/* ---------- (Không cần renderBookmark bằng AsyncStorage nữa) ---------- */
+
+
+
   return (
     <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity onPress={() => {
+        Snackbar.dismiss();
+        navigation.goBack();
+      }} style={styles.backButton}>
         <Icon name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
       <Image source={{ uri: product.image }} style={styles.image} />
 
       <View style={styles.content}>
+        <View style={styles.txt}>
+
         <Text style={styles.name}>{product.name}</Text>
+
+        <TouchableOpacity
+  onPress={() =>
+    bookmark ? removeBookmark(product._id) : saveBookmark(product._id)
+  }>
+  <Image
+    source={
+      bookmark
+        ? require('../assets/images/check_fav.png')
+        : require('../assets/images/uncheck_fav.png')
+    }
+    style={styles.heart}
+  />
+</TouchableOpacity>
+
+
+        </View>
+
+
         <Text style={styles.price}>Đơn giá: {product.price.toLocaleString()} đ</Text>
         <Text style={styles.price}>Tổng: {totalPrice.toLocaleString()} đ</Text>
         <Text style={styles.stock}>Kho: {product.stock}</Text>
@@ -137,6 +303,47 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         <TouchableOpacity style={styles.cartButton} onPress={handleAddToCart}>
           <Text style={styles.cartText}>Thêm vào giỏ hàng</Text>
         </TouchableOpacity>
+
+        {/* Bình luận */}
+        <View style={{ marginTop: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Bình luận:</Text>
+          {comments.length === 0 ? (
+            <Text>Chưa có bình luận nào.</Text>
+          ) : (
+            comments.map((comment, index) => (
+              <View key={index} style={{ marginVertical: 8 }}>
+                <Text style={{ fontWeight: 'bold' }}>{comment.userName}</Text>
+                <Text>Đánh giá: {comment.rating}⭐</Text>
+                <Text>{comment.content}</Text>
+              </View>
+            ))
+          )}
+
+          <Text style={{ marginTop: 16 }}>Viết bình luận:</Text>
+          <TextInput
+            placeholder="Nhập bình luận..."
+            value={newComment}
+            onChangeText={setNewComment}
+            style={{
+              borderColor: '#ccc',
+              borderWidth: 1,
+              padding: 8,
+              borderRadius: 4,
+              marginVertical: 8,
+            }}
+          />
+
+          <Text>Chọn đánh giá:</Text>
+          <View style={{ flexDirection: 'row', marginVertical: 8 }}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                <Text style={{ fontSize: 20, color: rating >= star ? 'orange' : '#ccc' }}>★</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Button title="Gửi bình luận" onPress={handleCommentSubmit} />
+        </View>
       </View>
     </ScrollView>
   );
@@ -150,7 +357,7 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   image: { width: '100%', height: 300, resizeMode: 'contain', backgroundColor: '#f9f9f9' },
   content: { padding: 16 },
-  name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
+  name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 , width: 345},
   price: { fontSize: 18, color: 'orange', marginBottom: 4 },
   stock: { fontSize: 14, marginBottom: 12 },
   sizeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
@@ -171,4 +378,12 @@ const styles = StyleSheet.create({
   qtyNumber: { marginHorizontal: 12, fontSize: 16 },
   cartButton: { backgroundColor: 'orange', padding: 14, alignItems: 'center', borderRadius: 5 },
   cartText: { color: '#fff', fontWeight: 'bold' },
+  heart:{
+    width: 20,
+    height: 20,
+
+  },
+  txt:{
+    flexDirection: "row"
+  }
 });

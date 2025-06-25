@@ -151,7 +151,7 @@ export default function RegisterScreen({ navigation }: any) {
 
   return (
     <ImageBackground
-      source={require('../assets/backgroundR.png')}
+      source={require('../assets/images/backgroundR.png')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -235,12 +235,12 @@ export default function RegisterScreen({ navigation }: any) {
 
       <View style={styles.socialContainer}>
         <TouchableOpacity>
-          <Image style={styles.faceB} source={require(`../assets/faceb.jpg`)} />
+          <Image style={styles.faceB} source={require(`../assets/images/logo_fb.png`)} />
         </TouchableOpacity>
         <TouchableOpacity>
           <Image
             style={styles.googleIcon}
-            source={require(`../assets/gg1.png`)}
+            source={require(`../assets/images/logo_gg.png`)}
           />
         </TouchableOpacity>
       </View>
@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   faceB: {
-    width: 45,
-    height: 43,
+    width: 40,
+    height: 40,
     resizeMode: 'cover'
   },
   googleIcon: {

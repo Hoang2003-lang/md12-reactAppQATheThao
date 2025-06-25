@@ -1,59 +1,192 @@
-// src/screens/HomeScreen.tsx
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'
-import { useState } from 'react';
-
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Dimensions,
+  Image,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
 const FavoriteScreen = ({ navigation }: any) => {
+  const [favoriteItems, setFavoriteItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    return (
-        <View style={styles.container}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Icon name="chevron-back" size={24} color="#000" />
-                <Text style={styles.title1} > Màn Favorite  </Text>
-            </TouchableOpacity>
+  /* ------------ FETCH FAVOURITES ------------- */
+  const fetchFavorites = async () => {
+    setIsLoading(true);
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        setFavoriteItems([]);
+        return;
+      }
 
-        </View>
-    );
+      // B1: Lấy danh sách favorite
+      const res = await fetch(`http://192.168.101.193:3001/api/favorites/${userId}`);
+      if (!res.ok) throw new Error(`Lỗi ${res.status}: ${res.statusText}`);
+
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        setFavoriteItems([]);
+        return;
+      }
+
+      // B2: Lấy chi tiết từng sản phẩm
+      const productDetails = await Promise.all(
+        data.map(async (fav: any) => {
+          const productId = fav.productId?._id || fav.productId || fav._id;
+          try {
+            const productRes = await fetch(
+              `http://192.168.101.193:3001/api/products/${productId}`
+            );
+            if (!productRes.ok) return null;
+
+            const resJson = await productRes.json();
+const product = resJson.product;
+
+if (product && product.name && product.price && product.image) {
+  return {
+    _id: product._id,
+    name: product.name,
+    price: product.price,
+    image: product.image,
+  };
+} else {
+  console.warn('Thiếu dữ liệu sản phẩm:', product);
+  return null;
+}
+
+          } catch (e) {
+            console.error('Lỗi khi lấy sản phẩm:', productId, e);
+            return null;
+          }
+        })
+      );
+
+      const filtered = productDetails.filter((p) => p !== null);
+      setFavoriteItems(filtered);
+    } catch (err) {
+      console.error('Lỗi khi lấy danh sách yêu thích:', err);
+      setFavoriteItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /* ------------ LIFE-CYCLE ------------- */
+  useEffect(() => {
+    fetchFavorites();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchFavorites();
+    }, [])
+  );
+
+  /* ------------ RENDER ------------- */
+  const formatPrice = (price: number | string | undefined) =>
+    price !== undefined ? Number(price).toLocaleString('vi-VN') + 'đ' : '';
+
+  const Item = ({ item }: { item: any }) => (
+    <View style={styles.card}>
+      <Image source={{ uri: item.image }} style={styles.imgCard} />
+      <Text style={styles.nameCard} numberOfLines={1}>
+        {item.name}
+      </Text>
+      <Text style={styles.priceCard}>{formatPrice(item.price)}</Text>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.header}>Yêu thích</Text>
+
+      {isLoading ? (
+        <ActivityIndicator size="large" style={{ marginTop: 30 }} />
+      ) : favoriteItems.length === 0 ? (
+        <Text style={styles.textNull}>
+          Hiện tại chưa có sản phẩm yêu thích nào
+        </Text>
+      ) : (
+        <FlatList
+          data={favoriteItems}
+          keyExtractor={(item) => item._id}
+          numColumns={2}
+          renderItem={({ item }) => (
+            <View style={{ flex: 1, margin: 8 }}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() =>
+                  navigation.navigate('ProductDetail', { productId: item._id })
+                }>
+                <Item item={item} />
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      )}
+    </View>
+  );
 };
 
 export default FavoriteScreen;
 
+/* ------------ STYLES ------------- */
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    backButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 15,
-        marginTop: 10,
-    },
-    title1: {
-        fontSize: 20,
-        marginLeft: 70
-    },
-    bottomNav: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: '#FFFFFF',
-        paddingVertical: 10,
-        borderRadius: 10,
-        position: 'absolute',
-        bottom: 10,
-        left: 20,
-        right: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 3,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    backgroundColor: '#EC761E',
+    paddingBottom: 8,
+    paddingTop: 3,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontSize: 32,
+    fontFamily: 'Lora-Bold',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: 5,
+    height: 230,
+    width: 180,
+    borderRadius: 16,
+    elevation: 5,
+  },
+  imgCard: {
+    width: width / 2 - 32,
+    height: width / 2 - 32,
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  nameCard: {
+    fontSize: 13,
+    marginTop: 5,
+    marginLeft: 10,
+    fontFamily: 'Lora-Regular',
+    width: 165,
+  },
+  priceCard: {
+    fontSize: 13,
+    marginTop: 5,
+    marginLeft: 10,
+    fontFamily: 'Lora-Regular',
+    color: '#EC761E',
+  },
+  textNull: {
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    flex: 1,
+    fontFamily: 'Lora-Regular',
+    fontSize: 16,
+  },
 });
-
-
-
