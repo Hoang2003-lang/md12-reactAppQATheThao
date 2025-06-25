@@ -577,95 +577,26 @@ export default function LoginScreen({ navigation }: any) {
       await AsyncStorage.setItem('userEmail', user.email);
       await AsyncStorage.setItem('userName', user.name);
 
-            // TODO: Lưu token vào AsyncStorage nếu cần
-            navigation.navigate('Home'); // hoặc màn hình chính của bạn
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Đăng nhập thất bại';
-            Alert.alert('Lỗi', message);
-        }
-    };
+      // TODO: Lưu token vào AsyncStorage nếu cần
+      navigation.navigate('Home'); // hoặc màn hình chính của bạn
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Đăng nhập thất bại';
+      Alert.alert('Lỗi', message);
+    }
+  };
 
-    // return (
-    //     <View style={styles.container}>
-    //         <Image
-    //             source={require('../assets/images/banner1.png')}
-    //             style={styles.image}
-    //             resizeMode="cover"
-    //         />
+  const handleSkip = () => {
+    // Bỏ qua và chuyển thẳng đến màn hình Home
+    navigation.navigate('Home');
+  };
 
-    //         <View style={styles.formContainer}>
-    //             <Text style={styles.title}>Đăng nhập</Text>
-
-    //             <View style={styles.inputContainer}>
-
-    //                 <TextInput
-    //                     style={styles.input}
-    //                     placeholder="Tên tài khoản hoặc email"
-    //                     placeholderTextColor="#aaa"
-    //                     // value={name}
-    //                 />
-    //             </View>
-
-    //             <View style={styles.inputContainer}>
-
-    //                 <TextInput
-    //                     style={styles.input}
-    //                     placeholder="Mật khẩu"
-    //                     placeholderTextColor="#aaa"
-    //                     secureTextEntry={!passwordVisible}
-    //                 />
-    //                 <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
-
-    //                 </TouchableOpacity>
-    //             </View>
-
-    //             <View style={styles.checkboxContainer}>
-    //                 <Pressable onPress={() => setRememberMe(!rememberMe)} style={styles.checkbox}>
-    //                     <View style={[styles.checkboxBox, agreeTerms && styles.checkboxChecked]} />
-    //                     <Text style={styles.checkboxText}>Nhớ tài khoản</Text>
-    //                 </Pressable>
-    //             </View>
-
-    //             <TouchableOpacity style={styles.loginButton}>
-    //                 <Text style={styles.loginText}>Đăng nhập</Text>
-    //             </TouchableOpacity>
-
-    //             <Text style={styles.forgotText}>Quên mật khẩu?</Text>
-
-    //             <View style={styles.dividerContainer}>
-    //                 <View style={styles.line} />
-    //                 <Text style={styles.orText}>Đăng nhập bằng</Text>
-    //                 <View style={styles.line} />
-    //             </View>
-
-    //             <View style={styles.socialContainer}>
-    //                 <TouchableOpacity >
-    //                     <Image style={styles.faceB}
-    //                         source={require(`../assets/images/faceb.jpg`)} />
-    //                 </TouchableOpacity>
-    //                 <TouchableOpacity >
-    //                     <Image
-    //                         style={styles.googleIcon}
-    //                         source={require(`../assets/images/gg1.png`)}
-    //                     />
-    //                 </TouchableOpacity>
-    //             </View>
-
-    //             <Text style={styles.signupText}>
-    //                 Bạn không có tài khoản?{' '}
-    //                 <Text style={{ color: '#ff6600', fontWeight: 'bold' }} onPress={handleDK} >tạo tài khoản</Text>
-    //             </Text>
-    //         </View>
-    //     </View>
-    // );
-
-    return (
-        <View style={styles.container}>
-            <Image
-                source={require('../assets/images/banner1.png')}
-                style={styles.image}
-                resizeMode="cover"
-            />
+  return (
+    <View style={styles.container}>
+      <Image
+        source={require('../assets/images/banner1.png')}
+        style={styles.image}
+        resizeMode="cover"
+      />
 
       <View style={styles.formContainer}>
         <Text style={styles.title}>Đăng nhập</Text>
@@ -713,20 +644,20 @@ export default function LoginScreen({ navigation }: any) {
           <View style={styles.line} />
         </View>
 
-                <View style={styles.socialContainer}>
-                    <TouchableOpacity>
-                        <Image
-                            style={styles.faceB}
-                            source={require(`../assets/images/logo_fb.png`)}
-                        />
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-                        <Image
-                            style={styles.googleIcon}
-                            source={require(`../assets/images/logo_gg.png`)}
-                        />
-                    </TouchableOpacity>
-                </View>
+        <View style={styles.socialContainer}>
+          <TouchableOpacity>
+            <Image
+              style={styles.faceB}
+              source={require(`../assets/images/logo_fb.png`)}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              style={styles.googleIcon}
+              source={require(`../assets/images/logo_gg.png`)}
+            />
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.signupText}>
           Bạn không có tài khoản?{' '}
@@ -734,6 +665,11 @@ export default function LoginScreen({ navigation }: any) {
             tạo tài khoản
           </Text>
         </Text>
+
+        {/* Thêm nút Bỏ qua để chuyển tới màn hình Home */}
+        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+          <Text style={styles.skipText}>Bỏ qua</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -795,5 +731,16 @@ const styles = StyleSheet.create({
   },
   checkboxChecked: { backgroundColor: '#4CAF50' },
   checkboxText: { fontSize: 11, color: '#333' },
-  checkbox: { flexDirection: 'row', alignItems: 'center' }
+  checkbox: { flexDirection: 'row', alignItems: 'center' },
+  skipButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 15
+  },
+  skipText: {
+    color: '#ff6600',
+    fontSize: 16,
+    fontWeight: 'bold'
+  }
 });

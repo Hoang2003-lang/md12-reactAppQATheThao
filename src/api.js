@@ -5,7 +5,7 @@ const BASE_URL = 'http://192.168.33.4:3001/api'; // hoặc 'http://10.0.2.2:3001
 
 const API = axios.create({
   baseURL: 'http://192.168.33.4:3001/api', // ví dụ: http://192.168.1.10:3000 
-  timeout: 1000,   
+  timeout: 10000,   
   headers: {
     'Content-Type': 'application/json',
   },
