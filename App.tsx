@@ -19,6 +19,7 @@ import RegisterScreen from './src/login/RegisterScreen';
 import ForgotPassword from './src/login/ForgotPassword';
 
 import TabNavigator from './src/TabNavigator/TabNavigator';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
 
 
@@ -26,30 +27,27 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
 
-  
+
   return (
-     <NavigationContainer>
-       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-        {/* thanh điều hướng, không xoá */}
-        <Stack.Screen name="Home" component={TabNavigator} />
-     
-
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="ForgotP" component={ForgotPassword} />
-        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-        <Stack.Screen name="Promotion" component={SeemoreScreen} />
-        <Stack.Screen name="Cart" component={CartScreen} />
-        <Stack.Screen name="Chat" component={ChatScreen} />
-        <Stack.Screen name="Category" component={Logomore} />
-
-        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
-
-
-      </Stack.Navigator>
-
-    </NavigationContainer>
+    
+    <ActionSheetProvider> 
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+          {/* thanh điều hướng, không xoá */}
+          <Stack.Screen name="Home" component={TabNavigator} />
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="ForgotP" component={ForgotPassword} />
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+          <Stack.Screen name="Promotion" component={SeemoreScreen} />
+          <Stack.Screen name="Cart" component={CartScreen} />
+          <Stack.Screen name="Chat" component={ChatScreen} />
+          <Stack.Screen name="Category" component={Logomore} />
+          <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ActionSheetProvider>
   );
 };
 
