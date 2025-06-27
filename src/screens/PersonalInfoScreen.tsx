@@ -26,7 +26,7 @@ const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
-  const [gender, setGender] = useState('');
+  const [role, setRole] = useState('');
   const [dob, setDob] = useState('');
 
   const loadUserData = async () => {
@@ -40,6 +40,8 @@ const [phone, setPhone] = useState('');
         setEmail(currentUser.email || '');
          setPhone(currentUser.phone || '');
         setImageUri(currentUser.avatar || null);
+                 setRole(currentUser.role || '');
+
       }
     } catch (err) {
       Alert.alert('Lỗi tải dữ liệu', 'Không thể tải thông tin người dùng');
@@ -151,10 +153,10 @@ const handleSave = async () => {
           editable={editing}
         />
 
-        <Text style={styles.label}>Giới tính</Text>
+        <Text style={styles.label}>Địa Chỉ</Text>
         <TextInput
-          value={gender}
-          onChangeText={setGender}
+          value={role}
+          onChangeText={setRole}
           style={styles.input}
           editable={editing}
         />
