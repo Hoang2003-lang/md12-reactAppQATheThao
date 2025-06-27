@@ -12,7 +12,8 @@ import SeemoreScreen from './src/screens/semore/SeemoreScreen';
 import CartScreen from './src/screens/CartScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
-import Category from './src/screens/category/CategoryScreen'
+import Category from './src/screens/category/CategoryScreen';
+import BannerDT from './src/screens/banner/BannerDetail'
 
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
@@ -43,6 +44,7 @@ const App = () => {
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="Category" component={Category} />
+        <Stack.Screen name="BannerDT" component={BannerDT} />
 
         <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
 

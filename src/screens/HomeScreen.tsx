@@ -32,6 +32,8 @@ const HomeScreen = ({ navigation }: any) => {
 
   // banner chuyển động
   useEffect(() => {
+    if (banners.length === 0) return;
+
     const interval = setInterval(() => {
       setActiveIndex(prev => {
         const nextIndex = (prev + 1) % banners.length;
@@ -41,7 +43,7 @@ const HomeScreen = ({ navigation }: any) => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [banners]); 
 
   // call api danh muc
   useEffect(() => {
@@ -76,6 +78,12 @@ const HomeScreen = ({ navigation }: any) => {
       console.error('Lỗi khi lấy dữ liệu banner', error);
     }
   }
+
+  const handleBannerPress = (banner: any) => {
+    navigation.navigate('BannerDT', { banner });
+  };
+
+
 
   // call api sp
   const loadProducts = async () => {
@@ -167,7 +175,13 @@ const HomeScreen = ({ navigation }: any) => {
           style={styles.bannerWrapper}
         >
           {banners.map(b => (
-            <Image key={b.id} source={{ uri: b.banner }} style={styles.bannerImage} />
+            <TouchableOpacity
+              key={b.id}
+              activeOpacity={0.8}
+              onPress={() => handleBannerPress(b)}
+            >
+              <Image key={b.id} source={{ uri: b.banner }} style={styles.bannerImage} />
+            </TouchableOpacity>
           ))}
 
 
@@ -274,7 +288,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  bannerWrapper: {width: width, height: width * 0.6, marginTop: 10 },
+  bannerWrapper: { width: width, height: width * 0.6, marginTop: 10 },
   bannerImage: {
     width: width * 0.9,
     height: width * 0.57,
