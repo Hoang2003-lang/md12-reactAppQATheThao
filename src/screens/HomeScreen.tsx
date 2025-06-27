@@ -141,6 +141,10 @@ const HomeScreen = ({ navigation }: any) => {
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Chat')}>
           <Ionicons name="chatbubble-ellipses-outline" size={24} color="#000" />
         </TouchableOpacity>
+   {/* Thông báo*/}
+<TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
+  <Ionicons name="notifications-outline" size={24} color="#000" />
+</TouchableOpacity>
       </View>
 
       {/* Body scroll */}
