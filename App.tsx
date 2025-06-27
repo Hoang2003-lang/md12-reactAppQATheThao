@@ -13,7 +13,11 @@ import CartScreen from './src/screens/CartScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
-import NotificationScreen from './src/screens/NotificationScreen';
+
+import PayScreen from './src/screens/pay/PayScreen';
+import CodPayScreen from './src/screens/pay/CodPayScreen';
+import ShopPayScreen from './src/screens/pay/ShopPayScreen';
+
 
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
@@ -24,37 +28,35 @@ import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
 
 
-
 const Stack = createNativeStackNavigator();
 
 const App = () => {
 
 
   return (
-     <NavigationContainer>
-       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
-        {/* thanh điều hướng, không xoá */}
-        <Stack.Screen name="Home" component={TabNavigator} />
-     
-
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="ForgotP" component={ForgotPassword} />
-        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-        <Stack.Screen name="Promotion" component={SeemoreScreen} />
-        <Stack.Screen name="Cart" component={CartScreen} />
-        <Stack.Screen name="Chat" component={ChatScreen} />
-        <Stack.Screen name="Category" component={Logomore} />
-        <Stack.Screen name="Notification" component={NotificationScreen} />
-
-        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
-
-
-      </Stack.Navigator>
-
-    </NavigationContainer>
-
+    
+    <ActionSheetProvider> 
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Pay" screenOptions={{ headerShown: false }}> 
+          {/* thanh điều hướng, không xoá */}
+          <Stack.Screen name="Home" component={TabNavigator} />
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="ForgotP" component={ForgotPassword} />
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+          <Stack.Screen name="Promotion" component={SeemoreScreen} />
+          <Stack.Screen name="Cart" component={CartScreen} />
+          <Stack.Screen name="Pay" component={PayScreen} />
+          <Stack.Screen name="CodPay" component={CodPayScreen} />
+          <Stack.Screen name="ShopPay" component={ShopPayScreen} />
+          
+          <Stack.Screen name="Chat" component={ChatScreen} />
+          <Stack.Screen name="Category" component={Logomore} />
+          <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ActionSheetProvider>
   );
 };
 
