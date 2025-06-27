@@ -17,7 +17,7 @@ import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
 import PayScreen from './src/screens/pay/PayScreen';
 import CodPayScreen from './src/screens/pay/CodPayScreen';
 import ShopPayScreen from './src/screens/pay/ShopPayScreen';
-
+import CreditCardPayScreen from './src/screens/pay/CreditCardPayScreen';
 
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
@@ -46,10 +46,13 @@ const App = () => {
           <Stack.Screen name="ForgotP" component={ForgotPassword} />
           <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
           <Stack.Screen name="Promotion" component={SeemoreScreen} />
+
           <Stack.Screen name="Cart" component={CartScreen} />
           <Stack.Screen name="Pay" component={PayScreen} />
           <Stack.Screen name="CodPay" component={CodPayScreen} />
           <Stack.Screen name="ShopPay" component={ShopPayScreen} />
+          <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} />
+
           
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Category" component={Logomore} />
