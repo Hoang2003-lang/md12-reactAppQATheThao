@@ -7,18 +7,19 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import { Socket } from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { Alert } from 'react-native';
+import { useActionSheet } from '@expo/react-native-action-sheet';
 
 const ChatScreen = ({ navigation }: any) => {
   const [userId, setUserId] = useState('');
   const [chatId, setChatId] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
-  //   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
-  //   const socketRef = useRef(null);
   const socketRef = useRef<Socket | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  const { showActionSheetWithOptions } = useActionSheet();
 
-  const API_URL = 'http://192.168.10.105:3001'; // ⚠️ Đổi thành IP thật nếu test trên điện thoại
+  const API_URL = 'http://10.0.2.2:3001'; // Đổi thành IP thật nếu dùng máy thật
   const adminId = '683e9c91e2aa5ca0fbfb1030';
 
 
@@ -56,34 +57,48 @@ const ChatScreen = ({ navigation }: any) => {
     });
 
     socketRef.current.on('new message', (msg: any) => {
-      setMessages(prev => {
-        // Nếu có _id, kiểm tra theo _id
-        const existsById = msg._id && prev.some(m => m._id === msg._id);
-        if (existsById) return prev;
-
-        // Tìm bản local trùng nội dung + người gửi + chatId
-        const localIndex = prev.findIndex(m =>
-          m._local &&
-          m.senderId === msg.senderId &&
-          m.chatId === msg.chatId &&
-          m.content === msg.content
-        );
-
-        if (localIndex !== -1) {
-          const updated = [...prev];
-          updated[localIndex] = {
-            ...msg,
-            _local: false
-          };
-          return updated;
-        }
-
-        // Nếu không trùng local, thêm mới
-        return [...prev, msg];
-      });
-
-
+      const rawMsg = msg.message;
+      const normalizedMsg = {
+        ...rawMsg,
+        senderId: rawMsg.senderId || rawMsg.sender?._id || rawMsg.sender || '',
+      };
+      setMessages(prev => [...prev, normalizedMsg]);
+      console.log('✅ SOCKET MSG:', JSON.stringify(normalizedMsg, null, 2));
     });
+
+    socketRef.current.on('reaction updated', ({ messageId, userId, emoji }) => {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg._id === messageId
+            ? {
+              ...msg,
+              reactions: [
+                ...(msg.reactions || []).filter((r: { user: any; }) => r.user !== userId),
+                { user: userId, emoji }
+              ]
+            }
+            : msg
+        )
+      );
+    });
+
+    socketRef.current.on('message deleted', ({ messageId }) => {
+      setMessages(prev => prev.filter(m => m._id !== messageId));
+    });
+
+    socketRef.current?.on('chat messages cleared', ({ chatId: clearedId }) => {
+      if (clearedId === chatId) {
+        setMessages([]);
+      }
+    });
+    socketRef.current.on('chat deleted', ({ chatId: deletedId }) => {
+      if (deletedId === chatId) {
+        setMessages([]);
+        Alert.alert('Thông báo', 'Admin đã xoá toàn bộ đoạn chat.');
+      }
+    });
+
+
 
     return () => {
       if (socketRef.current) socketRef.current.disconnect();
@@ -103,7 +118,7 @@ const ChatScreen = ({ navigation }: any) => {
         const normalized = rawMessages.map((msg: any) => ({
           ...msg,
           senderId: msg.senderId || msg.sender?._id || msg.sender || '',
-          // _fromApi: true // <-- thêm dấu hiệu phân biệt
+          reactions: msg.reactions || [],
         }));
 
         setMessages(normalized);
@@ -125,7 +140,7 @@ const ChatScreen = ({ navigation }: any) => {
     };
 
     try {
-      // await axios.post(${API_URL}/api/chats/message, msgData);
+      // await axios.post(`${API_URL}/api/chats/message`, msgData);
 
       const tempMsg = {
         chatId,
@@ -133,9 +148,9 @@ const ChatScreen = ({ navigation }: any) => {
         content: message,
         timestamp: new Date().toISOString(),
         isRead: false,
-        _local: true
+        // _local: true
       };
-      setMessages(prev => [...prev, tempMsg]);
+      // setMessages(prev => [...prev, tempMsg]);
 
 
       socketRef.current?.emit('send message', msgData);
@@ -148,7 +163,12 @@ const ChatScreen = ({ navigation }: any) => {
     }
   };
 
-  
+  // Tự động cuộn xuống cuối danh sách tin nhắn khi có tin mới
+  useEffect(() => {
+    flatListRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
+
   if (!userId || !chatId) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -158,31 +178,121 @@ const ChatScreen = ({ navigation }: any) => {
   }
 
 
+
+  const handleLongPress = (item: any) => {
+    const isUser = item.senderId === userId;
+    const options = ['👍', '❤️', '😂'];
+    if (isUser) options.push('Thu hồi');
+    options.push('Hủy');
+
+    const cancelButtonIndex = options.length - 1;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex,
+        title: 'Chọn hành động'
+      },
+      (buttonIndex) => {
+        if (buttonIndex === undefined) return;
+        const selected = options[buttonIndex];
+        if (selected === '👍' || selected === '❤️' || selected === '😂') {
+          reactToMessage(item._id, selected);
+        } else if (selected === 'Thu hồi') {
+          deleteMessage(item._id);
+        }
+      }
+    );
+
+  };
+
+  const reactToMessage = (messageId: string, emoji: string) => {
+    socketRef.current?.emit('reaction message', {
+      chatId,
+      messageId,
+      userId,
+      emoji
+    });
+  };
+
+  const deleteMessage = (messageId: string) => {
+    socketRef.current?.emit('delete message', {
+      chatId,
+      messageId
+    });
+  };
+
+  // xoá đoạn chat
+  const clearChat = () => {
+    Alert.alert(
+      'Xác nhận',
+      'Bạn có chắc muốn xoá toàn bộ đoạn chat?',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        {
+          text: 'Xoá',
+          style: 'destructive',
+          onPress: () => {
+            socketRef.current?.emit('delete chat messages', { chatId });
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="chevron-back" size={24} color="#000" />
-        <Text style={styles.header}>Nhắn tin</Text>
-      </TouchableOpacity>
+
+      <View style={styles.headerContainer}>
+        <TouchableOpacity style={styles.backArea} onPress={() => navigation.goBack()}>
+          <Icon name="chevron-back" size={24} color="#000" />
+          <Text style={styles.header}>Nhắn tin</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={clearChat} style={styles.deleteButton}>
+          <Icon name="trash-outline" size={22} color="red" />
+        </TouchableOpacity>
+      </View>
       <FlatList
         ref={flatListRef}
         data={messages}
         removeClippedSubviews={false}
         keyExtractor={(_, index) => index.toString()}
-        // keyExtractor={(item) => ${item.timestamp}-${item.content}}
+        // keyExtractor={(item, index) => `${item.timestamp}-${item.content}-${index}`}
         renderItem={({ item }) => {
           const isUser = item.senderId?.toString() === userId?.toString();
 
+          // return (
+          //   <View style={[styles.message, isUser ? styles.user : styles.admin]}>
+          //     <Text>{item.content}</Text>
+          //     <Text style={styles.time}>
+          //       {new Date(item.timestamp).toLocaleTimeString('vi-VN', {
+          //         hour: '2-digit',
+          //         minute: '2-digit',
+          //       })}
+          //     </Text>
+          //   </View>
+          // );
           return (
-            <View style={[styles.message, isUser ? styles.user : styles.admin]}>
+            <TouchableOpacity
+              onLongPress={() => handleLongPress(item)}
+              style={[styles.message, isUser ? styles.user : styles.admin]}
+            >
               <Text>{item.content}</Text>
+
+              {item.reactions?.length > 0 && (
+                <Text style={{ fontSize: 18 }}>
+                  {item.reactions.map((r: { emoji: any; }) => r.emoji).join(' ')}
+                </Text>
+              )}
+
               <Text style={styles.time}>
                 {new Date(item.timestamp).toLocaleTimeString('vi-VN', {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
               </Text>
-            </View>
+            </TouchableOpacity>
           );
         }}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -280,5 +390,22 @@ const styles = StyleSheet.create({
     // backgroundColor: 'orange',
     // color: '#fff',
     textAlign: 'center',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: 'orange',
+  },
+
+  backArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  deleteButton: {
+    padding: 8,
   },
 });
