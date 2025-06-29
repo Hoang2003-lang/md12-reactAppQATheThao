@@ -45,14 +45,24 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     const checkBookmark = async () => {
-      const stored = await AsyncStorage.getItem("bookmark");
-      const list = stored ? JSON.parse(stored) : [];
-      const isBookmarked = list.includes(productId);
-      setBookMark(isBookmarked);
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+  
+        const res = await API.get(`/favorites/check/${userId}/${productId}`);
+  
+        // Ví dụ backend trả về { isFavorite: true } hoặc { exists: true }
+        const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
+        setBookMark(isFav);
+      } catch (error: any) {
+        console.log('❌ Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
+        setBookMark(false);
+      }
     };
-
+  
     checkBookmark();
-  },[productId]);
+  }, [productId]);
+  
 
   const fetchProduct = async () => {
     try {
@@ -159,68 +169,59 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   //Hoang Anh - bookmark
 
-  //save sau khi chuyen man hinh
-  const saveBookmark= async (productId: string) => {
+  /* ---------- WISHLIST (mới) ---------- */
+// Thêm Yêu thích:  POST  /api/favorites/add
+const saveBookmark = async (productId: string) => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) {
+      return Alert.alert('Bạn cần đăng nhập để dùng tính năng Yêu thích!');
+    }
+
+    // Gửi request
+    const res = await API.post('/favorites/add', { userId, productId });
+
     setBookMark(true);
-    await AsyncStorage.getItem("bookmark").then((token) => {
-      const res= JSON.parse(token);
-      if(res !== null){
-        let data= res.find((val: string) => val == productId);
-        if(data == null){
-          res.push(productId);
-          AsyncStorage.setItem("bookmark", JSON.stringify(res));
-          Snackbar.show({
-            text: "Thêm thành công vào mục Yêu thích!",
-            duration: Snackbar.LENGTH_SHORT,
-            action:{
-              text: "Xem",
-              onPress:() => {
-                navigation.navigate('Home', { screen: 'Favorite' });
-              }
-            }
-          })
-        }
-      }else{
-        let bookmark= [];
-        bookmark.push(productId);
-        AsyncStorage.setItem("bookmark", JSON.stringify(bookmark));
-        Snackbar.show({
-          text: "Thêm thành công vào mục Yêu thích!",
-          duration: Snackbar.LENGTH_SHORT,
-          action:{
-            text: "Xem",
-            onPress:() => {
-              navigation.navigate('Home', { screen: 'Favorite' });
-            }
-          }
-        })
-      }
-    })
-  }
-
-  //unsave
-  const removeBookmark= async (productId: string) => {
-    setBookMark(false);
-    const bookmark= await AsyncStorage.getItem("bookmark").then((token) => {
-      const res= JSON.parse(token);
-      return res.filter((id: string) => id !== productId)
-    });
-    await AsyncStorage.setItem("bookmark", JSON.stringify(bookmark));
     Snackbar.show({
-      text: "Xoá thành công khỏi mục Yêu thích!",
-      duration: Snackbar.LENGTH_SHORT
-    })
+      text: 'Thêm thành công vào mục Yêu thích!',
+      duration: Snackbar.LENGTH_SHORT,
+      action: {
+        text: 'Xem',
+        onPress: () => navigation.navigate('Home', { screen: 'Favorite' }),
+      },
+    });
+  } catch (err: any) {
+    // Nếu là lỗi đã tồn tại, vẫn có thể coi là "đang ở trạng thái yêu thích"
+    if (err?.response?.status === 400 && err.response?.data?.message?.includes('Sản phẩm đã có')) {
+      setBookMark(true); // Đảm bảo icon đúng trạng thái
+    } else {
+      console.error('Lỗi thêm favorite:', err);
+      Alert.alert('Không thêm được vào Yêu thích!');
+    }
   }
+};
 
-  const renderBookmark= async (productId: string) =>{
-    await AsyncStorage.getItem("bookmark").then((token) => {
-      const res= JSON.parse(token);
-      if(res != null){
-        let data= res.find((val: string) => val === productId);
-        return data = null ? setBookMark(false) : setBookMark(true);
-      }
-    })
+// Xoá Yêu thích:  DELETE  /api/favorites/:userId/:productId
+const removeBookmark = async (productId: string) => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) return;
+
+    await API.delete(`/favorites/${userId}/${productId}`);
+    setBookMark(false);
+
+    Snackbar.show({
+      text: 'Xoá thành công khỏi mục Yêu thích!',
+      duration: Snackbar.LENGTH_SHORT,
+    });
+  } catch (err) {
+    console.error('Lỗi xoá favorite:', err);
+    Alert.alert('Không xoá được khỏi Yêu thích!');
   }
+};
+
+/* ---------- (Không cần renderBookmark bằng AsyncStorage nữa) ---------- */
+
 
 
   return (
@@ -239,9 +240,20 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
         <Text style={styles.name}>{product.name}</Text>
 
-        <TouchableOpacity onPress={() => bookmark ? removeBookmark(product._id) : saveBookmark(product._id)}>
-          <Image source={!bookmark ? require("../assets/images/uncheck_fav.png") : require("../assets/images/check_fav.png")} style={styles.heart} />
-        </TouchableOpacity>
+        <TouchableOpacity
+  onPress={() =>
+    bookmark ? removeBookmark(product._id) : saveBookmark(product._id)
+  }>
+  <Image
+    source={
+      bookmark
+        ? require('../assets/images/check_fav.png')
+        : require('../assets/images/uncheck_fav.png')
+    }
+    style={styles.heart}
+  />
+</TouchableOpacity>
+
 
         </View>
 

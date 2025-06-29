@@ -8,11 +8,12 @@ import SearchScreen from './src/screens/SearchScreen';
 import FavoriteScreen from './src/screens/FavoriteScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
+import SeemoreScreen from './src/screens/semore/SeemoreScreen';
 import CartScreen from './src/screens/CartScreen';
-import CheckoutScreen from './src/screens/CheckoutScreen';
-
-
-
+import ChatScreen from './src/screens/chat/ChatScreen';
+import Logomore from './src/screens/semore/LogoMoreScreen';
+import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
+import CheckoutScreen from './src/screens/CheckoutScreen'
 
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
