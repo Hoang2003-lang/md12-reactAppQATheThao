@@ -6,6 +6,15 @@ import SearchScreen from '../screens/SearchScreen';
 import FavoriteScreen from '../screens/FavoriteScreen';
 import AccountScreen from '../screens/AccountScreen';
 import { Image, TouchableOpacity } from 'react-native';
+<<<<<<< HEAD
+=======
+
+import PayScreen from '../screens/pay/PayScreen';
+import CodPayScreen from '../screens/pay/CodPayScreen';
+import ShopPayScreen from '../screens/pay/ShopPayScreen';
+import CreditCardPayScreen from '../screens/pay/CreditCardPayScreen';
+
+>>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
 import CartScreen from '../screens/CartScreen'
 
 const Tab = createBottomTabNavigator();
