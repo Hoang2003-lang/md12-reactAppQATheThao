@@ -552,6 +552,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
+import { _signInWithGoogle } from '../config/firebase/GoogleSignIn';
 
 export default function LoginScreen({ navigation }: any) {
   const [rememberMe, setRememberMe] = useState(false);
@@ -584,6 +585,19 @@ export default function LoginScreen({ navigation }: any) {
             Alert.alert('Lỗi', message);
         }
     };
+
+    async function googleSignin () {
+      _signInWithGoogle().then(data => {
+        if(!data){
+          console.log("=> Error:","No Data");
+          return
+        }
+        console.log("=> Success Login by Google");
+        
+        navigation.navigate("Home");
+      });
+    }
+
 
     // return (
     //     <View style={styles.container}>
@@ -714,13 +728,13 @@ export default function LoginScreen({ navigation }: any) {
         </View>
 
                 <View style={styles.socialContainer}>
-                    <TouchableOpacity>
+                    <TouchableOpacity >
                         <Image
                             style={styles.faceB}
                             source={require(`../assets/images/logo_fb.png`)}
                         />
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => googleSignin()}>
                         <Image
                             style={styles.googleIcon}
                             source={require(`../assets/images/logo_gg.png`)}

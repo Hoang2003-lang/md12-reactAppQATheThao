@@ -10,6 +10,7 @@ import MCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 // ✅ Import kiểu RootStackParamList
 type RootStackParamList = {
@@ -42,6 +43,9 @@ const AccountScreen: React.FC = () => {
     try {
       // Xoá dữ liệu user
       await AsyncStorage.clear();
+
+      await GoogleSignin.signOut();
+      
       Alert.alert('Đã đăng xuất!');
       navigation.navigate('Login');
     } catch (err) {
