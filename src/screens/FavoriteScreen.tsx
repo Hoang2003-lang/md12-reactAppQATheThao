@@ -18,7 +18,6 @@ const FavoriteScreen = ({ navigation }: any) => {
   const [favoriteItems, setFavoriteItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  /* ------------ FETCH FAVOURITES ------------- */
   const fetchFavorites = async () => {
     setIsLoading(true);
     try {
@@ -29,7 +28,7 @@ const FavoriteScreen = ({ navigation }: any) => {
       }
 
       // B1: Lấy danh sách favorite
-      const res = await fetch(`http://10.0.2.2:3001/api/favorites/${userId}`);
+      const res = await fetch(`http://192.168.8.218:3001/api/favorites/${userId}`);
       if (!res.ok) throw new Error(`Lỗi ${res.status}: ${res.statusText}`);
 
       const data = await res.json();
@@ -38,18 +37,18 @@ const FavoriteScreen = ({ navigation }: any) => {
         return;
       }
 
-      // B2: Lấy chi tiết từng sản phẩm
+      //Đổi IP
       const productDetails = await Promise.all(
         data.map(async (fav: any) => {
           const productId = fav.productId?._id || fav.productId || fav._id;
           try {
             const productRes = await fetch(
-              `http://10.0.2.2:3001/api/products/${productId}`
+              `http://192.168.8.218:3001/api/products/${productId}`
             );
             if (!productRes.ok) return null;
 
             const resJson = await productRes.json();
-const product = resJson.product;
+            const product = resJson.data;
 
 if (product && product.name && product.price && product.image) {
   return {
@@ -58,7 +57,12 @@ if (product && product.name && product.price && product.image) {
     price: product.price,
     image: product.image,
   };
-} else {
+}  else {
+  if (!product) {
+    console.warn('Product bị undefined/null:', resJson);
+  } else {
+    console.warn(`id: ${product._id} - name: ${product.name} - price: ${product.price} - image: ${product.image}`);
+  }
   console.warn('Thiếu dữ liệu sản phẩm:', product);
   return null;
 }
@@ -80,7 +84,7 @@ if (product && product.name && product.price && product.image) {
     }
   };
 
-  /* ------------ LIFE-CYCLE ------------- */
+
   useEffect(() => {
     fetchFavorites();
   }, []);
@@ -91,7 +95,7 @@ if (product && product.name && product.price && product.image) {
     }, [])
   );
 
-  /* ------------ RENDER ------------- */
+
   const formatPrice = (price: number | string | undefined) =>
     price !== undefined ? Number(price).toLocaleString('vi-VN') + 'đ' : '';
 
@@ -139,7 +143,6 @@ if (product && product.name && product.price && product.image) {
 
 export default FavoriteScreen;
 
-/* ------------ STYLES ------------- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

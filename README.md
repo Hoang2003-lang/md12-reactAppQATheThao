@@ -34,4 +34,5 @@ npm react-native-asset
 npm install @react-native-async-storage/async-storage
 npm install react-native-snackbar
 npm i react-native-image-picker
+npm i react-native-actions-sheet
 --

@@ -50,15 +50,6 @@ export default function CartScreen({ navigation }: any) {
         setCartItems([]);
       }
     } catch (error: any) {
-<<<<<<< HEAD
-      if (error.response?.status === 404) {
-        console.log('ℹ️ Giỏ hàng chưa tồn tại với user_id này');
-        setCartItems([]);
-      } else {
-        console.error('❌ Lỗi khi gọi API giỏ hàng:', error);
-        Alert.alert('Lỗi', 'Không thể tải giỏ hàng');
-      }
-=======
       console.error(' Lỗi khi gọi API giỏ hàng:', error);
       Alert.alert('Lỗi', 'Không thể tải giỏ hàng');
     }
@@ -88,34 +79,11 @@ export default function CartScreen({ navigation }: any) {
     } catch (err) {
       console.error('❌ Lỗi xoá item:', err);
       Alert.alert('Xoá thất bại', 'Không thể xoá sản phẩm');
->>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
     }
   };
 
   const calculateTotal = () => {
     return cartItems.reduce((sum: number, item: any) => {
-<<<<<<< HEAD
-      return sum + (item.product_id?.price || 0) * item.quantity;
-    }, 0);
-  };
-
-  const renderItem = ({ item }: any) => (
-    <View style={styles.itemContainer}>
-      <Image
-        source={{ uri: item.product_id?.image || 'https://via.placeholder.com/100' }}
-        style={styles.image}
-      />
-      <View style={styles.infoContainer}>
-        <Text style={styles.name}>{item.product_id?.name || 'Sản phẩm'}</Text>
-        <Text style={styles.price}>
-          Giá: {item.product_id?.price?.toLocaleString()} đ
-        </Text>
-        <Text style={styles.quantity}>Số lượng: {item.quantity}</Text>
-        <Text style={styles.size}>Size: {item.size}</Text>
-      </View>
-    </View>
-  );
-=======
       const product = item.product_id || item;
       return sum + (product.price || 0) * (item.quantity || 1);
     }, 0);
@@ -167,15 +135,10 @@ export default function CartScreen({ navigation }: any) {
       </View>
     );
   };
->>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>🛒 Giỏ hàng của bạn</Text>
-<<<<<<< HEAD
-
-=======
->>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
       {loading ? (
         <ActivityIndicator size="large" color="orange" />
       ) : cartItems.length === 0 ? (
@@ -186,13 +149,6 @@ export default function CartScreen({ navigation }: any) {
             data={cartItems}
             keyExtractor={(_, index) => index.toString()}
             renderItem={renderItem}
-<<<<<<< HEAD
-          />
-          <View style={styles.totalContainer}>
-            <Text style={styles.totalLabel}>Tổng cộng:</Text>
-            <Text style={styles.totalValue}>{calculateTotal().toLocaleString()} đ</Text>
-          </View>
-=======
             removeClippedSubviews={false}
           />
           <View style={styles.totalContainer}>
@@ -207,7 +163,6 @@ export default function CartScreen({ navigation }: any) {
           >
             <Text style={styles.buyNowText}>Mua ngay</Text>
           </TouchableOpacity>
->>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
         </>
       )}
     </View>
@@ -296,5 +251,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold'
   }
->>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
 });

@@ -13,15 +13,11 @@ import CartScreen from './src/screens/CartScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
-<<<<<<< HEAD
-import NotificationScreen from './src/screens/NotificationScreen';
-=======
 
 import PayScreen from './src/screens/pay/PayScreen';
 import CodPayScreen from './src/screens/pay/CodPayScreen';
 import ShopPayScreen from './src/screens/pay/ShopPayScreen';
 import CreditCardPayScreen from './src/screens/pay/CreditCardPayScreen';
->>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
 
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
@@ -29,10 +25,6 @@ import ForgotPassword from './src/login/ForgotPassword';
 
 import TabNavigator from './src/TabNavigator/TabNavigator';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
-<<<<<<< HEAD
-
-=======
->>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
 
 
 
@@ -42,36 +34,10 @@ const App = () => {
 
 
   return (
-<<<<<<< HEAD
-     <NavigationContainer>
-       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
-        {/* thanh điều hướng, không xoá */}
-        <Stack.Screen name="Home" component={TabNavigator} />
-     
-
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="ForgotP" component={ForgotPassword} />
-        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-        <Stack.Screen name="Promotion" component={SeemoreScreen} />
-        <Stack.Screen name="Cart" component={CartScreen} />
-        <Stack.Screen name="Chat" component={ChatScreen} />
-        <Stack.Screen name="Category" component={Logomore} />
-        <Stack.Screen name="Notification" component={NotificationScreen} />
-
-        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
-
-
-      </Stack.Navigator>
-
-    </NavigationContainer>
-
-=======
     
     <ActionSheetProvider> 
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}> 
+        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}> 
           {/* thanh điều hướng, không xoá */}
           <Stack.Screen name="Home" component={TabNavigator} />
           <Stack.Screen name="Splash" component={SplashScreen} />
@@ -94,7 +60,6 @@ const App = () => {
         </Stack.Navigator>
       </NavigationContainer>
     </ActionSheetProvider>
->>>>>>> 0a1a0a9aa998b1f85c2dbbf36a44a28aafea2dec
   );
 };
 
