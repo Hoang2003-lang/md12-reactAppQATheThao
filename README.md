@@ -38,4 +38,5 @@ npm i react-native-actions-sheet
 npm install --save @react-native-firebase/app
 npm install @react-native-firebase/auth
 npm i @react-native-google-signin/google-signin
+npm install @react-native-firebase/auth@latest
 --

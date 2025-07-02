@@ -586,16 +586,18 @@ export default function LoginScreen({ navigation }: any) {
         }
     };
 
-    async function googleSignin () {
-      _signInWithGoogle().then(data => {
-        if(!data){
-          console.log("=> Error:","No Data");
-          return
+    async function googleSignin() {
+      try {
+        const userData = await _signInWithGoogle();
+        if (!userData) {
+          Alert.alert("Lỗi", "Đăng nhập bằng Google thất bại");
+          return;
         }
-        console.log("=> Success Login by Google");
-        
         navigation.navigate("Home");
-      });
+      } catch (error) {
+        console.error("Lỗi chi tiết:", error);
+        Alert.alert("Lỗi", "Không thể đăng nhập bằng Google");
+      }
     }
 
 
