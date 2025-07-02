@@ -43,7 +43,7 @@ const HomeScreen = ({ navigation }: any) => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [banners]); 
+  }, [banners]);
 
   // call api danh muc
   useEffect(() => {
@@ -72,7 +72,7 @@ const HomeScreen = ({ navigation }: any) => {
   const loadBanners = async () => {
     try {
       const res = await API.get('/banners');
-      console.log('lấy dl t cong', res.data)
+      // console.log('lấy dl t cong', res.data)
       setBanners(res.data)
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu banner', error);
@@ -160,10 +160,10 @@ const HomeScreen = ({ navigation }: any) => {
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Chat')}>
           <Ionicons name="chatbubble-ellipses-outline" size={24} color="#000" />
         </TouchableOpacity>
-   {/* Thông báo*/}
-<TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
-  <Ionicons name="notifications-outline" size={24} color="#000" />
-</TouchableOpacity>
+        {/* Thông báo*/}
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
+          <Ionicons name="notifications-outline" size={24} color="#000" />
+        </TouchableOpacity>
       </View>
 
       {/* Body scroll */}
@@ -184,25 +184,26 @@ const HomeScreen = ({ navigation }: any) => {
               activeOpacity={0.8}
               onPress={() => handleBannerPress(b)}
             >
-              <Image key={b.id} source={{ uri: b.banner }} style={styles.bannerImage} />
+              <Image source={{ uri: b.banner }} style={styles.bannerImage} />
             </TouchableOpacity>
           ))}
 
 
         </ScrollView>
         <View style={styles.dotsContainer}>
-          {banners.map((_, i) => (
-            <View key={i} style={[styles.dot, i === activeIndex && styles.activeDot]} />
+          {banners.map((b, i) => (
+            <View key={b.id || i} style={[styles.dot, i === activeIndex && styles.activeDot]} />
           ))}
         </View>
 
         {/* Sản phẩm các loại */}
         <Section title="Khuyến mãi">
-          {products.slice(0, 4).map(item => (
-            <View key={item._id} style={styles.productWrapper} >
+          {products.slice(0, 4).map((item, index) => (
+            <View key={`${item._id}-${index}`} style={styles.productWrapper}>
               <ProductCard item={item} navigation={navigation} />
             </View>
-          ))}
+          ))
+          }
 
           <View style={{ paddingHorizontal: 10, alignItems: 'flex-end' }} >
             <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Khuyến mãi', type: 'promotion' })}>
@@ -213,23 +214,30 @@ const HomeScreen = ({ navigation }: any) => {
         </Section>
 
         <Section title="Áo Câu Lạc Bộ">
-          {products.filter(p => p.name.includes('Áo Đấu')).slice(0, 4).map(item => (
-            <View key={item._id} style={styles.productWrapper} >
-              <ProductCard key={item._id} item={item} navigation={navigation} />
-            </View>
-
-          ))}
+          {products
+            .filter(p => p.name.includes('Áo Đấu'))
+            .slice(0, 4)
+            .map((item, index) => (
+              <View key={`${item._id}-${index}`} style={styles.productWrapper}>
+                <ProductCard item={item} navigation={navigation} />
+              </View>
+            ))
+          }
           <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Áo Câu Lạc Bộ', type: 'club' })}>
             <Text style={styles.seeMore}>Xem thêm...</Text>
           </TouchableOpacity>
         </Section>
 
         <Section title="Áo đội tuyển quốc gia">
-          {products.filter(p => p.name.includes('Manchester')).slice(0, 4).map(item => (
-            <View key={item._id} style={styles.productWrapper} >
-              <ProductCard key={item._id} item={item} navigation={navigation} />
-            </View>
-          ))}
+          {products
+            .filter(p => p.name.includes('Manchester'))
+            .slice(0, 4)
+            .map((item, index) => (
+              <View key={`${item._id}-${index}`} style={styles.productWrapper}>
+                <ProductCard item={item} navigation={navigation} />
+              </View>
+            ))
+          }
           <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Áo Đội Tuyển Quốc Gia', type: 'national' })}>
             <Text style={styles.seeMore}>Xem thêm...</Text>
           </TouchableOpacity>
@@ -241,7 +249,7 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={styles.categoryRow}>
               {categories.map(cat => (
                 <TouchableOpacity
-                  key={cat.id}
+                  key={cat._id || cat.id}
                   style={styles.categoryItem}
                   onPress={() => navigation.navigate('Category', {
                     categoryId: cat.id,
