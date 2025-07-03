@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -19,22 +18,20 @@ import Snackbar from 'react-native-snackbar';
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
-const ProductDetailScreen = ({ route, navigation }: any) => {
+const ProductDetailScreen = ({ route, navigation }) => {
   const { productId } = route.params;
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [bookmark, setBookMark]= useState<boolean>(false);
-
+  const [bookmark, setBookMark] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [rating, setRating] = useState(5);
 
   useEffect(() => {
     fetchProduct();
-    
   }, [productId]);
 
   useEffect(() => {
@@ -45,14 +42,20 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     const checkBookmark = async () => {
-      const stored = await AsyncStorage.getItem("bookmark");
-      const list = stored ? JSON.parse(stored) : [];
-      const isBookmarked = list.includes(productId);
-      setBookMark(isBookmarked);
-    };
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
 
+        const res = await API.get(`/favorites/check/${userId}/${productId}`);
+        const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
+        setBookMark(isFav);
+      } catch (error) {
+        console.log('❌ Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
+        setBookMark(false);
+      }
+    };
     checkBookmark();
-  },[productId]);
+  }, [productId]);
 
   const fetchProduct = async () => {
     try {
@@ -75,40 +78,33 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
       return;
     }
 
-    const cartItem = {
-      _id: product._id,
-      name: product.name,
-      image: product.image,
-      size: selectedSize,
-      quantity,
-      price: product.price,
-      total: product.price * quantity,
-    };
-
     try {
-      const storedCart = await AsyncStorage.getItem('cart');
-      const parsedCart = storedCart ? JSON.parse(storedCart) : [];
-
-      const existingIndex = parsedCart.findIndex(
-        (item: any) => item._id === cartItem._id && item.size === cartItem.size
-      );
-
-      if (existingIndex !== -1) {
-        parsedCart[existingIndex].quantity += cartItem.quantity;
-        parsedCart[existingIndex].total += cartItem.total;
-
-        const updatedItem = parsedCart.splice(existingIndex, 1)[0];
-        parsedCart.unshift(updatedItem);
-      } else {
-        parsedCart.unshift(cartItem);
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('Thông báo', 'Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.', [
+          { text: 'Huỷ', style: 'cancel' },
+          { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') },
+        ]);
+        return;
       }
 
-      await AsyncStorage.setItem('cart', JSON.stringify(parsedCart));
+      const cartItem = {
+        user_id: userId,
+        product_id: product._id,
+        name: product.name,
+        image: product.image,
+        size: selectedSize,
+        quantity: quantity,
+        price: product.price,
+total: product.price * quantity,
+      };
+
+      await API.post('/carts/add', cartItem);
+
       Alert.alert('✅ Sản phẩm đã được thêm vào giỏ hàng!');
       navigation.navigate('Cart');
-
     } catch (err) {
-      console.error('Lỗi khi thêm vào giỏ:', err);
+      console.error('Lỗi khi thêm vào giỏ hàng:', err.response?.data || err.message);
       Alert.alert('❌ Có lỗi xảy ra khi thêm vào giỏ hàng.');
     }
   };
@@ -141,6 +137,52 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const saveBookmark = async (productId) => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        return Alert.alert('Bạn cần đăng nhập để dùng tính năng Yêu thích!');
+      }
+
+      await API.post('/favorites/add', { userId, productId });
+
+      setBookMark(true);
+      Snackbar.show({
+        text: 'Thêm thành công vào mục Yêu thích!',
+        duration: Snackbar.LENGTH_SHORT,
+        action: {
+          text: 'Xem',
+          onPress: () => navigation.navigate('Home', { screen: 'Favorite' }),
+        },
+      });
+    } catch (err) {
+      if (err?.response?.status === 400 && err.response?.data?.message?.includes('Sản phẩm đã có')) {
+        setBookMark(true);
+      } else {
+        console.error('Lỗi thêm favorite:', err);
+        Alert.alert('Không thêm được vào Yêu thích!');
+      }
+    }
+  };
+
+  const removeBookmark = async (productId) => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) return;
+
+      await API.delete(`/favorites/${userId}/${productId}`);
+      setBookMark(false);
+
+      Snackbar.show({
+        text: 'Xoá thành công khỏi mục Yêu thích!',
+        duration: Snackbar.LENGTH_SHORT,
+      });
+    } catch (err) {
+      console.error('Lỗi xoá favorite:', err);
+      Alert.alert('Không xoá được khỏi Yêu thích!');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -157,94 +199,34 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     );
   }
 
-  //Hoang Anh - bookmark
-
-  //save sau khi chuyen man hinh
-  const saveBookmark= async (productId: string) => {
-    setBookMark(true);
-    await AsyncStorage.getItem("bookmark").then((token) => {
-      const res= JSON.parse(token);
-      if(res !== null){
-        let data= res.find((val: string) => val == productId);
-        if(data == null){
-          res.push(productId);
-          AsyncStorage.setItem("bookmark", JSON.stringify(res));
-          Snackbar.show({
-            text: "Thêm thành công vào mục Yêu thích!",
-            duration: Snackbar.LENGTH_SHORT,
-            action:{
-              text: "Xem",
-              onPress:() => {
-                navigation.navigate('Home', { screen: 'Favorite' });
-              }
-            }
-          })
-        }
-      }else{
-        let bookmark= [];
-        bookmark.push(productId);
-        AsyncStorage.setItem("bookmark", JSON.stringify(bookmark));
-        Snackbar.show({
-          text: "Thêm thành công vào mục Yêu thích!",
-          duration: Snackbar.LENGTH_SHORT,
-          action:{
-            text: "Xem",
-            onPress:() => {
-              navigation.navigate('Home', { screen: 'Favorite' });
-            }
-          }
-        })
-      }
-    })
-  }
-
-  //unsave
-  const removeBookmark= async (productId: string) => {
-    setBookMark(false);
-    const bookmark= await AsyncStorage.getItem("bookmark").then((token) => {
-      const res= JSON.parse(token);
-      return res.filter((id: string) => id !== productId)
-    });
-    await AsyncStorage.setItem("bookmark", JSON.stringify(bookmark));
-    Snackbar.show({
-      text: "Xoá thành công khỏi mục Yêu thích!",
-      duration: Snackbar.LENGTH_SHORT
-    })
-  }
-
-  const renderBookmark= async (productId: string) =>{
-    await AsyncStorage.getItem("bookmark").then((token) => {
-      const res= JSON.parse(token);
-      if(res != null){
-        let data= res.find((val: string) => val === productId);
-        return data = null ? setBookMark(false) : setBookMark(true);
-      }
-    })
-  }
-
-
   return (
     <ScrollView style={styles.container}>
       <TouchableOpacity onPress={() => {
         Snackbar.dismiss();
         navigation.goBack();
       }} style={styles.backButton}>
-        <Icon name="arrow-back" size={24} color="black" />
+<Icon name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
       <Image source={{ uri: product.image }} style={styles.image} />
 
       <View style={styles.content}>
         <View style={styles.txt}>
-
-        <Text style={styles.name}>{product.name}</Text>
-
-        <TouchableOpacity onPress={() => bookmark ? removeBookmark(product._id) : saveBookmark(product._id)}>
-          <Image source={!bookmark ? require("../assets/images/uncheck_fav.png") : require("../assets/images/check_fav.png")} style={styles.heart} />
-        </TouchableOpacity>
-
+          <Text style={styles.name}>{product.name}</Text>
+          <TouchableOpacity
+            onPress={() =>
+              bookmark ? removeBookmark(product._id) : saveBookmark(product._id)
+            }>
+            <Image
+              source={
+                bookmark
+                  ? require('../assets/images/check_fav.png')
+                  : require('../assets/images/uncheck_fav.png')
+              }
+              style={styles.heart}
+            />
+          </TouchableOpacity>
         </View>
-
 
         <Text style={styles.price}>Đơn giá: {product.price.toLocaleString()} đ</Text>
         <Text style={styles.price}>Tổng: {totalPrice.toLocaleString()} đ</Text>
@@ -292,7 +274,6 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
           <Text style={styles.cartText}>Thêm vào giỏ hàng</Text>
         </TouchableOpacity>
 
-        {/* Bình luận */}
         <View style={{ marginTop: 24 }}>
           <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Bình luận:</Text>
           {comments.length === 0 ? (
@@ -302,7 +283,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
               <View key={index} style={{ marginVertical: 8 }}>
                 <Text style={{ fontWeight: 'bold' }}>{comment.userName}</Text>
                 <Text>Đánh giá: {comment.rating}⭐</Text>
-                <Text>{comment.content}</Text>
+<Text>{comment.content}</Text>
               </View>
             ))
           )}
@@ -345,7 +326,7 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   image: { width: '100%', height: 300, resizeMode: 'contain', backgroundColor: '#f9f9f9' },
   content: { padding: 16 },
-  name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 , width: 345},
+  name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8, width: 345 },
   price: { fontSize: 18, color: 'orange', marginBottom: 4 },
   stock: { fontSize: 14, marginBottom: 12 },
   sizeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
@@ -366,12 +347,6 @@ const styles = StyleSheet.create({
   qtyNumber: { marginHorizontal: 12, fontSize: 16 },
   cartButton: { backgroundColor: 'orange', padding: 14, alignItems: 'center', borderRadius: 5 },
   cartText: { color: '#fff', fontWeight: 'bold' },
-  heart:{
-    width: 20,
-    height: 20,
-
-  },
-  txt:{
-    flexDirection: "row"
-  }
+  heart: { width: 20, height: 20 },
+  txt: { flexDirection: "row" }
 });
