@@ -10,6 +10,7 @@ import AccountScreen from './src/screens/AccountScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import SeemoreScreen from './src/screens/semore/SeemoreScreen';
 import CartScreen from './src/screens/CartScreen';
+import CheckoutScreen from './src/screens/CheckoutScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
@@ -46,14 +47,12 @@ const App = () => {
           <Stack.Screen name="ForgotP" component={ForgotPassword} />
           <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
           <Stack.Screen name="Promotion" component={SeemoreScreen} />
-
           <Stack.Screen name="Cart" component={CartScreen} />
+          <Stack.Screen name="Checkout" component={CheckoutScreen} />
           <Stack.Screen name="Pay" component={PayScreen} />
           <Stack.Screen name="CodPay" component={CodPayScreen} />
           <Stack.Screen name="ShopPay" component={ShopPayScreen} />
-          <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} />
-
-          
+          <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} />     
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Category" component={Logomore} />
           <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
