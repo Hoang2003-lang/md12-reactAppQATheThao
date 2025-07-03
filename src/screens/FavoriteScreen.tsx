@@ -11,6 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
+import API from '../api';
 
 const { width } = Dimensions.get('window');
 
@@ -27,46 +28,34 @@ const FavoriteScreen = ({ navigation }: any) => {
         return;
       }
 
-      // B1: Lấy danh sách favorite
-      const res = await fetch(`http://192.168.8.218:3001/api/favorites/${userId}`);
-      if (!res.ok) throw new Error(`Lỗi ${res.status}: ${res.statusText}`);
+      // B1: Lấy danh sách favorite bằng axios
+      const res = await API.get(`/favorites/${userId}`);
+      const data = res.data;
 
-      const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) {
         setFavoriteItems([]);
         return;
       }
 
-      //Đổi IP
+      // B2: Lấy chi tiết sản phẩm cho từng yêu thích
       const productDetails = await Promise.all(
         data.map(async (fav: any) => {
           const productId = fav.productId?._id || fav.productId || fav._id;
           try {
-            const productRes = await fetch(
-              `http://192.168.8.218:3001/api/products/${productId}`
-            );
-            if (!productRes.ok) return null;
+            const productRes = await API.get(`/products/${productId}`);
+            const product = productRes.data?.data;
 
-            const resJson = await productRes.json();
-            const product = resJson.data;
-
-if (product && product.name && product.price && product.image) {
-  return {
-    _id: product._id,
-    name: product.name,
-    price: product.price,
-    image: product.image,
-  };
-}  else {
-  if (!product) {
-    console.warn('Product bị undefined/null:', resJson);
-  } else {
-    console.warn(`id: ${product._id} - name: ${product.name} - price: ${product.price} - image: ${product.image}`);
-  }
-  console.warn('Thiếu dữ liệu sản phẩm:', product);
-  return null;
-}
-
+            if (product && product.name && product.price && product.image) {
+              return {
+                _id: product._id,
+                name: product.name,
+                price: product.price,
+                image: product.image,
+              };
+            } else {
+              console.warn('Thiếu dữ liệu sản phẩm:', product);
+              return null;
+            }
           } catch (e) {
             console.error('Lỗi khi lấy sản phẩm:', productId, e);
             return null;
@@ -84,7 +73,6 @@ if (product && product.name && product.price && product.image) {
     }
   };
 
-
   useEffect(() => {
     fetchFavorites();
   }, []);
@@ -94,7 +82,6 @@ if (product && product.name && product.price && product.image) {
       fetchFavorites();
     }, [])
   );
-
 
   const formatPrice = (price: number | string | undefined) =>
     price !== undefined ? Number(price).toLocaleString('vi-VN') + 'đ' : '';
