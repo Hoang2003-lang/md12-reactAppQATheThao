@@ -29,7 +29,7 @@ const FavoriteScreen = ({ navigation }: any) => {
       }
 
       // B1: Lấy danh sách favorite
-      const res = await fetch(`http://10.0.2.2:3001/api/favorites/${userId}`);
+      const res = await fetch(`http://192.168.1.4:3001/api/favorites/${userId}`);
       if (!res.ok) throw new Error(`Lỗi ${res.status}: ${res.statusText}`);
 
       const data = await res.json();
@@ -44,7 +44,7 @@ const FavoriteScreen = ({ navigation }: any) => {
           const productId = fav.productId?._id || fav.productId || fav._id;
           try {
             const productRes = await fetch(
-              `http://10.0.2.2:3001/api/products/${productId}`
+              `http://192.168.1.4:3001/api/products/${productId}`
             );
             if (!productRes.ok) return null;
 
@@ -98,7 +98,7 @@ if (product && product.name && product.price && product.image) {
 
       if (token) {
         const bookmarkedIds = JSON.parse(token);
-        const response = await fetch("http://192.168.33.4:3001/api/products");
+        const response = await fetch("http://192.168.1.4:3001/api/products");
         const allProducts = await response.json();
 
         const filtered = allProducts.filter((product: any) =>

@@ -101,11 +101,13 @@ export default AccountScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 20 },
+   text: {  },
   header: {
     fontSize: 22,
     fontWeight: '700',
     alignSelf: 'center',
     marginBottom: 12,
+   backgroundColor: 'orange', padding: 10, alignItems: 'center'
   },
   row: {
     flexDirection: 'row',

@@ -24,27 +24,16 @@ const { width } = Dimensions.get('window');
 const HomeScreen = ({ navigation }: any) => {
 
   const scrollRef = useRef<ScrollView>(null);
+  const [banners, setBanners] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const banners = [
-    { id: '1', image: require('../assets/images/bannerDATN.jpg') },
-    { id: '2', image: require('../assets/images/bannerDATN3.jpg') },
-    { id: '3', image: require('../assets/images/bannerDATN2.jpg') },
-    { id: '4', image: require('../assets/images/bannerDATN1.jpg') },
-  ];
-
-  const categories = [
-    { id: 'psg', image: require('../assets/images/psg.png') },
-    { id: 'arsenal', image: require('../assets/images/arsenal.png') },
-    { id: 'chelsea', image: require('../assets/images/chelsea.png') },
-    { id: 'vietnam', image: require('../assets/images/vietnam.png') },
-    { id: 'japan', image: require('../assets/images/japan.png') },
-  ];
-
   // banner chuyển động
   useEffect(() => {
+    if (banners.length === 0) return;
+
     const interval = setInterval(() => {
       setActiveIndex(prev => {
         const nextIndex = (prev + 1) % banners.length;
@@ -54,10 +43,23 @@ const HomeScreen = ({ navigation }: any) => {
     }, 3000);
 
     return () => clearInterval(interval);
+  }, [banners]); 
+
+  // call api danh muc
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await API.get('/categories');
+        setCategories(res.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    })();
   }, []);
 
   // load sp
   useEffect(() => {
+    loadBanners();
     loadProducts();
     const unsubscribe = navigation.addListener('focus', () => {
       loadCartCount();
@@ -65,6 +67,23 @@ const HomeScreen = ({ navigation }: any) => {
     loadCartCount();
     return unsubscribe;
   }, []);
+
+  // call banner
+  const loadBanners = async () => {
+    try {
+      const res = await API.get('/banners');
+      console.log('lấy dl t cong', res.data)
+      setBanners(res.data)
+    } catch (error) {
+      console.error('Lỗi khi lấy dữ liệu banner', error);
+    }
+  }
+
+  const handleBannerPress = (banner: any) => {
+    navigation.navigate('BannerDT', { banner });
+  };
+
+
 
   // call api sp
   const loadProducts = async () => {
@@ -141,6 +160,10 @@ const HomeScreen = ({ navigation }: any) => {
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Chat')}>
           <Ionicons name="chatbubble-ellipses-outline" size={24} color="#000" />
         </TouchableOpacity>
+   {/* Thông báo*/}
+<TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
+  <Ionicons name="notifications-outline" size={24} color="#000" />
+</TouchableOpacity>
       </View>
 
       {/* Body scroll */}
@@ -156,8 +179,16 @@ const HomeScreen = ({ navigation }: any) => {
           style={styles.bannerWrapper}
         >
           {banners.map(b => (
-            <Image key={b.id} source={b.image} style={styles.bannerImage} />
+            <TouchableOpacity
+              key={b.id}
+              activeOpacity={0.8}
+              onPress={() => handleBannerPress(b)}
+            >
+              <Image key={b.id} source={{ uri: b.banner }} style={styles.bannerImage} />
+            </TouchableOpacity>
           ))}
+
+
         </ScrollView>
         <View style={styles.dotsContainer}>
           {banners.map((_, i) => (
@@ -169,8 +200,7 @@ const HomeScreen = ({ navigation }: any) => {
         <Section title="Khuyến mãi">
           {products.slice(0, 4).map(item => (
             <View key={item._id} style={styles.productWrapper} >
-
-              <ProductCard key={item._id} item={item} navigation={navigation} />
+              <ProductCard item={item} navigation={navigation} />
             </View>
           ))}
 
@@ -213,13 +243,18 @@ const HomeScreen = ({ navigation }: any) => {
                 <TouchableOpacity
                   key={cat.id}
                   style={styles.categoryItem}
-                  onPress={() => navigation.navigate('Category', { categoryId: cat.id })}
+                  onPress={() => navigation.navigate('Category', {
+                    categoryId: cat.id,
+                    code: cat.code,
+                    title: cat.name,
+                  })}
                 >
-                  <Image source={cat.image} style={styles.categoryImage} />
+                  <Image source={{ uri: cat.image }} style={styles.categoryImage} />
                 </TouchableOpacity>
               ))}
             </View>
           </ScrollView>
+
         </Section>
       </ScrollView>
     </View>
@@ -257,10 +292,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  bannerWrapper: { height: width * 0.6, marginTop: 10 },
+  bannerWrapper: { width: width, height: width * 0.6, marginTop: 10 },
   bannerImage: {
     width: width * 0.9,
-    height: width * 0.5,
+    height: width * 0.57,
     resizeMode: 'cover',
     borderRadius: 10,
     marginHorizontal: width * 0.05
@@ -334,9 +369,13 @@ const styles = StyleSheet.create({
     height: 70,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden', // bo ảnh trong
     margin: 10
   },
-  categoryImage: { width: 40, height: 40 },
+  categoryImage: {
+    width: '100%',
+    height: '100%',
+  },
   seeMore: {
     color: 'orange',
     marginLeft: 15,
