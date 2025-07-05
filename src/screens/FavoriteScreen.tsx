@@ -11,6 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
+import API from '../api';
 
 const { width } = Dimensions.get('window');
 
@@ -18,7 +19,6 @@ const FavoriteScreen = ({ navigation }: any) => {
   const [favoriteItems, setFavoriteItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  /* ------------ FETCH FAVOURITES ------------- */
   const fetchFavorites = async () => {
     setIsLoading(true);
     try {
@@ -29,7 +29,7 @@ const FavoriteScreen = ({ navigation }: any) => {
       }
 
       // B1: Lấy danh sách favorite
-      const res = await fetch(`http://192.168.1.4:3001/api/favorites/${userId}`);
+      const res = await fetch(`http://192.168.33.4:3001/api/favorites/${userId}`);
       if (!res.ok) throw new Error(`Lỗi ${res.status}: ${res.statusText}`);
 
       const data = await res.json();
@@ -38,31 +38,30 @@ const FavoriteScreen = ({ navigation }: any) => {
         return;
       }
 
-      // B2: Lấy chi tiết từng sản phẩm
+      // B2: Lấy chi tiết sản phẩm cho từng yêu thích
       const productDetails = await Promise.all(
         data.map(async (fav: any) => {
           const productId = fav.productId?._id || fav.productId || fav._id;
           try {
             const productRes = await fetch(
-              `http://192.168.1.4:3001/api/products/${productId}`
+              `http://192.168.33.4:3001/api/products/${productId}`
             );
             if (!productRes.ok) return null;
 
             const resJson = await productRes.json();
 const product = resJson.product;
 
-if (product && product.name && product.price && product.image) {
-  return {
-    _id: product._id,
-    name: product.name,
-    price: product.price,
-    image: product.image,
-  };
-} else {
-  console.warn('Thiếu dữ liệu sản phẩm:', product);
-  return null;
-}
-
+            if (product && product.name && product.price && product.image) {
+              return {
+                _id: product._id,
+                name: product.name,
+                price: product.price,
+                image: product.image,
+              };
+            } else {
+              console.warn('Thiếu dữ liệu sản phẩm:', product);
+              return null;
+            }
           } catch (e) {
             console.error('Lỗi khi lấy sản phẩm:', productId, e);
             return null;
@@ -80,7 +79,6 @@ if (product && product.name && product.price && product.image) {
     }
   };
 
-  /* ------------ LIFE-CYCLE ------------- */
   useEffect(() => {
     fetchFavorites();
   }, []);
@@ -91,28 +89,9 @@ if (product && product.name && product.price && product.image) {
     }, [])
   );
 
-  const fetchBookmark = async () => {
-    try {
-      const token = await AsyncStorage.getItem("bookmark");
-      console.log("Raw bookmark token:", token);
-
-      if (token) {
-        const bookmarkedIds = JSON.parse(token);
-        const response = await fetch("http://192.168.1.4:3001/api/products");
-        const allProducts = await response.json();
-
-        const filtered = allProducts.filter((product: any) =>
-          bookmarkedIds.includes(String(product._id))
-        );
-
-        console.log("Bookmark result:", filtered);
-        setBookmarkedItems(filtered);
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Lỗi khi fetch bookmark:", error);
-    }
-  };
+  /* ------------ RENDER ------------- */
+  const formatPrice = (price: number | string | undefined) =>
+    price !== undefined ? Number(price).toLocaleString('vi-VN') + 'đ' : '';
 
   const Item = ({ item }: { item: any }) => (
     <View style={styles.card}>
@@ -158,7 +137,6 @@ if (product && product.name && product.price && product.image) {
 
 export default FavoriteScreen;
 
-/* ------------ STYLES ------------- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

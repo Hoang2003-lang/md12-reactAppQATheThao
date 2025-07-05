@@ -169,7 +169,6 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   //Hoang Anh - bookmark
 
-  /* ---------- WISHLIST (mới) ---------- */
 // Thêm Yêu thích:  POST  /api/favorites/add
 const saveBookmark = async (productId: string) => {
   try {

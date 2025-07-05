@@ -18,8 +18,7 @@ import API from '../api';
 const PersonalInfoScreen = () => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
-const [phone, setPhone] = useState('');
-
+  const [phone, setPhone] = useState('');
   const [user, setUser] = useState<any>(null);
   const [editing, setEditing] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -193,7 +192,6 @@ const styles = StyleSheet.create({
     borderColor: '#d1d5db',
   },
   title: { fontSize: 18, fontWeight: 'bold' },
-
   avatarWrap: {
     alignItems: 'center',
     marginVertical: 24,
@@ -218,7 +216,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
-
   form: {
     paddingHorizontal: 20,
   },

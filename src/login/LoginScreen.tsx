@@ -552,6 +552,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
+import { _signInWithGoogle } from '../config/firebase/GoogleSignIn';
 
 export default function LoginScreen({ navigation }: any) {
   const [rememberMe, setRememberMe] = useState(false);
@@ -577,13 +578,13 @@ export default function LoginScreen({ navigation }: any) {
       await AsyncStorage.setItem('userEmail', user.email);
       await AsyncStorage.setItem('userName', user.name);
 
-      // TODO: Lưu token vào AsyncStorage nếu cần
-      navigation.navigate('Home'); // hoặc màn hình chính của bạn
-    } catch (err: any) {
-      const message = err.response?.data?.message || 'Đăng nhập thất bại';
-      Alert.alert('Lỗi', message);
-    }
-  };
+            // TODO: Lưu token vào AsyncStorage nếu cần
+            navigation.navigate('Home'); // hoặc màn hình chính của bạn
+        } catch (err: any) {
+            const message = err.response?.data?.message || 'Đăng nhập thất bại';
+            Alert.alert('Lỗi', message);
+        }
+    };
 
   const handleSkip = () => {
     // Bỏ qua và chuyển thẳng đến màn hình Home
@@ -644,20 +645,20 @@ export default function LoginScreen({ navigation }: any) {
           <View style={styles.line} />
         </View>
 
-        <View style={styles.socialContainer}>
-          <TouchableOpacity>
-            <Image
-              style={styles.faceB}
-              source={require(`../assets/images/logo_fb.png`)}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Image
-              style={styles.googleIcon}
-              source={require(`../assets/images/logo_gg.png`)}
-            />
-          </TouchableOpacity>
-        </View>
+                <View style={styles.socialContainer}>
+                    <TouchableOpacity>
+                        <Image
+                            style={styles.faceB}
+                            source={require(`../assets/images/logo_fb.png`)}
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                        <Image
+                            style={styles.googleIcon}
+                            source={require(`../assets/images/logo_gg.png`)}
+                        />
+                    </TouchableOpacity>
+                </View>
 
         <Text style={styles.signupText}>
           Bạn không có tài khoản?{' '}

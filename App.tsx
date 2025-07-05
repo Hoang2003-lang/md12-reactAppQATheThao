@@ -13,6 +13,7 @@ import CartScreen from './src/screens/CartScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/SeemoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
+import NotificationScreen from './src/screens/NotificationScreen';
 
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
@@ -45,6 +46,7 @@ const App = () => {
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="Category" component={Logomore} />
+        <Stack.Screen name="Notification" component={NotificationScreen} />
 
         <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
 
@@ -52,6 +54,7 @@ const App = () => {
       </Stack.Navigator>
 
     </NavigationContainer>
+
   );
 };
 
