@@ -199,6 +199,65 @@ total: product.price * quantity,
     );
   }
 
+<<<<<<< HEAD
+=======
+  //Hoang Anh - bookmark
+
+// Thêm Yêu thích:  POST  /api/favorites/add
+const saveBookmark = async (productId: string) => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) {
+      return Alert.alert('Bạn cần đăng nhập để dùng tính năng Yêu thích!');
+    }
+
+    // Gửi request
+    const res = await API.post('/favorites/add', { userId, productId });
+
+    setBookMark(true);
+    Snackbar.show({
+      text: 'Thêm thành công vào mục Yêu thích!',
+      duration: Snackbar.LENGTH_SHORT,
+      action: {
+        text: 'Xem',
+        onPress: () => navigation.navigate('Home', { screen: 'Favorite' }),
+      },
+    });
+  } catch (err: any) {
+    // Nếu là lỗi đã tồn tại, vẫn có thể coi là "đang ở trạng thái yêu thích"
+    if (err?.response?.status === 400 && err.response?.data?.message?.includes('Sản phẩm đã có')) {
+      setBookMark(true); // Đảm bảo icon đúng trạng thái
+    } else {
+      console.error('Lỗi thêm favorite:', err);
+      Alert.alert('Không thêm được vào Yêu thích!');
+    }
+  }
+};
+
+// Xoá Yêu thích:  DELETE  /api/favorites/:userId/:productId
+const removeBookmark = async (productId: string) => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) return;
+
+    await API.delete(`/favorites/${userId}/${productId}`);
+    setBookMark(false);
+
+    Snackbar.show({
+      text: 'Xoá thành công khỏi mục Yêu thích!',
+      duration: Snackbar.LENGTH_SHORT,
+    });
+  } catch (err) {
+    console.error('Lỗi xoá favorite:', err);
+    Alert.alert('Không xoá được khỏi Yêu thích!');
+  }
+};
+
+/* ---------- (Không cần renderBookmark bằng AsyncStorage nữa) ---------- */
+
+
+
+>>>>>>> 530d472b13d77c8a1c3e04eabf2bf0df032dfa2a
   return (
     <ScrollView style={styles.container}>
       <TouchableOpacity onPress={() => {
