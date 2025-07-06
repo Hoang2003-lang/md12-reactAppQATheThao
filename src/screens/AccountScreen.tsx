@@ -10,7 +10,11 @@ import MCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import API from '../api';
+
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
 
 type RootStackParamList = {
   Login: undefined;
@@ -44,6 +48,9 @@ const AccountScreen: React.FC = () => {
   const doLogout = async () => {
     try {
       await AsyncStorage.clear();
+
+      await GoogleSignin.signOut();
+      
       Alert.alert('Đã đăng xuất!');
       navigation.navigate('Login');
     } catch (err) {

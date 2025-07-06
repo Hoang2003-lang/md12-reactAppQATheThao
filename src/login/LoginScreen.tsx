@@ -552,6 +552,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
+import { _signInWithGoogle } from '../config/firebase/GoogleSignIn';
 
 export default function LoginScreen({ navigation }: any) {
   const [rememberMe, setRememberMe] = useState(false);
@@ -584,6 +585,21 @@ export default function LoginScreen({ navigation }: any) {
             Alert.alert('Lỗi', message);
         }
     };
+
+    async function googleSignin() {
+      try {
+        const userData = await _signInWithGoogle();
+        if (!userData) {
+          Alert.alert("Lỗi", "Đăng nhập bằng Google thất bại");
+          return;
+        }
+        navigation.navigate("Home");
+      } catch (error) {
+        console.error("Lỗi chi tiết:", error);
+        Alert.alert("Lỗi", "Không thể đăng nhập bằng Google");
+      }
+    }
+
 
     // return (
     //     <View style={styles.container}>
@@ -714,13 +730,13 @@ export default function LoginScreen({ navigation }: any) {
         </View>
 
                 <View style={styles.socialContainer}>
-                    <TouchableOpacity>
+                    <TouchableOpacity >
                         <Image
                             style={styles.faceB}
                             source={require(`../assets/images/logo_fb.png`)}
                         />
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => googleSignin()}>
                         <Image
                             style={styles.googleIcon}
                             source={require(`../assets/images/logo_gg.png`)}

@@ -19,8 +19,7 @@ const PersonalInfoScreen = () => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
-const [phone, setPhone] = useState('');
-
+  const [phone, setPhone] = useState('');
 
   const [user, setUser] = useState<any>(null);
   const [editing, setEditing] = useState(false);
@@ -192,11 +191,13 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: 'bold' },
 
+
   editBtn: {
     backgroundColor: '#3b82f6',
     padding: 6,
     borderRadius: 999,
   },
+
 
   avatarWrap: {
     alignItems: 'center',

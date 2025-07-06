@@ -1,97 +1,142 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, ScrollView} from 'react-native';
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Dimensions,
+  Image,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 
-//TODO:
-// - Item ko mất trong màn hình yêu thích khi uncheck wishlist "X"
-// - Hiển thị màn hình khác khi không có sản phẩm "X"
-// - Chưa hiển thị được sản phẩm chi tiết khi click vào item
-// - Click vào còn đang hiển thị lỗi
-
-
 const { width } = Dimensions.get('window');
 
 const FavoriteScreen = ({ navigation }: any) => {
-  const [bookmarkedItems, setBookmarkedItems] = useState([]);
+  const [favoriteItems, setFavoriteItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchFavorites = async () => {
+    setIsLoading(true);
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        setFavoriteItems([]);
+        return;
+      }
+
+      // B1: Lấy danh sách favorite
+      const res = await fetch(`http://192.168.8.218:3001/api/favorites/${userId}`);
+      if (!res.ok) throw new Error(`Lỗi ${res.status}: ${res.statusText}`);
+
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        setFavoriteItems([]);
+        return;
+      }
+
+      //Đổi IP
+      const productDetails = await Promise.all(
+        data.map(async (fav: any) => {
+          const productId = fav.productId?._id || fav.productId || fav._id;
+          try {
+            const productRes = await fetch(
+              `http://192.168.8.218:3001/api/products/${productId}`
+            );
+            if (!productRes.ok) return null;
+
+            const resJson = await productRes.json();
+            const product = resJson.data;
+
+if (product && product.name && product.price && product.image) {
+  return {
+    _id: product._id,
+    name: product.name,
+    price: product.price,
+    image: product.image,
+  };
+}  else {
+  if (!product) {
+    console.warn('Product bị undefined/null:', resJson);
+  } else {
+    console.warn(`id: ${product._id} - name: ${product.name} - price: ${product.price} - image: ${product.image}`);
+  }
+  console.warn('Thiếu dữ liệu sản phẩm:', product);
+  return null;
+}
+
+          } catch (e) {
+            console.error('Lỗi khi lấy sản phẩm:', productId, e);
+            return null;
+          }
+        })
+      );
+
+      const filtered = productDetails.filter((p) => p !== null);
+      setFavoriteItems(filtered);
+    } catch (err) {
+      console.error('Lỗi khi lấy danh sách yêu thích:', err);
+      setFavoriteItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   useEffect(() => {
-    fetchBookmark();
+    fetchFavorites();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchBookmark();
+      fetchFavorites();
     }, [])
   );
 
-  const fetchBookmark = async () => {
-    try {
-      const token = await AsyncStorage.getItem("bookmark");
-      console.log("Raw bookmark token:", token);
 
-      if (token) {
-        const bookmarkedIds = JSON.parse(token);
-        const response = await fetch("http://192.168.8.121:3001/api/products");
-        const allProducts = await response.json();
-
-        const filtered = allProducts.filter((product: any) =>
-          bookmarkedIds.includes(String(product._id))
-        );
-
-        console.log("Bookmark result:", filtered);
-        setBookmarkedItems(filtered);
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Lỗi khi fetch bookmark:", error);
-    }
-  };
+  const formatPrice = (price: number | string | undefined) =>
+    price !== undefined ? Number(price).toLocaleString('vi-VN') + 'đ' : '';
 
   const Item = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <Image source={{ uri: item.image }} style={styles.imgCard} />
-      <Text style={styles.nameCard} numberOfLines={1}>{item.name}</Text>
+      <Text style={styles.nameCard} numberOfLines={1}>
+        {item.name}
+      </Text>
       <Text style={styles.priceCard}>{formatPrice(item.price)}</Text>
     </View>
   );
 
-  const formatPrice = (price: number | string): string => {
-    return Number(price)
-      .toLocaleString('vi-VN') + 'đ';
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Yêu thích</Text>
-      <View style={styles.container}>
+
       {isLoading ? (
-  <ActivityIndicator size={"large"} />
-) : bookmarkedItems.length === 0 ? (
-    <Text style={styles.textNull}>Hiện tại chưa có sản phẩm yêu thích nào</Text>
-) : (
-  <FlatList
-    data={bookmarkedItems}
-    keyExtractor={(item) => item._id}
-    numColumns={2}
-    renderItem={({ item }) => (
-      <View style={{ flex: 1, margin: 8 }}>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("ProductDetail", { id: item._id })
-          }
-        >
-          <Item item={item} />
-        </TouchableOpacity>
-      </View>
-    )}
-  />
-)}
-        
-      </View>
+        <ActivityIndicator size="large" style={{ marginTop: 30 }} />
+      ) : favoriteItems.length === 0 ? (
+        <Text style={styles.textNull}>
+          Hiện tại chưa có sản phẩm yêu thích nào
+        </Text>
+      ) : (
+        <FlatList
+          data={favoriteItems}
+          keyExtractor={(item) => item._id}
+          numColumns={2}
+          renderItem={({ item }) => (
+            <View style={{ flex: 1, margin: 8 }}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() =>
+                  navigation.navigate('ProductDetail', { productId: item._id })
+                }>
+                <Item item={item} />
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 };
@@ -104,19 +149,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    backgroundColor: "#EC761E",
-    padding: 8,
-    color: "#FFFFFF",
-    textAlign: "center",
+    backgroundColor: '#EC761E',
+    paddingBottom: 8,
+    paddingTop: 3,
+    color: '#FFFFFF',
+    textAlign: 'center',
     fontSize: 32,
-    fontFamily: "Lora-Bold"
+    fontFamily: 'Lora-Bold',
   },
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     paddingTop: 5,
     height: 230,
     width: 180,
-    alignContent: "space-between",
     borderRadius: 16,
     elevation: 5,
   },
@@ -124,27 +169,27 @@ const styles = StyleSheet.create({
     width: width / 2 - 32,
     height: width / 2 - 32,
     borderRadius: 8,
-    alignSelf: "center"
+    alignSelf: 'center',
   },
   nameCard: {
     fontSize: 13,
     marginTop: 5,
     marginLeft: 10,
-    fontFamily: "Lora-Regular",
+    fontFamily: 'Lora-Regular',
     width: 165,
   },
   priceCard: {
     fontSize: 13,
     marginTop: 5,
     marginLeft: 10,
-    fontFamily: "Lora-Regular",
-    color: "#EC761E"
+    fontFamily: 'Lora-Regular',
+    color: '#EC761E',
   },
-  textNull:{
-    textAlign: "center",
-    textAlignVertical: "center",
-    height: 600,
-    fontFamily: "Lora-Regular",
-    fontSize: 16
-  }
+  textNull: {
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    flex: 1,
+    fontFamily: 'Lora-Regular',
+    fontSize: 16,
+  },
 });

@@ -1,6 +1,8 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
 
 
 
@@ -118,5 +120,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
 }
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+apply plugin: 'com.google.gms.google-services'

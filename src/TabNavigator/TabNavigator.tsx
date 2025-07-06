@@ -7,13 +7,10 @@ import FavoriteScreen from '../screens/FavoriteScreen';
 import AccountScreen from '../screens/AccountScreen';
 import { Image, TouchableOpacity } from 'react-native';
 
-
-
 import PayScreen from '../screens/pay/PayScreen';
 import CodPayScreen from '../screens/pay/CodPayScreen';
 import ShopPayScreen from '../screens/pay/ShopPayScreen';
 import CreditCardPayScreen from '../screens/pay/CreditCardPayScreen';
-
 
 
 import CartScreen from '../screens/CartScreen'
