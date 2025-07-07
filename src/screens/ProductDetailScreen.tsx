@@ -18,15 +18,30 @@ import Snackbar from 'react-native-snackbar';
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
-const ProductDetailScreen = ({ route, navigation }) => {
+type Product = {
+  _id: string;
+  name: string;
+  image: string;
+  price: number;
+  stock: number;
+  description: string;
+};
+
+type Comment = {
+  userName: string;
+  rating: number;
+  content: string;
+};
+
+const ProductDetailScreen = ({ route, navigation }: any) => {
   const { productId } = route.params;
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
   const [bookmark, setBookMark] = useState(false);
-  const [comments, setComments] = useState([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [rating, setRating] = useState(5);
 
@@ -49,7 +64,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
         const res = await API.get(`/favorites/check/${userId}/${productId}`);
         const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
         setBookMark(isFav);
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
         setBookMark(false);
       }
@@ -86,6 +101,11 @@ const ProductDetailScreen = ({ route, navigation }) => {
           { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') },
         ]);
         return;
+}
+
+      if (!product) {
+        Alert.alert('Không tìm thấy thông tin sản phẩm.');
+        return;
       }
 
       const cartItem = {
@@ -96,7 +116,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
         size: selectedSize,
         quantity: quantity,
         price: product.price,
-total: product.price * quantity,
+        total: product.price * quantity,
       };
 
       await API.post('/carts/add', cartItem);
@@ -104,7 +124,12 @@ total: product.price * quantity,
       Alert.alert('✅ Sản phẩm đã được thêm vào giỏ hàng!');
       navigation.navigate('Cart');
     } catch (err) {
-      console.error('Lỗi khi thêm vào giỏ hàng:', err.response?.data || err.message);
+      if (err && typeof err === 'object' && 'response' in err) {
+        // @ts-ignore
+        console.error('Lỗi khi thêm vào giỏ hàng:', err.response?.data || err.message);
+      } else {
+        console.error('Lỗi khi thêm vào giỏ hàng:', err);
+      }
       Alert.alert('❌ Có lỗi xảy ra khi thêm vào giỏ hàng.');
     }
   };
@@ -137,7 +162,7 @@ total: product.price * quantity,
     }
   };
 
-  const saveBookmark = async (productId) => {
+  const saveBookmark = async (productId: string) => {
     try {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
@@ -155,7 +180,7 @@ total: product.price * quantity,
           onPress: () => navigation.navigate('Home', { screen: 'Favorite' }),
         },
       });
-    } catch (err) {
+    } catch (err: any) {
       if (err?.response?.status === 400 && err.response?.data?.message?.includes('Sản phẩm đã có')) {
         setBookMark(true);
       } else {
@@ -165,7 +190,7 @@ total: product.price * quantity,
     }
   };
 
-  const removeBookmark = async (productId) => {
+  const removeBookmark = async (productId: string) => {
     try {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) return;
@@ -179,7 +204,7 @@ total: product.price * quantity,
       });
     } catch (err) {
       console.error('Lỗi xoá favorite:', err);
-      Alert.alert('Không xoá được khỏi Yêu thích!');
+Alert.alert('Không xoá được khỏi Yêu thích!');
     }
   };
 
@@ -199,72 +224,13 @@ total: product.price * quantity,
     );
   }
 
-<<<<<<< HEAD
-=======
-  //Hoang Anh - bookmark
-
-// Thêm Yêu thích:  POST  /api/favorites/add
-const saveBookmark = async (productId: string) => {
-  try {
-    const userId = await AsyncStorage.getItem('userId');
-    if (!userId) {
-      return Alert.alert('Bạn cần đăng nhập để dùng tính năng Yêu thích!');
-    }
-
-    // Gửi request
-    const res = await API.post('/favorites/add', { userId, productId });
-
-    setBookMark(true);
-    Snackbar.show({
-      text: 'Thêm thành công vào mục Yêu thích!',
-      duration: Snackbar.LENGTH_SHORT,
-      action: {
-        text: 'Xem',
-        onPress: () => navigation.navigate('Home', { screen: 'Favorite' }),
-      },
-    });
-  } catch (err: any) {
-    // Nếu là lỗi đã tồn tại, vẫn có thể coi là "đang ở trạng thái yêu thích"
-    if (err?.response?.status === 400 && err.response?.data?.message?.includes('Sản phẩm đã có')) {
-      setBookMark(true); // Đảm bảo icon đúng trạng thái
-    } else {
-      console.error('Lỗi thêm favorite:', err);
-      Alert.alert('Không thêm được vào Yêu thích!');
-    }
-  }
-};
-
-// Xoá Yêu thích:  DELETE  /api/favorites/:userId/:productId
-const removeBookmark = async (productId: string) => {
-  try {
-    const userId = await AsyncStorage.getItem('userId');
-    if (!userId) return;
-
-    await API.delete(`/favorites/${userId}/${productId}`);
-    setBookMark(false);
-
-    Snackbar.show({
-      text: 'Xoá thành công khỏi mục Yêu thích!',
-      duration: Snackbar.LENGTH_SHORT,
-    });
-  } catch (err) {
-    console.error('Lỗi xoá favorite:', err);
-    Alert.alert('Không xoá được khỏi Yêu thích!');
-  }
-};
-
-/* ---------- (Không cần renderBookmark bằng AsyncStorage nữa) ---------- */
-
-
-
->>>>>>> 530d472b13d77c8a1c3e04eabf2bf0df032dfa2a
   return (
     <ScrollView style={styles.container}>
       <TouchableOpacity onPress={() => {
         Snackbar.dismiss();
         navigation.goBack();
       }} style={styles.backButton}>
-<Icon name="arrow-back" size={24} color="black" />
+        <Icon name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
       <Image source={{ uri: product.image }} style={styles.image} />
@@ -330,7 +296,7 @@ const removeBookmark = async (productId: string) => {
         </View>
 
         <TouchableOpacity style={styles.cartButton} onPress={handleAddToCart}>
-          <Text style={styles.cartText}>Thêm vào giỏ hàng</Text>
+<Text style={styles.cartText}>Thêm vào giỏ hàng</Text>
         </TouchableOpacity>
 
         <View style={{ marginTop: 24 }}>
@@ -342,7 +308,7 @@ const removeBookmark = async (productId: string) => {
               <View key={index} style={{ marginVertical: 8 }}>
                 <Text style={{ fontWeight: 'bold' }}>{comment.userName}</Text>
                 <Text>Đánh giá: {comment.rating}⭐</Text>
-<Text>{comment.content}</Text>
+                <Text>{comment.content}</Text>
               </View>
             ))
           )}
@@ -403,7 +369,7 @@ const styles = StyleSheet.create({
   quantityRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   qtyButton: { borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 4 },
   qtyText: { fontSize: 16 },
-  qtyNumber: { marginHorizontal: 12, fontSize: 16 },
+qtyNumber: { marginHorizontal: 12, fontSize: 16 },
   cartButton: { backgroundColor: 'orange', padding: 14, alignItems: 'center', borderRadius: 5 },
   cartText: { color: '#fff', fontWeight: 'bold' },
   heart: { width: 20, height: 20 },
