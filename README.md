@@ -40,3 +40,5 @@ npm install @react-native-firebase/auth
 npm i @react-native-google-signin/google-signin
 npm install @react-native-firebase/auth@latest
 --
+
+// 4/7: Tài khoản
