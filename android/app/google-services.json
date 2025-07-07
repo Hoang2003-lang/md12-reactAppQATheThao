@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "985098184266",
+    "project_id": "md-12-datn",
+    "storage_bucket": "md-12-datn.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:985098184266:android:93de0b0d4b47e2d77f68b3",
+        "android_client_info": {
+          "package_name": "com.md12_reactapp_qathethao"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "985098184266-gr9eknc6ldq8njhnan5mevahfpnmmr50.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.md12_reactapp_qathethao",
+            "certificate_hash": "04a52b1c0fb2ca2c794614405f1fdfdf1ce10846"
+          }
+        },
+        {
+          "client_id": "985098184266-s3mp7f1q7t899ef5g3eu2huh3ocarusj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaQCTL18-IioTgYmOGAMp2Y_7-8IJvuAc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "985098184266-s3mp7f1q7t899ef5g3eu2huh3ocarusj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
