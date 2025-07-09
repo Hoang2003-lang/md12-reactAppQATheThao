@@ -33,7 +33,7 @@ npm react-native-asset
 --
 npm install @react-native-async-storage/async-storage
 npm install react-native-snackbar
-npm i react-native-image-picker
+npm i react-native-image-
 npm i react-native-actions-sheet
 npm install --save @react-native-firebase/app
 npm install @react-native-firebase/auth
@@ -42,3 +42,4 @@ npm install @react-native-firebase/auth@latest
 --
 
 // 4/7: Tài khoản
+picker
