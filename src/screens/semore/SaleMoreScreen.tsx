@@ -10,42 +10,42 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import API from '../../api';
-import ProductCard from '../productCard/ProductCard';
+import { getDiscountProducts } from '../../services/SaleProducts';
+import SaleProductCard from '../productCard/SaleProductCard';
 
 const { width } = Dimensions.get('window');
 
-const LogoMoreScreen = ({ navigation, route }: any) => {
-  const { code, title } = route.params;
+const SaleMoreScreen = ({ navigation, route }: any) => {
+  const { title, type } = route.params;
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
-    const fetchProductsByCategory = async () => {
-      try {
-        const res = await API.get('/products');
-        const all = res.data;
-        const filtered = all.filter((p: any) => p.categoryCode === code);
-        if (isMounted) setProducts(filtered);
-      } catch (error) {
-        console.error('Lỗi lấy sản phẩm theo danh mục:', error);
-      } finally {
-        if (isMounted) setLoading(false);
+    const fetchProducts = async () => {
+      if (type === 'promotion') {
+        try {
+          const discountList = await getDiscountProducts();
+          if (isMounted) setProducts(discountList);
+        } catch (err) {
+          console.error('Lỗi khi lấy sản phẩm khuyến mãi:', err);
+        } finally {
+          if (isMounted) setLoading(false);
+        }
       }
     };
 
-    fetchProductsByCategory();
+    fetchProducts();
 
     return () => {
       isMounted = false;
     };
-  }, [code]);
+  }, [type]);
 
   const renderItem = ({ item }: any) => (
     <View style={styles.productWrapper}>
-      <ProductCard item={item} navigation={navigation} />
+      <SaleProductCard item={item} navigation={navigation} />
     </View>
   );
 
@@ -55,7 +55,9 @@ const LogoMoreScreen = ({ navigation, route }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerText} numberOfLines={1}>{title || 'Sản phẩm'}</Text>
+        <Text style={styles.headerText} numberOfLines={1}>
+          {title || 'Khuyến mãi'}
+        </Text>
       </View>
 
       {loading ? (
@@ -68,14 +70,13 @@ const LogoMoreScreen = ({ navigation, route }: any) => {
           numColumns={2}
           contentContainerStyle={styles.list}
           removeClippedSubviews={false}
-
         />
       )}
     </SafeAreaView>
   );
 };
 
-export default LogoMoreScreen;
+export default SaleMoreScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   productWrapper: {
-    width: (width - 40) / 2,
+    width: (width - 40) / 2, // 10 + 10 padding + 10 khoảng giữa
     marginBottom: 15,
     alignItems: 'center',
     backgroundColor: '#fff',

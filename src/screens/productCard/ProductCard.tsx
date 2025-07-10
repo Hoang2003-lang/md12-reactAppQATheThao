@@ -8,14 +8,14 @@ const ProductCard = ({ item, navigation }: any) => {
   const handlePressIn = () => {
     Animated.spring(scale, {
       toValue: 1.03,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   };
 
   const handlePressOut = () => {
     Animated.spring(scale, {
       toValue: 1,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   };
 
