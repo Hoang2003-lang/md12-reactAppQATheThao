@@ -25,8 +25,11 @@ import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
 import ForgotPassword from './src/login/ForgotPassword';
 
+
+
 import TabNavigator from './src/TabNavigator/TabNavigator';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
+import NotificationScreen from './src/screens/NotificationScreen';
 
 
 
@@ -56,7 +59,6 @@ const App = () => {
           <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} />     
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Category" component={Logomore} />
-          <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
           <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
         </Stack.Navigator>
       </NavigationContainer>
