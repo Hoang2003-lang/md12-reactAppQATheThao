@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import API from '../api';
 
 export default function CheckoutScreen({ route, navigation }: any) {
   const { selectedItems } = route.params;
-  const [userId, setUserId] = useState('');
-  const [addressList, setAddressList] = useState<any[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [discount, setDiscount] = useState(0);
   const [selectedVoucher, setSelectedVoucher] = useState<any>(null);
@@ -21,44 +20,86 @@ export default function CheckoutScreen({ route, navigation }: any) {
     { code: 'FREESHIP', label: 'Giảm 15%', discount: 0.15 },
   ];
 
-  useEffect(() => {
-    const init = async () => {
-      const id = await AsyncStorage.getItem('userId');
-      if (id) {
-        setUserId(id);
-        fetchAddresses(id);
-      }
-    };
-    init();
+  const fetchUser = useCallback(async () => {
+    const id = await AsyncStorage.getItem('userId');
+    if (id) {
+      const res = await API.get(`/users/${id}`);
+      setUser(res.data);
+    }
   }, []);
 
-  const fetchAddresses = async (id: string) => {
-    try {
-      const res = await API.get(`/addresses/user/${id}`);
-      if (Array.isArray(res.data)) {
-        setAddressList(res.data);
-      }
-    } catch (err) {
-      console.error('Lỗi lấy danh sách địa chỉ:', err);
-    }
-  };
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
-  const calculateTotal = () => {
-    const subtotal = selectedItems.reduce((sum: number, item: any) => {
+  useFocusEffect(
+    useCallback(() => {
+      fetchUser(); // Refresh when coming back from address screen
+    }, [])
+  );
+
+  const calculateSubtotal = () => {
+    return selectedItems.reduce((sum: number, item: any) => {
       const product = item.product_id || item;
       return sum + (product.price || 0) * (item.quantity || 1);
     }, 0);
-    return subtotal - subtotal * discount;
   };
 
-  const handleConfirmPayment = () => {
-    if (!selectedAddress) {
-      Alert.alert('Thông báo', 'Vui lòng chọn địa chỉ giao hàng.');
-      return;
+const handleConfirmPayment = async () => {
+  if (!user?.address) {
+    Alert.alert('Chưa có địa chỉ', 'Vui lòng nhập địa chỉ giao hàng.');
+    navigation.navigate('PersonalInfo');
+    return;
+  }
+
+  try {
+    const subtotal = calculateSubtotal();
+    const shippingFee = 20000;
+    const discountAmount = subtotal * discount;
+    const finalTotal = subtotal + shippingFee - discountAmount;
+
+    // ✅ Tạo order_code duy nhất
+    const generateOrderCode = () => {
+      const now = new Date();
+      const timestamp = now.getTime().toString().slice(-6);
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      return `ORD-${timestamp}-${random}`;
+    };
+
+    const orderPayload: any = {
+      id_user: user._id,
+      items: selectedItems.map((item: any) => ({
+        id_product: item.product_id?._id || item._id,
+        name: item.product_id?.name || item.name,
+        purchaseQuantity: item.quantity,
+        price: item.product_id?.price || item.price
+      })),
+      totalPrice: subtotal,
+      shippingFee: shippingFee,
+      discount: discountAmount,
+      finalTotal: finalTotal,
+      paymentMethod: paymentMethod.toLowerCase(),
+      shippingAddress: user.address,
+      status: 'waiting',
+      order_code: generateOrderCode() // ✅ Thêm mã đơn hàng vào
+    };
+
+    if (selectedVoucher?.id) {
+      orderPayload.voucherId = selectedVoucher.id;
     }
-    Alert.alert('Đặt hàng thành công', 'Đơn hàng đã được tạo!');
+
+    console.log('orderPayload gửi đi:', orderPayload);
+
+    await API.post('/orders', orderPayload);
+
+    Alert.alert('Thành công', 'Đặt hàng thành công!');
     navigation.navigate('Home');
-  };
+  } catch (err: any) {
+    console.error('Lỗi API:', err.response?.data || err.message);
+    Alert.alert('Lỗi', err.response?.data?.message || 'Không thể đặt hàng');
+  }
+};
+
 
   const renderProductItem = ({ item }: any) => {
     const product = item.product_id || item;
@@ -75,19 +116,6 @@ export default function CheckoutScreen({ route, navigation }: any) {
     );
   };
 
-  const renderAddressItem = ({ item }: any) => {
-    const isSelected = selectedAddress?._id === item._id;
-    return (
-      <TouchableOpacity
-        style={[styles.addressBox, isSelected && styles.selectedAddressBox]}
-        onPress={() => setSelectedAddress(item)}
-      >
-        <Text style={styles.addressText}>{item.fullName} - {item.phone}</Text>
-        <Text>{item.receivingAddress}, {item.commune}, {item.district}, {item.province}</Text>
-      </TouchableOpacity>
-    );
-  };
-
   return (
     <FlatList
       ListHeaderComponent={
@@ -97,14 +125,12 @@ export default function CheckoutScreen({ route, navigation }: any) {
           {/* Địa chỉ giao hàng */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Địa chỉ giao hàng</Text>
-            <Text style={{ marginBottom: 8, color: '#555' }}>
-              {selectedAddress
-                ? `${selectedAddress.receivingAddress}, ${selectedAddress.commune}, ${selectedAddress.district}, ${selectedAddress.province}`
-                : 'Chưa chọn địa chỉ'}
-            </Text>
-
-            <Text style={styles.sectionSubTitle}>Chọn địa chỉ khác</Text>
-            {addressList.map((item) => renderAddressItem({ item }))}
+            <Text>{user?.address || 'Chưa nhập địa chỉ'}</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('PersonalInfo')}
+            >
+              <Text style={{ color: 'blue', marginTop: 4 }}>Ấn để chỉnh sửa địa chỉ</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Mã giảm giá */}
@@ -130,7 +156,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
                       setSelectedVoucher(item);
                       setDiscount(item.discount);
                       setShowVoucherList(false);
-                      Alert.alert('Áp dụng thành công', `Áp dụng ${item.label}`);
+                      Alert.alert('Thành công', `Áp dụng ${item.label}`);
                     }}
                   >
                     <Text>{item.label}</Text>
@@ -161,14 +187,32 @@ export default function CheckoutScreen({ route, navigation }: any) {
         </View>
       }
       data={selectedItems}
-      renderItem={renderProductItem}
       removeClippedSubviews={false}
+      renderItem={renderProductItem}
       keyExtractor={(_, index) => index.toString()}
       ListFooterComponent={
         <View style={styles.footerContainer}>
           <View style={styles.totalContainer}>
+            <Text style={styles.totalLabel}>Tổng gốc:</Text>
+            <Text style={styles.totalAmount}>{calculateSubtotal().toLocaleString()} đ</Text>
+          </View>
+          {selectedVoucher && (
+            <View style={styles.totalContainer}>
+              <Text style={styles.totalLabel}>Giảm giá:</Text>
+              <Text style={styles.totalAmount}>
+                -{(calculateSubtotal() * discount).toLocaleString()} đ
+              </Text>
+            </View>
+          )}
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalLabel}>Phí vận chuyển:</Text>
+            <Text style={styles.totalAmount}>20,000 đ</Text>
+          </View>
+          <View style={styles.totalContainer}>
             <Text style={styles.totalLabel}>Tổng thanh toán:</Text>
-            <Text style={styles.totalAmount}>{calculateTotal().toLocaleString()} đ</Text>
+            <Text style={styles.totalAmount}>
+              {(calculateSubtotal() + 20000 - calculateSubtotal() * discount).toLocaleString()} đ
+            </Text>
           </View>
           <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmPayment}>
             <Text style={styles.confirmText}>Đặt Hàng</Text>
@@ -184,14 +228,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 },
   section: { marginBottom: 20 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
-  sectionSubTitle: { fontSize: 14, marginBottom: 6 },
-  addressBox: {
-    borderWidth: 1, borderColor: '#ccc', padding: 10, borderRadius: 8, marginBottom: 10
-  },
-  selectedAddressBox: {
-    borderColor: 'orange', backgroundColor: '#fffbe6'
-  },
-  addressText: { fontWeight: 'bold', marginBottom: 4 },
   itemContainer: {
     flexDirection: 'row', backgroundColor: '#f9f9f9',
     padding: 10, marginHorizontal: 16, marginBottom: 10, borderRadius: 8,

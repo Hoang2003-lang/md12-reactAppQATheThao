@@ -101,6 +101,7 @@ const PersonalInfoScreen = () => {
       console.error('Lỗi cập nhật:', err);
       Alert.alert('Lỗi', 'Không thể cập nhật thông tin người dùng');
     }
+    
   };
 
   return (

@@ -21,6 +21,7 @@ type RootStackParamList = {
   PersonalInfo: undefined;
   Cart: undefined;
   Chat: undefined;
+  OrderTracking: undefined;
 };
 
 
@@ -35,6 +36,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { icon: 'cart-outline', label: 'Giỏ hàng', screen: 'Cart' },
+  { icon: 'truck-check-outline', label: 'Theo dõi đơn hàng', screen: 'OrderTracking' },
   { icon: 'account-outline', label: 'Thông tin cá nhân', screen: 'PersonalInfo' },
   { icon: 'chat-outline', label: 'Trò chuyện', screen: 'Chat' },
   { icon: 'shield-lock-outline', label: 'Chính sách và bảo mật' },
