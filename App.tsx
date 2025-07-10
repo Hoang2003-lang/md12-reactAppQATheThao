@@ -33,6 +33,7 @@ import NotificationScreen from './src/screens/NotificationScreen';
 
 
 
+
 const Stack = createNativeStackNavigator();
 
 const App = () => {
@@ -59,6 +60,9 @@ const App = () => {
           <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} />     
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Category" component={Logomore} />
+          <Stack.Screen name="Notification" component={NotificationScreen} />
+          <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
+          <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
         </Stack.Navigator>
       </NavigationContainer>
