@@ -14,6 +14,7 @@ import CheckoutScreen from './src/screens/CheckoutScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
+import OrderTrackingScreen from './src/screens/OrderTrackingScreen';
 
 import PayScreen from './src/screens/pay/PayScreen';
 import CodPayScreen from './src/screens/pay/CodPayScreen';
@@ -29,6 +30,7 @@ import ForgotPassword from './src/login/ForgotPassword';
 import TabNavigator from './src/TabNavigator/TabNavigator';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import NotificationScreen from './src/screens/NotificationScreen';
+
 
 
 
@@ -58,8 +60,9 @@ const App = () => {
           <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} />     
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Category" component={Logomore} />
-                    <Stack.Screen name="Notification" component={NotificationScreen} />
-
+          <Stack.Screen name="Notification" component={NotificationScreen} />
+          <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
+          <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
         </Stack.Navigator>
       </NavigationContainer>

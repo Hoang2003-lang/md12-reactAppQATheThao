@@ -42,3 +42,30 @@ npm install @react-native-firebase/auth@latest
 --
 
 // 4/7: Tài khoản
+
+// xử lý khi bị xung đột git
+Bước 1: Lưu code của bạn lại (commit nếu cần)
+git add .
+git commit -m "Commit code của tôi trước khi pull"
+
+Bước 2: Kéo code mới nhất từ Git về (merge hoặc rebase)
+git pull origin main
+
+Nếu có conflict (xung đột), Git sẽ báo, và bạn phải mở file đó, chỉnh tay rồi:
+git add <file bị conflict>
+git commit -m "Resolve conflict"
+git push origin main
+
+ Ví dụ xử lý xung đột:
+Xung đột:
+<<<<<<< HEAD
+<Text>Hello from my version</Text>
+=======
+<Text>Hello from their version</Text>
+>>>>>>> abc1234
+Bạn muốn giữ cả 2:
+<Text>Hello from my version</Text>
+<Text>Hello from their version</Text>
+
+Hoặc chọn một bên:
+<Text>Hello from my version</Text>
