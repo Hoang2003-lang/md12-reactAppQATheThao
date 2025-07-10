@@ -553,6 +553,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 import { _signInWithGoogle } from '../config/firebase/GoogleSignIn';
+import { onFacebookButtonPress } from "../config/firebase/FacebookSignIn"
 
 export default function LoginScreen({ navigation }: any) {
   const [rememberMe, setRememberMe] = useState(false);
@@ -615,7 +616,39 @@ export default function LoginScreen({ navigation }: any) {
         Alert.alert("Lỗi", "Không thể đăng nhập bằng Google");
       }
     }
-
+    
+    //Login by Facebook
+    const handleFacebookLogin = async () => {
+      try {
+        const userCredential = await onFacebookButtonPress();
+        const user = userCredential.user;
+    
+        console.log('✅ Facebook Firebase UID:', user.uid);
+        console.log('✅ Email:', user.email);
+        console.log('✅ DisplayName:', user.displayName);
+    
+        // 🔁 Gửi thông tin lên backend để xác thực hoặc tạo user trong MongoDB
+        const res = await API.post('/auth/facebook', {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName,
+        });
+    
+        const backendUser = res.data.user;
+    
+        // ✅ Lưu userId thực sự từ MongoDB (ObjectId)
+        await AsyncStorage.setItem('userId', backendUser.id);
+        await AsyncStorage.setItem('userEmail', backendUser.email || '');
+        await AsyncStorage.setItem('userName', backendUser.name || '');
+    
+        // ✅ Điều hướng sang Home
+        navigation.navigate('Home');
+    
+      } catch (err) {
+        console.error('Facebook login error:', err);
+        Alert.alert('Lỗi đăng nhập bằng Facebook');
+      }
+    };
 
     // return (
     //     <View style={styles.container}>
@@ -746,7 +779,7 @@ export default function LoginScreen({ navigation }: any) {
         </View>
 
                 <View style={styles.socialContainer}>
-                    <TouchableOpacity >
+                    <TouchableOpacity onPress={handleFacebookLogin}>
                         <Image
                             style={styles.faceB}
                             source={require(`../assets/images/logo_fb.png`)}

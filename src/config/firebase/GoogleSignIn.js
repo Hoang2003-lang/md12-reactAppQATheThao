@@ -1,7 +1,6 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { getAuth, GoogleAuthProvider, signInWithCredential } from "@react-native-firebase/auth";
 
-//Thất bại
 export const _signInWithGoogle = async () => {
   try {
     // 1. Cấu hình Google Sign-In

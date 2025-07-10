@@ -122,6 +122,10 @@ dependencies {
     }
 
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
+
+    implementation project(':react-native-fbsdk-next')
+
+    implementation ("com.facebook.android:facebook-android-sdk:latest.release")
 }
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 apply plugin: 'com.google.gms.google-services'
