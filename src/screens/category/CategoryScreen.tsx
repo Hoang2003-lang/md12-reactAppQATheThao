@@ -1,35 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import ProductCard from '../productCard/ProductCard';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import API from '../../api';
+import ProductCard from '../productCard/ProductCard';
 
-const CategoryScreen = ({ route, navigation }: any) => {
+const CategoryScreen = ({ route, navigation }) => {
   const { code, title } = route.params;
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await API.get('/products');
-        const filtered = res.data.filter((p: any) => p.categoryCode === code);
-        setProducts(filtered);
-      } catch (err) {
-        console.error('Lỗi lấy sản phẩm danh mục:', err);
-      }
-    })();
-  }, [code]);
+ useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      // Sử dụng title làm tên category
+      const res = await API.get(`/products/categoryByName/${encodeURIComponent(title)}`);
+      setProducts(res.data.products || []);
+    } catch (error) {
+      console.error('Error fetching products by category name:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchProducts();
+}, [title]);
+
+
+  if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="orange" />;
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
-      <View style={styles.wrapRow}>
-        {products.map(item => (
-          <View key={item._id} style={styles.productWrapper}>
-            <ProductCard item={item} navigation={navigation} />
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+      {products.length === 0 ? (
+        <Text style={styles.noProduct}>Không có sản phẩm trong danh mục này.</Text>
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={item => item._id}
+          numColumns={2}
+          renderItem={({ item }) => (
+            <View style={styles.itemWrapper}>
+              <ProductCard item={item} navigation={navigation} />
+            </View>
+          )}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      )}
+    </View>
   );
 };
 
@@ -37,14 +52,7 @@ export default CategoryScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 10 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-  wrapRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between'
-  },
-  productWrapper: {
-    width: '48%',
-    marginBottom: 15,
-  }
+  title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginVertical: 10 },
+  noProduct: { textAlign: 'center', marginTop: 20, fontSize: 16, color: '#888' },
+  itemWrapper: { flex: 1, margin: 5 },
 });

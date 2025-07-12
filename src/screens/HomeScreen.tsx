@@ -43,7 +43,7 @@ const HomeScreen = ({ navigation }: any) => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [banners]); 
+  }, [banners]);
 
   // call api danh muc
   useEffect(() => {
@@ -160,10 +160,10 @@ const HomeScreen = ({ navigation }: any) => {
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Chat')}>
           <Ionicons name="chatbubble-ellipses-outline" size={24} color="#000" />
         </TouchableOpacity>
-   {/* Thông báo*/}
-<TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
-  <Ionicons name="notifications-outline" size={24} color="#000" />
-</TouchableOpacity>
+        {/* Thông báo*/}
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
+          <Ionicons name="notifications-outline" size={24} color="#000" />
+        </TouchableOpacity>
       </View>
 
       {/* Body scroll */}
@@ -241,17 +241,20 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={styles.categoryRow}>
               {categories.map(cat => (
                 <TouchableOpacity
-                  key={cat.id}
+                  key={cat._id}
                   style={styles.categoryItem}
-                  onPress={() => navigation.navigate('Category', {
-                    categoryId: cat.id,
-                    code: cat.code,
-                    title: cat.name,
-                  })}
+                  onPress={() =>
+                    navigation.navigate('Category', {
+                      categoryId: cat._id,
+                      code: cat.code,
+                      title: cat.name,
+                    })
+                  }
                 >
                   <Image source={{ uri: cat.image }} style={styles.categoryImage} />
                 </TouchableOpacity>
               ))}
+
             </View>
           </ScrollView>
 
