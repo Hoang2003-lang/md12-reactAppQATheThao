@@ -14,12 +14,12 @@ import CheckoutScreen from './src/screens/CheckoutScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
-<<<<<<< HEAD
+
 import BannerDT from './src/screens/banner/BannerDetail'
 import SaleMore from './src/screens/semore/SaleMoreScreen'
-=======
+
 import OrderTrackingScreen from './src/screens/OrderTrackingScreen';
->>>>>>> 4e9fdeff11810d85c68d78a279983019e14e3b7d
+
 
 import PayScreen from './src/screens/pay/PayScreen';
 import CodPayScreen from './src/screens/pay/CodPayScreen';

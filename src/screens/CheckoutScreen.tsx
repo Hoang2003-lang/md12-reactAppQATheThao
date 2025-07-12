@@ -34,7 +34,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
 
   useFocusEffect(
     useCallback(() => {
-      fetchUser(); // Refresh when coming back from address screen
+      fetchUser();
     }, [])
   );
 
@@ -45,61 +45,73 @@ export default function CheckoutScreen({ route, navigation }: any) {
     }, 0);
   };
 
-const handleConfirmPayment = async () => {
-  if (!user?.address) {
-    Alert.alert('Chưa có địa chỉ', 'Vui lòng nhập địa chỉ giao hàng.');
-    navigation.navigate('PersonalInfo');
-    return;
-  }
-
-  try {
-    const subtotal = calculateSubtotal();
-    const shippingFee = 20000;
-    const discountAmount = subtotal * discount;
-    const finalTotal = subtotal + shippingFee - discountAmount;
-
-    // ✅ Tạo order_code duy nhất
-    const generateOrderCode = () => {
-      const now = new Date();
-      const timestamp = now.getTime().toString().slice(-6);
-      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-      return `ORD-${timestamp}-${random}`;
-    };
-
-    const orderPayload: any = {
-      id_user: user._id,
-      items: selectedItems.map((item: any) => ({
-        id_product: item.product_id?._id || item._id,
-        name: item.product_id?.name || item.name,
-        purchaseQuantity: item.quantity,
-        price: item.product_id?.price || item.price
-      })),
-      totalPrice: subtotal,
-      shippingFee: shippingFee,
-      discount: discountAmount,
-      finalTotal: finalTotal,
-      paymentMethod: paymentMethod.toLowerCase(),
-      shippingAddress: user.address,
-      status: 'waiting',
-      order_code: generateOrderCode() // ✅ Thêm mã đơn hàng vào
-    };
-
-    if (selectedVoucher?.id) {
-      orderPayload.voucherId = selectedVoucher.id;
+  const handleConfirmPayment = async () => {
+    if (!user || !user._id) {
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng.');
+      return;
     }
 
-    console.log('orderPayload gửi đi:', orderPayload);
+    if (!selectedItems || selectedItems.length === 0) {
+      Alert.alert('Lỗi', 'Giỏ hàng trống.');
+      return;
+    }
 
-    await API.post('/orders', orderPayload);
+    if (!paymentMethod) {
+      Alert.alert('Lỗi', 'Vui lòng chọn phương thức thanh toán.');
+      return;
+    }
 
-    Alert.alert('Thành công', 'Đặt hàng thành công!');
-    navigation.navigate('Home');
-  } catch (err: any) {
-    console.error('Lỗi API:', err.response?.data || err.message);
-    Alert.alert('Lỗi', err.response?.data?.message || 'Không thể đặt hàng');
-  }
-};
+    if (!user.address) {
+      Alert.alert('Chưa có địa chỉ', 'Vui lòng nhập địa chỉ giao hàng.');
+      navigation.navigate('PersonalInfo');
+      return;
+    }
 
+    try {
+      const subtotal = calculateSubtotal();
+      const shippingFee = 20000;
+      const discountAmount = subtotal * discount;
+      const finalTotal = subtotal + shippingFee - discountAmount;
+
+      const generateOrderCode = () => {
+        const now = new Date();
+        const timestamp = now.getTime().toString().slice(-6);
+        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+        return `ORD-${timestamp}-${random}`;
+      };
+
+      const orderPayload: any = {
+  userId: user._id,
+        items: selectedItems.map((item: any) => ({
+          id_product: item.product_id?._id || item._id,
+          name: item.product_id?.name || item.name,
+          purchaseQuantity: item.quantity,
+          price: item.product_id?.price || item.price
+        })),
+        totalPrice: subtotal,
+        shippingFee,
+        discount: discountAmount,
+        finalTotal,
+        paymentMethod: paymentMethod.toLowerCase(),
+        shippingAddress: user.address,
+        status: 'waiting',
+order_code: generateOrderCode()
+      };
+
+      if (selectedVoucher?.id) {
+        orderPayload.voucherId = selectedVoucher.id;
+      }
+
+      console.log('orderPayload gửi đi:', orderPayload);
+      await API.post('/orders', orderPayload);
+
+      Alert.alert('Thành công', 'Đặt hàng thành công!');
+      navigation.navigate('Home');
+    } catch (err: any) {
+      console.error('Lỗi API:', err.response?.data || err.message);
+      Alert.alert('Lỗi', err.response?.data?.message || 'Không thể đặt hàng');
+    }
+  };
 
   const renderProductItem = ({ item }: any) => {
     const product = item.product_id || item;
@@ -122,18 +134,14 @@ const handleConfirmPayment = async () => {
         <View style={styles.container}>
           <Text style={styles.title}>Thanh Toán</Text>
 
-          {/* Địa chỉ giao hàng */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Địa chỉ giao hàng</Text>
             <Text>{user?.address || 'Chưa nhập địa chỉ'}</Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('PersonalInfo')}
-            >
+            <TouchableOpacity onPress={() => navigation.navigate('PersonalInfo')}>
               <Text style={{ color: 'blue', marginTop: 4 }}>Ấn để chỉnh sửa địa chỉ</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Mã giảm giá */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Chọn Voucher</Text>
             <TouchableOpacity
@@ -166,7 +174,6 @@ const handleConfirmPayment = async () => {
             )}
           </View>
 
-          {/* Phương thức thanh toán */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
             <TouchableOpacity
