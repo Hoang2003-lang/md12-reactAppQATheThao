@@ -14,15 +14,20 @@ import CheckoutScreen from './src/screens/CheckoutScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/SeemoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
-import NotificationScreen from './src/screens/NotificationScreen';
+
+import PayScreen from './src/screens/pay/PayScreen';
+import CodPayScreen from './src/screens/pay/CodPayScreen';
+// import ShopPayScreen from './src/screens/pay/CodPayScreen';
+import CreditCardPayScreen from './src/screens/pay/CreditCardPayScreen';
 
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
 import ForgotPassword from './src/login/ForgotPassword';
 
-
 import TabNavigator from './src/TabNavigator/TabNavigator';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
+import NotificationScreen from './src/screens/NotificationScreen';
+
 
 
 
@@ -32,10 +37,10 @@ const App = () => {
 
 
   return (
-    
-    <ActionSheetProvider> 
+
+    <ActionSheetProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}> 
+        <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
           {/* thanh điều hướng, không xoá */}
           <Stack.Screen name="Home" component={TabNavigator} />
           <Stack.Screen name="Splash" component={SplashScreen} />
@@ -44,16 +49,16 @@ const App = () => {
           <Stack.Screen name="ForgotP" component={ForgotPassword} />
           <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
           <Stack.Screen name="Promotion" component={SeemoreScreen} />
-
           <Stack.Screen name="Cart" component={CartScreen} />
-          {/* <Stack.Screen name="Pay" component={PayScreen} />
+           <Stack.Screen name="Pay" component={PayScreen} />
           <Stack.Screen name="CodPay" component={CodPayScreen} />
-          <Stack.Screen name="ShopPay" component={ShopPayScreen} />
-          <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} /> */}
-
-          
+          {/* <Stack.Screen name="ShopPay" component={ShopPayScreen} /> */}
+          <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} />     
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Category" component={Logomore} />
+          <Stack.Screen name="Notification" component={NotificationScreen} />
+          {/* <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} /> */}
+          <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
         </Stack.Navigator>
       </NavigationContainer>

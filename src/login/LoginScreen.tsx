@@ -586,16 +586,32 @@ export default function LoginScreen({ navigation }: any) {
         }
     };
 
+
+    //Login by Google
     async function googleSignin() {
       try {
         const userData = await _signInWithGoogle();
-        if (!userData) {
+        if (!userData || !userData.accessToken) {
           Alert.alert("Lỗi", "Đăng nhập bằng Google thất bại");
           return;
         }
+    
+        // Gửi accessToken thật từ Google lên server
+        // console.log("Gửi accessToken:", userData.accessToken);
+        const res = await API.post('/auth/google', {
+          accessToken: userData.accessToken
+        });
+    
+        const user = res.data.user;
+    
+        await AsyncStorage.setItem('userId', user.id);
+        await AsyncStorage.setItem('userEmail', user.email);
+        await AsyncStorage.setItem('userName', user.name);
+    
         navigation.navigate("Home");
+    
       } catch (error) {
-        console.error("Lỗi chi tiết:", error);
+        console.error("Lỗi chi tiết:", (error as any)?.response?.data);        
         Alert.alert("Lỗi", "Không thể đăng nhập bằng Google");
       }
     }

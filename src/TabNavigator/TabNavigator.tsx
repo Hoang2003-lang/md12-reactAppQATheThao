@@ -12,6 +12,7 @@ import CodPayScreen from '../screens/pay/CodPayScreen';
 import ShopPayScreen from '../screens/pay/ShopPayScreen';
 import CreditCardPayScreen from '../screens/pay/CreditCardPayScreen';
 
+
 import CartScreen from '../screens/CartScreen'
 
 const Tab = createBottomTabNavigator();

@@ -17,6 +17,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 import { Animated } from 'react-native';
 import ProductCard from './productCard/ProductCard';
+import SaleProductCard from './productCard/SaleProductCard';
+import { fetchAllProducts } from '../services/ProductServices';
+import { fetchSaleProducts } from '../services/SaleProducts';
+import { fetchBanners } from '../services/BannerServices';
+import { fetchCategories } from '../services/CategoryServices';
+
 
 
 const { width } = Dimensions.get('window');
@@ -24,11 +30,24 @@ const { width } = Dimensions.get('window');
 const HomeScreen = ({ navigation }: any) => {
 
   const scrollRef = useRef<ScrollView>(null);
-  const [banners, setBanners] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const banners = [
+    { id: '1', image: require('../assets/images/bannerDATN.jpg') },
+    { id: '2', image: require('../assets/images/bannerDATN3.jpg') },
+    { id: '3', image: require('../assets/images/bannerDATN2.jpg') },
+    { id: '4', image: require('../assets/images/bannerDATN1.jpg') },
+  ];
+
+  const categories = [
+    { id: 'psg', image: require('../assets/images/psg.png') },
+    { id: 'arsenal', image: require('../assets/images/arsenal.png') },
+    { id: 'chelsea', image: require('../assets/images/chelsea.png') },
+    { id: 'vietnam', image: require('../assets/images/vietnam.png') },
+    { id: 'japan', image: require('../assets/images/japan.png') },
+  ];
 
   // banner chuyển động
   useEffect(() => {
@@ -43,23 +62,10 @@ const HomeScreen = ({ navigation }: any) => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [banners]);
-
-  // call api danh muc
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await API.get('/categories');
-        setCategories(res.data);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      }
-    })();
   }, []);
 
   // load sp
   useEffect(() => {
-    loadBanners();
     loadProducts();
     const unsubscribe = navigation.addListener('focus', () => {
       loadCartCount();
@@ -67,23 +73,6 @@ const HomeScreen = ({ navigation }: any) => {
     loadCartCount();
     return unsubscribe;
   }, []);
-
-  // call banner
-  const loadBanners = async () => {
-    try {
-      const res = await API.get('/banners');
-      console.log('lấy dl t cong', res.data)
-      setBanners(res.data)
-    } catch (error) {
-      console.error('Lỗi khi lấy dữ liệu banner', error);
-    }
-  }
-
-  const handleBannerPress = (banner: any) => {
-    navigation.navigate('BannerDT', { banner });
-  };
-
-
 
   // call api sp
   const loadProducts = async () => {
@@ -123,12 +112,20 @@ const HomeScreen = ({ navigation }: any) => {
   };
 
 
-  const Section = ({ title, children }: any) => (
+  const Section = ({ title, onSeeMore, children }: any) => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {onSeeMore && (
+          <TouchableOpacity onPress={onSeeMore}>
+            <Text style={styles.seeMore}>Xem thêm...</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <View style={styles.wrapRow}>{children}</View>
     </View>
   );
+
 
   return (
     <View style={styles.container}>
@@ -179,20 +176,14 @@ const HomeScreen = ({ navigation }: any) => {
           style={styles.bannerWrapper}
         >
           {banners.map(b => (
-            <TouchableOpacity
-              key={b.id}
-              activeOpacity={0.8}
-              onPress={() => handleBannerPress(b)}
-            >
-              <Image key={b.id} source={{ uri: b.banner }} style={styles.bannerImage} />
-            </TouchableOpacity>
+            <Image key={b.id} source={b.image} style={styles.bannerImage} />
           ))}
 
 
         </ScrollView>
         <View style={styles.dotsContainer}>
-          {banners.map((_, i) => (
-            <View key={i} style={[styles.dot, i === activeIndex && styles.activeDot]} />
+          {banners.map((b, i) => (
+            <View key={b.id || i} style={[styles.dot, i === activeIndex && styles.activeDot]} />
           ))}
         </View>
 
@@ -200,7 +191,8 @@ const HomeScreen = ({ navigation }: any) => {
         <Section title="Khuyến mãi">
           {products.slice(0, 4).map(item => (
             <View key={item._id} style={styles.productWrapper} >
-              <ProductCard item={item} navigation={navigation} />
+
+              <ProductCard key={item._id} item={item} navigation={navigation} />
             </View>
           ))}
 
@@ -212,28 +204,38 @@ const HomeScreen = ({ navigation }: any) => {
 
         </Section>
 
-        <Section title="Áo Câu Lạc Bộ">
+
+        <Section
+          title="Áo Câu Lạc Bộ"
+          onSeeMore={() =>
+            navigation.navigate('Promotion', { title: 'Áo Câu Lạc Bộ', type: 'club' })
+          }
+        >
           {products.filter(p => p.name.includes('Áo Đấu')).slice(0, 4).map(item => (
-            <View key={item._id} style={styles.productWrapper} >
-              <ProductCard key={item._id} item={item} navigation={navigation} />
-            </View>
-
-          ))}
-          <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Áo Câu Lạc Bộ', type: 'club' })}>
-            <Text style={styles.seeMore}>Xem thêm...</Text>
-          </TouchableOpacity>
-        </Section>
-
-        <Section title="Áo đội tuyển quốc gia">
-          {products.filter(p => p.name.includes('Manchester')).slice(0, 4).map(item => (
-            <View key={item._id} style={styles.productWrapper} >
-              <ProductCard key={item._id} item={item} navigation={navigation} />
+            <View key={item._id} style={styles.productWrapper}>
+              <ProductCard item={item} navigation={navigation} />
             </View>
           ))}
-          <TouchableOpacity onPress={() => navigation.navigate('Promotion', { title: 'Áo Đội Tuyển Quốc Gia', type: 'national' })}>
-            <Text style={styles.seeMore}>Xem thêm...</Text>
-          </TouchableOpacity>
         </Section>
+
+
+        <Section
+          title="Áo đội tuyển quốc gia"
+          onSeeMore={() =>
+            navigation.navigate('Promotion', { title: 'Áo Đội Tuyển Quốc Gia', type: 'national' })
+          }
+        >
+          {products
+            .filter(p => ['vietnam', 'japan', 'england', 'arsenal', 'psg', 'tottenham'].includes(p.categoryCode))
+            .slice(0, 4)
+            .map(item => (
+              <View key={item._id} style={styles.productWrapper}>
+                <ProductCard item={item} navigation={navigation} />
+              </View>
+            ))}
+        </Section>
+
+
 
 
         <Section title="Danh mục">
@@ -241,15 +243,9 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={styles.categoryRow}>
               {categories.map(cat => (
                 <TouchableOpacity
-                  key={cat._id}
+                  key={cat.id}
                   style={styles.categoryItem}
-                  onPress={() =>
-                    navigation.navigate('Category', {
-                      categoryId: cat._id,
-                      code: cat.code,
-                      title: cat.name,
-                    })
-                  }
+                  onPress={() => navigation.navigate('Category', { categoryId: cat.id })}
                 >
                   <Image source={{ uri: cat.image }} style={styles.categoryImage} />
                 </TouchableOpacity>
@@ -259,6 +255,8 @@ const HomeScreen = ({ navigation }: any) => {
           </ScrollView>
 
         </Section>
+
+
       </ScrollView>
     </View>
   );
@@ -362,7 +360,7 @@ const styles = StyleSheet.create({
   },
   categoryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    gap: 10,
     marginBottom: 10
   },
   categoryItem: {
@@ -372,13 +370,9 @@ const styles = StyleSheet.create({
     height: 70,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden', // bo ảnh trong
     margin: 10
   },
-  categoryImage: {
-    width: '100%',
-    height: '100%',
-  },
+  categoryImage: { width: 40, height: 40 },
   seeMore: {
     color: 'orange',
     marginLeft: 15,
@@ -400,6 +394,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 10,
 
-  }
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    marginBottom: 5,
+    margin: 20
+  },
+
 
 });

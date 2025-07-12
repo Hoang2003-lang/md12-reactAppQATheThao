@@ -3,7 +3,7 @@ import {
   StyleSheet, Text, View, TouchableOpacity,
   TextInput, SafeAreaView, ScrollView, Alert,
 } from 'react-native';
-import LocationPicker from './LocationPicker'; // Đã có
+import LocationPicker from '../pay/LocationPicker'; // Đã có
 import { useNavigation } from '@react-navigation/native';
 
 const ShopPayScreen = () => {
