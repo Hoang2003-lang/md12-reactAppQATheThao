@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function CheckoutScreen({ route, navigation }: any) {
   const { selectedItems } = route.params;
   const [userId, setUserId] = useState('');
+  const [user, setUser] = useState<any>(null); // <-- Thêm state user
   const [addressList, setAddressList] = useState<any[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState('COD');
@@ -32,72 +34,92 @@ export default function CheckoutScreen({ route, navigation }: any) {
     init();
   }, []);
 
-  const fetchAddresses = async (id: string) => {
-    try {
-      const res = await API.get(`/addresses/user/${id}`);
-      if (Array.isArray(res.data)) {
-        setAddressList(res.data);
-      }
-    } catch (err) {
-      console.error('Lỗi lấy danh sách địa chỉ:', err);
+  // <-- Thêm hàm fetchUser để lấy user từ AsyncStorage
+  const fetchUser = async () => {
+    const json = await AsyncStorage.getItem('user');
+    if (json) {
+      setUser(JSON.parse(json));
     }
   };
 
-  // ✅ Added: Tính số tiền giảm giá
-  const calculateDiscountAmount = () => {
-    const subtotal = selectedItems.reduce((sum: number, item: any) => {
+  useEffect(() => {
+    fetchUser(); // <-- Gọi fetchUser 1 lần khi component mount
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUser(); // Refresh user khi trở lại màn hình
+    }, [])
+  );
+
+  // Tính tổng tiền chưa tính phí ship và giảm giá
+  const calculateSubtotal = () => {
+    return selectedItems.reduce((sum: number, item: any) => {
       const product = item.product_id || item;
       return sum + (product.price || 0) * (item.quantity || 1);
     }, 0);
-    return subtotal * discount;
   };
 
-  // ✅ Added: Tính tổng tiền sau giảm
+  // <-- Thêm hàm tính tổng tiền (cộng phí ship, trừ giảm giá)
   const calculateTotal = () => {
-    const subtotal = selectedItems.reduce((sum: number, item: any) => {
-      const product = item.product_id || item;
-      return sum + (product.price || 0) * (item.quantity || 1);
-    }, 0);
-    return subtotal - calculateDiscountAmount();
+    const subtotal = calculateSubtotal();
+    const shippingFee = 20000;
+    const discountAmount = subtotal * discount;
+    return subtotal + shippingFee - discountAmount;
   };
 
-  // ✅ Added: Hàm gọi API tạo đơn hàng
-  const createOrderApiCall = async () => {
-    if (!userId || !selectedAddress || selectedItems.length === 0) {
-      Alert.alert('Lỗi', 'Vui lòng chọn địa chỉ và có sản phẩm trong giỏ hàng');
+  const handleConfirmPayment = async () => {
+    if (!user?.address) {
+      Alert.alert('Chưa có địa chỉ', 'Vui lòng nhập địa chỉ giao hàng.');
+      navigation.navigate('PersonalInfo');
       return;
     }
 
-    const orderItems = selectedItems.map((item: any) => ({
-      id_product: item.product_id?._id || item.id_product,
-      name: item.product_id?.name || item.name,
-      purchaseQuantity: item.quantity,
-      price: item.product_id?.price || item.price
-    }));
-
-    const payload = {
-      id_user: userId,
-      items: orderItems,
-      shippingFee: 0,
-      discount: calculateDiscountAmount(),
-      finalTotal: calculateTotal(),
-      paymentMethod,
-      shippingAddress: `${selectedAddress.receivingAddress}, ${selectedAddress.commune}, ${selectedAddress.district}, ${selectedAddress.province}`,
-      voucherId: selectedVoucher?._id || null
-    };
-
     try {
-      const res = await API.post('/orders', payload);
-      if (res.data?.data) {
-        navigation.replace('OrderSuccessScreen', {
-          order: res.data.data
-        });
-      } else {
-        throw new Error('Tạo đơn hàng thất bại');
+      const subtotal = calculateSubtotal();
+      const shippingFee = 20000;
+      const discountAmount = subtotal * discount;
+      const finalTotal = subtotal + shippingFee - discountAmount;
+
+      // Tạo mã đơn hàng duy nhất
+      const generateOrderCode = () => {
+        const now = new Date();
+        const timestamp = now.getTime().toString().slice(-6);
+        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+        return `ORD-${timestamp}-${random}`;
+      };
+
+      const orderPayload: any = {
+        id_user: user._id,
+        items: selectedItems.map((item: any) => ({
+          id_product: item.product_id?._id || item._id,
+          name: item.product_id?.name || item.name,
+          purchaseQuantity: item.quantity,
+          price: item.product_id?.price || item.price
+        })),
+        totalPrice: subtotal,
+        shippingFee: shippingFee,
+        discount: discountAmount,
+        finalTotal: finalTotal,
+        paymentMethod: paymentMethod.toLowerCase(),
+        shippingAddress: user.address,
+        status: 'waiting',
+        order_code: generateOrderCode(),
+      };
+
+      if (selectedVoucher?.id) {
+        orderPayload.voucherId = selectedVoucher.id;
       }
+
+      console.log('orderPayload gửi đi:', orderPayload);
+
+      await API.post('/orders', orderPayload);
+
+      Alert.alert('Thành công', 'Đặt hàng thành công!');
+      navigation.navigate('Home');
     } catch (err: any) {
-      console.error('Lỗi tạo đơn hàng:', err);
-      Alert.alert('Lỗi', err?.response?.data?.message || 'Không thể tạo đơn hàng');
+      console.error('Lỗi API:', err.response?.data || err.message);
+      Alert.alert('Lỗi', err.response?.data?.message || 'Không thể đặt hàng');
     }
   };
 
@@ -137,14 +159,12 @@ export default function CheckoutScreen({ route, navigation }: any) {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Địa chỉ giao hàng</Text>
-            <Text style={{ marginBottom: 8, color: '#555' }}>
-              {selectedAddress
-                ? `${selectedAddress.receivingAddress}, ${selectedAddress.commune}, ${selectedAddress.district}, ${selectedAddress.province}`
-                : 'Chưa chọn địa chỉ'}
-            </Text>
-
-            <Text style={styles.sectionSubTitle}>Chọn địa chỉ khác</Text>
-            {addressList.map((item) => renderAddressItem({ item }))}
+            <Text>{user?.address || 'Chưa nhập địa chỉ'}</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('PersonalInfo')}
+            >
+              <Text style={{ color: 'blue', marginTop: 4 }}>Ấn để chỉnh sửa địa chỉ</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
@@ -209,10 +229,10 @@ export default function CheckoutScreen({ route, navigation }: any) {
             <Text style={styles.totalAmount}>{calculateTotal().toLocaleString()} đ</Text>
           </View>
 
-          {/* ✅ Updated: gọi API thay vì chỉ hiển thị alert */}
+          {/* Sửa: gọi đúng hàm handleConfirmPayment */}
           <TouchableOpacity
             style={styles.confirmButton}
-            onPress={createOrderApiCall}
+            onPress={handleConfirmPayment}
           >
             <Text style={styles.confirmText}>Đặt Hàng</Text>
           </TouchableOpacity>
@@ -222,8 +242,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
   );
 }
 
-// ...Styles giữ nguyên
-
+// Styles giữ nguyên
 const styles = StyleSheet.create({
   container: { padding: 16, backgroundColor: '#fff' },
   title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 },
