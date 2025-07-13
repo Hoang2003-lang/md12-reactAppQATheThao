@@ -49,7 +49,7 @@ const App = () => {
 
     <ActionSheetProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="OrderSuccessScreen" screenOptions={{ headerShown: false }}>
+        <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
           {/* thanh điều hướng, không xoá */}
           <Stack.Screen name="Home" component={TabNavigator} />
           <Stack.Screen name="Splash" component={SplashScreen} />

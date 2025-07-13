@@ -46,7 +46,7 @@ export default function OrderSuccessScreen({ route, navigation }: any) {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../../assets/success.png')} // ✅ Thêm ảnh success tại /assets/success.png
+        source={require('../assets/images/success.png')} // ✅ Thêm ảnh success tại /assets/success.png
         style={styles.image}
       />
       <Text style={styles.title}>🎉 Đặt hàng thành công!</Text>
