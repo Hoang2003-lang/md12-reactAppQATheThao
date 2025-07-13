@@ -18,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 
-const socket = io('http://10.0.2.2:3001', {
+const socket = io('http://192.168.33.6:3001', {
   transports: ['websocket'],
 });
 

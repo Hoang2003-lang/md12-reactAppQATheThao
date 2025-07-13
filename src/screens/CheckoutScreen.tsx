@@ -43,21 +43,62 @@ export default function CheckoutScreen({ route, navigation }: any) {
     }
   };
 
+  // ✅ Added: Tính số tiền giảm giá
+  const calculateDiscountAmount = () => {
+    const subtotal = selectedItems.reduce((sum: number, item: any) => {
+      const product = item.product_id || item;
+      return sum + (product.price || 0) * (item.quantity || 1);
+    }, 0);
+    return subtotal * discount;
+  };
+
+  // ✅ Added: Tính tổng tiền sau giảm
   const calculateTotal = () => {
     const subtotal = selectedItems.reduce((sum: number, item: any) => {
       const product = item.product_id || item;
       return sum + (product.price || 0) * (item.quantity || 1);
     }, 0);
-    return subtotal - subtotal * discount;
+    return subtotal - calculateDiscountAmount();
   };
 
-  const handleConfirmPayment = () => {
-    if (!selectedAddress) {
-      Alert.alert('Thông báo', 'Vui lòng chọn địa chỉ giao hàng.');
+  // ✅ Added: Hàm gọi API tạo đơn hàng
+  const createOrderApiCall = async () => {
+    if (!userId || !selectedAddress || selectedItems.length === 0) {
+      Alert.alert('Lỗi', 'Vui lòng chọn địa chỉ và có sản phẩm trong giỏ hàng');
       return;
     }
-    Alert.alert('Đặt hàng thành công', 'Đơn hàng đã được tạo!');
-    navigation.navigate('Home');
+
+    const orderItems = selectedItems.map((item: any) => ({
+      id_product: item.product_id?._id || item.id_product,
+      name: item.product_id?.name || item.name,
+      purchaseQuantity: item.quantity,
+      price: item.product_id?.price || item.price
+    }));
+
+    const payload = {
+      id_user: userId,
+      items: orderItems,
+      shippingFee: 0,
+      discount: calculateDiscountAmount(),
+      finalTotal: calculateTotal(),
+      paymentMethod,
+      shippingAddress: `${selectedAddress.receivingAddress}, ${selectedAddress.commune}, ${selectedAddress.district}, ${selectedAddress.province}`,
+      voucherId: selectedVoucher?._id || null
+    };
+
+    try {
+      const res = await API.post('/orders', payload);
+      if (res.data?.data) {
+        navigation.replace('OrderSuccessScreen', {
+          order: res.data.data
+        });
+      } else {
+        throw new Error('Tạo đơn hàng thất bại');
+      }
+    } catch (err: any) {
+      console.error('Lỗi tạo đơn hàng:', err);
+      Alert.alert('Lỗi', err?.response?.data?.message || 'Không thể tạo đơn hàng');
+    }
   };
 
   const renderProductItem = ({ item }: any) => {
@@ -94,7 +135,6 @@ export default function CheckoutScreen({ route, navigation }: any) {
         <View style={styles.container}>
           <Text style={styles.title}>Thanh Toán</Text>
 
-          {/* Địa chỉ giao hàng */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Địa chỉ giao hàng</Text>
             <Text style={{ marginBottom: 8, color: '#555' }}>
@@ -107,7 +147,6 @@ export default function CheckoutScreen({ route, navigation }: any) {
             {addressList.map((item) => renderAddressItem({ item }))}
           </View>
 
-          {/* Mã giảm giá */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Chọn Voucher</Text>
             <TouchableOpacity
@@ -140,7 +179,6 @@ export default function CheckoutScreen({ route, navigation }: any) {
             )}
           </View>
 
-          {/* Phương thức thanh toán */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
             <TouchableOpacity
@@ -170,14 +208,21 @@ export default function CheckoutScreen({ route, navigation }: any) {
             <Text style={styles.totalLabel}>Tổng thanh toán:</Text>
             <Text style={styles.totalAmount}>{calculateTotal().toLocaleString()} đ</Text>
           </View>
-          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmPayment}>
+
+          {/* ✅ Updated: gọi API thay vì chỉ hiển thị alert */}
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={createOrderApiCall}
+          >
             <Text style={styles.confirmText}>Đặt Hàng</Text>
           </TouchableOpacity>
         </View>
       }
     />
   );
-};
+}
+
+// ...Styles giữ nguyên
 
 const styles = StyleSheet.create({
   container: { padding: 16, backgroundColor: '#fff' },
