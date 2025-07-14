@@ -33,7 +33,7 @@ npm react-native-asset
 --
 npm install @react-native-async-storage/async-storage
 npm install react-native-snackbar
-npm i react-native-image-picker
+npm i react-native-image-
 npm i react-native-actions-sheet
 npm install --save @react-native-firebase/app
 npm install @react-native-firebase/auth
@@ -42,6 +42,9 @@ npm install @react-native-firebase/auth@latest
 --
 
 // 4/7: Tài khoản
+<<<<<<< HEAD
+picker
+=======
 
 // xử lý khi bị xung đột git
 Bước 1: Lưu code của bạn lại (commit nếu cần)
@@ -69,3 +72,4 @@ Bạn muốn giữ cả 2:
 
 Hoặc chọn một bên:
 <Text>Hello from my version</Text>
+>>>>>>> 4e9fdeff11810d85c68d78a279983019e14e3b7d

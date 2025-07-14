@@ -623,11 +623,11 @@ export default function LoginScreen({ navigation }: any) {
         const userCredential = await onFacebookButtonPress();
         const user = userCredential.user;
     
-        console.log('✅ Facebook Firebase UID:', user.uid);
-        console.log('✅ Email:', user.email);
-        console.log('✅ DisplayName:', user.displayName);
+        console.log('Facebook Firebase UID:', user.uid);
+        console.log('Email:', user.email);
+        console.log('DisplayName:', user.displayName);
     
-        // 🔁 Gửi thông tin lên backend để xác thực hoặc tạo user trong MongoDB
+        //Gửi thông tin lên backend để xác thực hoặc tạo user trong MongoDB
         const res = await API.post('/auth/facebook', {
           uid: user.uid,
           email: user.email,
@@ -636,12 +636,11 @@ export default function LoginScreen({ navigation }: any) {
     
         const backendUser = res.data.user;
     
-        // ✅ Lưu userId thực sự từ MongoDB (ObjectId)
+        //Lưu userId thực sự từ MongoDB (ObjectId)
         await AsyncStorage.setItem('userId', backendUser.id);
         await AsyncStorage.setItem('userEmail', backendUser.email || '');
         await AsyncStorage.setItem('userName', backendUser.name || '');
     
-        // ✅ Điều hướng sang Home
         navigation.navigate('Home');
     
       } catch (err) {
