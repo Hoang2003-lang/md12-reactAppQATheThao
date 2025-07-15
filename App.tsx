@@ -16,9 +16,7 @@ import Logomore from './src/screens/semore/LogoMoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
 import BannerDT from './src/screens/banner/BannerDetail'
 import SaleMore from './src/screens/semore/SaleMoreScreen'
-
 import OrderTrackingScreen from './src/screens/OrderTrackingScreen';
-
 
 import PayScreen from './src/screens/pay/PayScreen';
 import CodPayScreen from './src/screens/pay/CodPayScreen';
