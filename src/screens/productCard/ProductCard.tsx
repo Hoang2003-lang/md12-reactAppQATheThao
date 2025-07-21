@@ -36,11 +36,11 @@ const ProductCard = ({ item, navigation }: any) => {
 
 const styles = StyleSheet.create({
   productItem: {
-    width: 160,
+    width: 180,
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: 2,
     backgroundColor: '#fff',
-    padding: 10,
+    padding: 15,
     borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -49,8 +49,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   productImage: {
-    width: 150,
-    height: 150,
+    width: 160,
+    height: 170,
     borderRadius: 10,
   },
   productName: {

@@ -14,6 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { LoginManager } from 'react-native-fbsdk-next';
+
 
 
 type RootStackParamList = {
@@ -49,13 +51,29 @@ const AccountScreen: React.FC = () => {
 
   const doLogout = async () => {
     try {
-      await AsyncStorage.clear();
+      // ⚠️ Cần cấu hình lại nếu dùng ở ngoài hàm _signInWithGoogle
+      GoogleSignin.configure({
+        webClientId: '985098184266-s3mp7f1q7t899ef5g3eu2huh3ocarusj.apps.googleusercontent.com',
+      });
+  
+      const currentUser = await GoogleSignin.getCurrentUser();
 
-      await GoogleSignin.signOut();
-      
+      if (currentUser) {
+        await GoogleSignin.revokeAccess();
+        await GoogleSignin.signOut();
+      }
+  
+      await LoginManager.logOut(); // Facebook logout
+      await AsyncStorage.clear();
+  
       Alert.alert('Đã đăng xuất!');
-      navigation.navigate('Login');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
     } catch (err) {
+      
+      console.error('❌ Logout error:', err);
       Alert.alert('Lỗi', 'Không thể đăng xuất');
     }
   };

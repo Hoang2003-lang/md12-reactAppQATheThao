@@ -27,7 +27,12 @@ const SaleProductCard = ({ item, navigation }: any) => {
 
   return (
     <Pressable
-      onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}
+
+      onPress={() => {
+        // console.log('>> ID sản phẩm được chọn:', item._id);
+        navigation.navigate('SaleProductDetail', { productId: item._id })
+      }
+      }
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
     >
@@ -54,7 +59,7 @@ const SaleProductCard = ({ item, navigation }: any) => {
 
 const styles = StyleSheet.create({
   card: {
-    width: 160,
+    width: 190,
     alignItems: 'center',
     marginVertical: 10,
     backgroundColor: '#fff',
@@ -70,7 +75,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   image: {
-    width: 150,
+    width: 160,
     height: 150,
     borderRadius: 10,
   },
