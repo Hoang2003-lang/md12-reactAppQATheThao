@@ -18,12 +18,9 @@ const SeemoreKMScreen = ({ navigation, route }: any) => {
 
                 if (type === 'promotion') {
                     filtered = filtered.filter((p: any) => p.name.includes('Áo Đấu'));
-                } else if (type === 'club') {
-                    filtered = filtered.filter((p: any) => p.name.includes('Manchester'));
                 } else if (type === 'national') {
                     filtered = filtered.filter((p: any) => p.name.includes('Chelsea'));
                 }
-
                 setProducts(filtered);
             } catch (e) {
                 console.error(e);

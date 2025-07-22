@@ -25,7 +25,7 @@ const socket = io('http://10.0.2.2:3001', {
 interface OrderItem {
   _id: string;
   status: string;
-  totalPrice: number;
+  finalTotal: number;
   createdAt: string;
   paymentMethod: string;
   shippingAddress: string;
@@ -108,7 +108,7 @@ const OrderTrackingScreen = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.bold}>Mã đơn: {item._id.slice(-6).toUpperCase()}</Text>
           <Text>Trạng thái: {translateStatus(item.status)}</Text>
-          <Text>Tổng: {item.totalPrice.toLocaleString('vi-VN')}đ</Text>
+          <Text>Tổng: {item.finalTotal.toLocaleString('vi-VN')}đ</Text>
         </View>
       </Pressable>
     );
@@ -128,7 +128,7 @@ const OrderTrackingScreen = () => {
               <Text style={styles.modalLabel}>Ngày đặt: {formatDate(selectedOrder.createdAt)}</Text>
               <Text style={styles.modalLabel}>Địa chỉ giao: {selectedOrder.shippingAddress}</Text>
               <Text style={styles.modalLabel}>Thanh toán: {selectedOrder.paymentMethod.toUpperCase()}</Text>
-              <Text style={styles.modalLabel}>Tổng tiền: {selectedOrder.totalPrice.toLocaleString('vi-VN')}đ</Text>
+              <Text style={styles.modalLabel}>Tổng tiền: {selectedOrder.finalTotal.toLocaleString('vi-VN')}đ</Text>
 
               <Text style={[styles.modalLabel, { marginTop: 10 }]}>Sản phẩm:</Text>
               {selectedOrder.items.map((item, index) => (

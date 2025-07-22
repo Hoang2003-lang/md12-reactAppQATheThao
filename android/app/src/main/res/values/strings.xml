@@ -1,3 +1,9 @@
 <resources>
+
     <string name="app_name">md12_reactApp_QATheThao</string>
+    <string name="facebook_app_id">1617410855597005</string>
+    <string name="fb_login_protocol_scheme">fb1617410855597005</string>
+    <string name="facebook_client_token">0354a5cbba5313d45ad924a76c6f08d0</string>
+
+
 </resources>

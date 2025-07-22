@@ -14,11 +14,11 @@ import CheckoutScreen from './src/screens/CheckoutScreen';
 import ChatScreen from './src/screens/chat/ChatScreen';
 import Logomore from './src/screens/semore/LogoMoreScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
-
 import BannerDT from './src/screens/banner/BannerDetail'
 import SaleMore from './src/screens/semore/SaleMoreScreen'
-
 import OrderTrackingScreen from './src/screens/OrderTrackingScreen';
+import SaleProductDetail from './src/screens/SaleProductDetail';
+
 
 
 import PayScreen from './src/screens/pay/PayScreen';
@@ -48,7 +48,7 @@ const App = () => {
 
     <ActionSheetProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+        <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
           {/* thanh điều hướng, không xoá */}
           <Stack.Screen name="Home" component={TabNavigator} />
           <Stack.Screen name="Splash" component={SplashScreen} />
@@ -59,6 +59,8 @@ const App = () => {
           <Stack.Screen name="Promotion" component={SeemoreScreen} />
           <Stack.Screen name="BannerDT" component={BannerDT} />
           <Stack.Screen name="SaleMore" component={SaleMore} />
+          <Stack.Screen name="SaleProductDetail" component={SaleProductDetail} />
+
 
           <Stack.Screen name="Cart" component={CartScreen} />
           <Stack.Screen name="Checkout" component={CheckoutScreen} />

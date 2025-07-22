@@ -200,33 +200,33 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
 
         {/* Sản phẩm các loại */}
-        <Section
-          title="Khuyến mãi"
-          onSeeMore={() =>
-            navigation.navigate('SaleMore', { title: 'Khuyến mãi', type: 'promotion' })
-          }
-        >
-          {Array.isArray(saleProducts) &&
-            saleProducts.slice(0, 4).map(item => (
+
+        <View style={{ marginTop: 10 }}>
+          <Text style={styles.sectionTitle}>Khuyến mãi</Text>
+
+          <View style={{ paddingLeft: 45 }}>
+            <View style={styles.gridContainer}>
+              {saleProducts.slice(0, 4).map((item, index) => (
+                <View key={item._id} style={styles.gridItem}>
+                  <SaleProductCard item={item} navigation={navigation} />
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+
+
+
+        <Section  title="Tất cả sản phẩm">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {products.map(item => (
               <View key={item._id} style={styles.productWrapper}>
-                <SaleProductCard item={item} navigation={navigation} />
+                <ProductCard item={item} navigation={navigation} />
               </View>
             ))}
+          </ScrollView>
         </Section>
 
-
-        <Section
-          title="Áo Câu Lạc Bộ"
-          onSeeMore={() =>
-            navigation.navigate('Promotion', { title: 'Áo Câu Lạc Bộ', type: 'club' })
-          }
-        >
-          {products.filter(p => p.name.includes('Áo Đấu')).slice(0, 4).map(item => (
-            <View key={item._id} style={styles.productWrapper}>
-              <ProductCard item={item} navigation={navigation} />
-            </View>
-          ))}
-        </Section>
 
 
         <Section
@@ -239,7 +239,7 @@ const HomeScreen = ({ navigation }: any) => {
             .filter(p => ['vietnam', 'japan', 'england', 'arsenal', 'psg', 'tottenham'].includes(p.categoryCode))
             .slice(0, 4)
             .map(item => (
-              <View key={item._id} style={styles.productWrapper}>
+              <View key={item._id} style={styles.productWrapper1}>
                 <ProductCard item={item} navigation={navigation} />
               </View>
             ))}
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginLeft: 30,
     marginBottom: 5
   },
   wrapRow: {
@@ -403,12 +403,20 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   productWrapper: {
+    width: 180,
+    marginBottom: 15,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 10,
+    marginRight: 15,
+    marginLeft: 10
+  },
+  productWrapper1: {
     width: (width - 40) / 2,
     marginBottom: 15,
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 10,
-
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -418,6 +426,19 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     margin: 20
   },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 30,
+    paddingLeft: 12
+  },
+
+  gridItem: {
+    width: '48%', // 2 item mỗi hàng, chừa khoảng cách
+    marginBottom: 12,
+  },
+
 
 
 });

@@ -13,7 +13,7 @@ export const fetchSaleProducts = async () => {
 export const getDiscountProducts = async () => {
   try {
     const res = await API.get('/sale-products');
-    console.log('Kết quả API /sale-products:', res.data);
+    // console.log('Kết quả API /sale-products:', res.data);
 
     const products = res.data.data; // 🔥 Đây mới là mảng sản phẩm
 
