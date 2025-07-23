@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,10 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Pressable
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
-import { Animated } from 'react-native';
 import ProductCard from './productCard/ProductCard';
 import SaleProductCard from './productCard/SaleProductCard';
 import { fetchAllProducts } from '../services/ProductServices';
@@ -23,18 +21,14 @@ import { fetchSaleProducts } from '../services/SaleProducts';
 import { fetchBanners } from '../services/BannerServices';
 import { fetchCategories } from '../services/CategoryServices';
 
-
-
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }: any) => {
-
   const scrollRef = useRef<ScrollView>(null);
   const [banners, setBanners] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [saleProducts, setSaleProducts] = useState<any[]>([]);
-
   const [cartCount, setCartCount] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -48,7 +42,6 @@ const HomeScreen = ({ navigation }: any) => {
     loadCartCount();
     return unsubscribe;
   }, []);
-
 
   const loadAllData = async () => {
     try {
@@ -72,7 +65,6 @@ const HomeScreen = ({ navigation }: any) => {
     navigation.navigate('BannerDT', { banner });
   };
 
-  // banner chuyển động
   useEffect(() => {
     if (banners.length === 0) return;
 
@@ -86,9 +78,6 @@ const HomeScreen = ({ navigation }: any) => {
 
     return () => clearInterval(interval);
   }, [banners]);
-
-
-
 
   const loadCartCount = async () => {
     try {
@@ -104,7 +93,7 @@ const HomeScreen = ({ navigation }: any) => {
       setCartCount(totalQuantity);
     } catch (err: any) {
       if (err.response?.status === 404) {
-        setCartCount(0); // giỏ hàng chưa tồn tại
+        setCartCount(0);
       } else {
         console.error('❌ Lỗi lấy giỏ hàng:', err);
         setCartCount(0);
@@ -116,7 +105,6 @@ const HomeScreen = ({ navigation }: any) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width);
     setActiveIndex(idx);
   };
-
 
   const Section = ({ title, onSeeMore, children }: any) => (
     <View style={styles.section}>
@@ -132,7 +120,6 @@ const HomeScreen = ({ navigation }: any) => {
     </View>
   );
 
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -140,14 +127,13 @@ const HomeScreen = ({ navigation }: any) => {
         <Text style={styles.text}>F7 Shop</Text>
       </TouchableOpacity>
 
-      {/* Top Search + Icons */}
+      {/* Top Bar */}
       <View style={styles.topBar}>
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color="#999" style={{ marginHorizontal: 10 }} />
           <TextInput placeholder="Tìm kiếm ở đây" placeholderTextColor="#999" style={styles.input} />
         </View>
 
-        {/* Giỏ hàng */}
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Cart')}>
           <View style={{ position: 'relative' }}>
             <Ionicons name="cart-outline" size={24} color="orange" />
@@ -159,17 +145,16 @@ const HomeScreen = ({ navigation }: any) => {
           </View>
         </TouchableOpacity>
 
-        {/* Chat */}
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Chat')}>
           <Ionicons name="chatbubble-ellipses-outline" size={24} color="#000" />
         </TouchableOpacity>
-        {/* Thông báo*/}
+
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
           <Ionicons name="notifications-outline" size={24} color="#000" />
         </TouchableOpacity>
       </View>
 
-      {/* Body scroll */}
+      {/* Body */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Banners */}
         <ScrollView
@@ -181,33 +166,30 @@ const HomeScreen = ({ navigation }: any) => {
           scrollEventThrottle={16}
           style={styles.bannerWrapper}
         >
-          {banners.map(b => (
+          {banners.map((b, index) => (
             <TouchableOpacity
-              key={b.id}
+              key={b.id || `banner-${index}`} // ✅ unique key
               activeOpacity={0.8}
               onPress={() => handleBannerPress(b)}
             >
               <Image source={{ uri: b.banner }} style={styles.bannerImage} />
             </TouchableOpacity>
           ))}
-
-
         </ScrollView>
+
         <View style={styles.dotsContainer}>
           {banners.map((b, i) => (
-            <View key={b.id || i} style={[styles.dot, i === activeIndex && styles.activeDot]} />
+            <View key={b.id || `dot-${i}`} style={[styles.dot, i === activeIndex && styles.activeDot]} />
           ))}
         </View>
 
-        {/* Sản phẩm các loại */}
-
+        {/* Khuyến mãi */}
         <View style={{ marginTop: 10 }}>
           <Text style={styles.sectionTitle}>Khuyến mãi</Text>
-
           <View style={{ paddingLeft: 45 }}>
             <View style={styles.gridContainer}>
               {saleProducts.slice(0, 4).map((item, index) => (
-                <View key={item._id} style={styles.gridItem}>
+                <View key={item._id || `sale-${index}`} style={styles.gridItem}>
                   <SaleProductCard item={item} navigation={navigation} />
                 </View>
               ))}
@@ -215,50 +197,51 @@ const HomeScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-
-
-        <Section  title="Tất cả sản phẩm">
+        {/* Tất cả sản phẩm */}
+        <Section title="Tất cả sản phẩm">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {products.map(item => (
-              <View key={item._id} style={styles.productWrapper}>
+            {products.map((item, index) => (
+              <View key={item._id || `product-${index}`} style={styles.productWrapper}>
                 <ProductCard item={item} navigation={navigation} />
               </View>
             ))}
           </ScrollView>
         </Section>
 
-
-
+        {/* Áo đội tuyển */}
         <Section
           title="Áo đội tuyển quốc gia"
           onSeeMore={() =>
-            navigation.navigate('Promotion', { title: 'Áo Đội Tuyển Quốc Gia', type: 'national' })
+            navigation.navigate('Promotion', {
+              title: 'Áo Đội Tuyển Quốc Gia',
+              type: 'national'
+            })
           }
         >
           {products
             .filter(p => ['vietnam', 'japan', 'england', 'arsenal', 'psg', 'tottenham'].includes(p.categoryCode))
             .slice(0, 4)
-            .map(item => (
-              <View key={item._id} style={styles.productWrapper1}>
+            .map((item, index) => (
+              <View key={item._id || `national-${index}`} style={styles.productWrapper1}>
                 <ProductCard item={item} navigation={navigation} />
               </View>
             ))}
         </Section>
 
-
-
-
+        {/* Danh mục */}
         <Section title="Danh mục">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.categoryRow}>
-              {categories.map(cat => (
+              {categories.map((cat, index) => (
                 <TouchableOpacity
-                  key={cat.code} // hoặc cat._id nếu chắc chắn
+                  key={cat.code || `cat-${index}`} // ✅ unique key
                   style={styles.categoryItem}
-                  onPress={() => navigation.navigate('Category', {
-                    code: cat.code,
-                    title: cat.name
-                  })}
+                  onPress={() =>
+                    navigation.navigate('Category', {
+                      code: cat.code,
+                      title: cat.name
+                    })
+                  }
                 >
                   <Image source={{ uri: cat.image }} style={styles.categoryImage} />
                 </TouchableOpacity>
@@ -266,8 +249,6 @@ const HomeScreen = ({ navigation }: any) => {
             </View>
           </ScrollView>
         </Section>
-
-
       </ScrollView>
     </View>
   );
@@ -324,12 +305,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     marginHorizontal: 4
   },
-  activeDot: {
-    backgroundColor: '#000'
-  },
-  section: {
-    marginVertical: 10
-  },
+  activeDot: { backgroundColor: '#000' },
+  section: { marginVertical: 10 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -341,66 +318,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
-  },
-  productItem: {
-    width: (width - 40) / 2,
-    alignItems: 'center',
-    marginVertical: 10,
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-
-  productImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 10
-  },
-  productName: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 5
-  },
-  productPrice: {
-    color: 'red'
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 10
-  },
-  categoryItem: {
-    backgroundColor: '#eee',
-    borderRadius: 50,
-    width: 70,
-    height: 70,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    margin: 10
-  },
-  categoryImage: {
-    width: '100%',
-    height: '100%'
-  },
-  seeMore: {
-    color: 'orange',
-    marginLeft: 15,
-    marginTop: 5,
-    // alignSelf: 'flex-end'
-  },
-  productItemHover: {
-    transform: [{ scale: 1.03 }],
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
   },
   productWrapper: {
     width: 180,
@@ -426,6 +343,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     margin: 20
   },
+  seeMore: { color: 'orange', marginLeft: 15, marginTop: 5 },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -433,12 +351,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingLeft: 12
   },
-
   gridItem: {
-    width: '48%', // 2 item mỗi hàng, chừa khoảng cách
+    width: '48%',
     marginBottom: 12,
   },
-
-
-
+  categoryRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10
+  },
+  categoryItem: {
+    backgroundColor: '#eee',
+    borderRadius: 50,
+    width: 70,
+    height: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    margin: 10
+  },
+  categoryImage: {
+    width: '100%',
+    height: '100%'
+  },
 });
