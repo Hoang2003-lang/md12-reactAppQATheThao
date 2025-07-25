@@ -88,6 +88,16 @@ export default function CheckoutScreen({ route, navigation }: any) {
       return;
     }
 
+    if (paymentMethod === 'Online') {
+      navigation.navigate('CheckoutVNPay', {
+        selectedItems,
+        user,
+        voucher: selectedVoucher
+      });
+      return;
+    }
+
+    // Xử lý COD
     const subtotal = calculateSubtotal();
     const shippingFee = 30000;
     const discountAmount = calculateDiscount();
@@ -101,8 +111,8 @@ export default function CheckoutScreen({ route, navigation }: any) {
     };
 
     try {
-         const orderPayload: any = {
-  userId: user._id,
+      const orderPayload: any = {
+        userId: user._id,
         items: selectedItems.map((item: any) => ({
           id_product: item.product_id?._id || item._id,
           name: item.product_id?.name || item.name,
@@ -113,19 +123,17 @@ export default function CheckoutScreen({ route, navigation }: any) {
         shippingFee,
         discount: discountAmount,
         finalTotal,
-        paymentMethod: paymentMethod.toLowerCase(),
+        paymentMethod: 'cod',
         shippingAddress: user.address,
         status: 'waiting',
-order_code: generateOrderCode()
+        order_code: generateOrderCode()
       };
 
       if (selectedVoucher?.id) {
         orderPayload.voucherId = selectedVoucher.id;
       }
 
-      console.log('orderPayload gửi đi:', orderPayload);
       await API.post('/orders', orderPayload);
-
       Alert.alert('Thành công', 'Đặt hàng thành công!');
       navigation.navigate('Home');
     } catch (err: any) {
@@ -203,6 +211,7 @@ order_code: generateOrderCode()
         </View>
       }
       data={selectedItems}
+      removeClippedSubviews={false}
       renderItem={renderProductItem}
       keyExtractor={(_, index) => index.toString()}
       ListFooterComponent={

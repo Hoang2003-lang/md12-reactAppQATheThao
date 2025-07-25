@@ -1,7 +1,8 @@
 // App.tsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Linking } from 'react-native';
 import SplashScreen from './src/screens/SplashScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SearchScreen from './src/screens/SearchScreen';
@@ -18,36 +19,79 @@ import BannerDT from './src/screens/banner/BannerDetail'
 import SaleMore from './src/screens/semore/SaleMoreScreen'
 import OrderTrackingScreen from './src/screens/OrderTrackingScreen';
 import SaleProductDetail from './src/screens/SaleProductDetail';
-
-
-
-import PayScreen from './src/screens/pay/PayScreen';
-import CodPayScreen from './src/screens/pay/CodPayScreen';
-import ShopPayScreen from './src/screens/pay/ShopPayScreen';
-import CreditCardPayScreen from './src/screens/pay/CreditCardPayScreen';
-
+import CheckoutVNPay from './src/screens/payment/CheckoutVNPay';
+import CheckVnPayMent from './src/screens/payment/CheckVnPayMent';
 import LoginScreen from './src/login/LoginScreen';
 import RegisterScreen from './src/login/RegisterScreen';
 import ForgotPassword from './src/login/ForgotPassword';
-
-
 
 import TabNavigator from './src/TabNavigator/TabNavigator';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import NotificationScreen from './src/screens/NotificationScreen';
 
-
-
-
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+  const navigationRef = useRef<any>(null);
 
+  useEffect(() => {
+    // ✅ Xử lý deep link khi app đang chạy
+    const handleDeepLink = (url: string) => {
+      console.log("🔗 Deep link received:", url);
+      
+      if (url.includes('payment-result')) {
+        try {
+          // ✅ Parse URL parameters
+          const urlParts = url.split('?');
+          if (urlParts.length > 1) {
+            const params = new URLSearchParams(urlParts[1]);
+            const searchParams = Object.fromEntries(params);
+            
+            console.log("📦 Parsed payment params:", searchParams);
+            
+            // ✅ Navigate to CheckVnPayMent with params
+            if (navigationRef.current) {
+              navigationRef.current.navigate('CheckVnPayMent', { 
+                searchParams: searchParams 
+              });
+            }
+          }
+        } catch (error) {
+          console.error("❌ Error parsing deep link:", error);
+        }
+      }
+    };
+
+    // ✅ Xử lý deep link khi app khởi động
+    const handleInitialURL = async () => {
+      try {
+        const initialURL = await Linking.getInitialURL();
+        if (initialURL) {
+          console.log("🚀 Initial URL:", initialURL);
+          handleDeepLink(initialURL);
+        }
+      } catch (error) {
+        console.error("❌ Error getting initial URL:", error);
+      }
+    };
+
+    // ✅ Listen for deep links when app is running
+    const subscription = Linking.addEventListener('url', (event) => {
+      console.log("🔗 URL event:", event.url);
+      handleDeepLink(event.url);
+    });
+
+    // ✅ Handle initial URL
+    handleInitialURL();
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
 
   return (
-
     <ActionSheetProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
           {/* thanh điều hướng, không xoá */}
           <Stack.Screen name="Home" component={TabNavigator} />
@@ -61,13 +105,10 @@ const App = () => {
           <Stack.Screen name="SaleMore" component={SaleMore} />
           <Stack.Screen name="SaleProductDetail" component={SaleProductDetail} />
 
-
           <Stack.Screen name="Cart" component={CartScreen} />
           <Stack.Screen name="Checkout" component={CheckoutScreen} />
-          <Stack.Screen name="Pay" component={PayScreen} />
-          <Stack.Screen name="CodPay" component={CodPayScreen} />
-          <Stack.Screen name="ShopPay" component={ShopPayScreen} />
-          <Stack.Screen name="CreditCardPay" component={CreditCardPayScreen} />
+          <Stack.Screen name="CheckoutVNPay" component={CheckoutVNPay} />
+          <Stack.Screen name="CheckVnPayMent" component={CheckVnPayMent} />
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Category" component={Logomore} />
           <Stack.Screen name="Notification" component={NotificationScreen} />

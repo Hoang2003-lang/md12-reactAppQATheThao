@@ -73,3 +73,12 @@ Bạn muốn giữ cả 2:
 Hoặc chọn một bên:
 <Text>Hello from my version</Text>
 >>>>>>> 4e9fdeff11810d85c68d78a279983019e14e3b7d
+
+```
+** test thẻ vnpay **
+
+Ngân hàng:NCB
+Số thẻ	: 9704198526191432198
+Tên chủ thẻ	: NGUYEN VAN A
+Ngày phát hành	: 07/15
+Mật khẩu OTP	: 123456
