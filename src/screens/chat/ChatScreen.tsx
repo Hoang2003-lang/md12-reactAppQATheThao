@@ -19,7 +19,7 @@ const ChatScreen = ({ navigation }: any) => {
   const flatListRef = useRef<FlatList>(null);
   const { showActionSheetWithOptions } = useActionSheet();
 
-  const API_URL = 'http://192.168.0.104:3002'; // Đổi thành IP thật nếu dùng máy thật
+  const API_URL = 'http://10.0.2.2:3002'; // Đổi thành IP thật nếu dùng máy thật
   const adminId = '683e9c91e2aa5ca0fbfb1030';
 
 
