@@ -42,9 +42,8 @@ npm install @react-native-firebase/auth@latest
 --
 
 // 4/7: Tài khoản
-<<<<<<< HEAD
-picker
-=======
+admin1@gmail.com
+admin1234
 
 // xử lý khi bị xung đột git
 Bước 1: Lưu code của bạn lại (commit nếu cần)
@@ -61,18 +60,15 @@ git push origin main
 
  Ví dụ xử lý xung đột:
 Xung đột:
-<<<<<<< HEAD
 <Text>Hello from my version</Text>
-=======
 <Text>Hello from their version</Text>
->>>>>>> abc1234
 Bạn muốn giữ cả 2:
 <Text>Hello from my version</Text>
 <Text>Hello from their version</Text>
 
 Hoặc chọn một bên:
 <Text>Hello from my version</Text>
->>>>>>> 4e9fdeff11810d85c68d78a279983019e14e3b7d
+
 
 ```
 ** test thẻ vnpay **
