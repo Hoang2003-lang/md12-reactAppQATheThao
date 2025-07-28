@@ -82,6 +82,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         user_id: userId,
         product_id: product._id,
         name: product.name,
+        type: "normal",
         image: product.image,
         size: selectedSize,
         quantity,

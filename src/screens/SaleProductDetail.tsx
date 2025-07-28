@@ -86,6 +86,7 @@ const SaleProductDetail = ({ route, navigation }: any) => {
             const cartItem = {
                 user_id: userId,
                 product_id: product._id,
+                type: 'sale',
                 name: product.name,
                 image: product.image,
                 size: selectedSize,

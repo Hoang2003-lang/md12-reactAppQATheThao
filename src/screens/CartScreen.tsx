@@ -49,7 +49,7 @@ export default function CartScreen({ navigation }: any) {
     }
   };
 
-  const updateQuantity = async (productId: string, size: string, quantity: number) => {
+  const updateQuantity = async (productId: string, size: string, quantity: number, type: 'normal' | 'sale') => {
     try {
       if (!userId) return;
 
@@ -59,7 +59,7 @@ export default function CartScreen({ navigation }: any) {
           {
             text: 'Xoá',
             style: 'destructive',
-            onPress: () => handleDeleteItem(productId, size),
+            onPress: () => handleDeleteItem(productId, size, type),
           },
         ]);
       }
@@ -75,12 +75,12 @@ export default function CartScreen({ navigation }: any) {
     }
   };
 
-  const handleDeleteItem = async (productId: string, size: string) => {
+  const handleDeleteItem = async (productId: string, size: string, type: 'normal' | 'sale') => {
     try {
       if (!userId) return;
 
       await API.delete(`/carts/${userId}/item`, {
-        params: { product_id: productId, size },
+        params: { product_id: productId, size, type},
       });
       await fetchCart(userId);
     } catch (err) {
@@ -147,14 +147,14 @@ const product = item.product_id || item;
           <Text style={styles.size}>Size: {item.size}</Text>
           <View style={styles.quantityRow}>
             <TouchableOpacity
-              onPress={() => updateQuantity(productId, item.size, item.quantity - 1)}
+              onPress={() => updateQuantity(productId, item.size, item.quantity - 1, item.type)}
               style={styles.qtyButton}
             >
               <Text style={styles.qtyText}>-</Text>
             </TouchableOpacity>
             <Text style={styles.quantity}>{item.quantity}</Text>
             <TouchableOpacity
-              onPress={() => updateQuantity(productId, item.size, item.quantity + 1)}
+              onPress={() => updateQuantity(productId, item.size, item.quantity + 1, item.type)}
               style={styles.qtyButton}
             >
               <Text style={styles.qtyText}>+</Text>
@@ -167,7 +167,7 @@ const product = item.product_id || item;
                 {
                   text: 'Xoá',
                   style: 'destructive',
-                  onPress: () => handleDeleteItem(productId, item.size),
+                  onPress: () => handleDeleteItem(productId, item.size, item.type),
                 },
               ])
             }
