@@ -204,9 +204,9 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={{ marginTop: 10 }}>
           <Text style={styles.sectionTitle}>Khuyến mãi</Text>
 
-          <View style={{ paddingLeft: 45 }}>
+          <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
             <View style={styles.gridContainer}>
-              {saleProducts.slice(0, 4).map((item, index) => (
+              {saleProducts.slice(0, 4).map((item) => (
                 <View key={item._id} style={styles.gridItem}>
                   <SaleProductCard item={item} navigation={navigation} />
                 </View>
@@ -217,7 +217,8 @@ const HomeScreen = ({ navigation }: any) => {
 
 
 
-        <Section  title="Tất cả sản phẩm">
+
+        <Section title="Tất cả sản phẩm">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {products.map(item => (
               <View key={item._id} style={styles.productWrapper}>
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
     marginLeft: 10
   },
   productWrapper1: {
-    width: (width - 40) / 2,
+    width: (width - 20) / 2,
     marginBottom: 15,
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -429,14 +430,14 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 30,
-    paddingLeft: 12
+    justifyContent: 'space-evenly',
   },
 
   gridItem: {
-    width: '48%', // 2 item mỗi hàng, chừa khoảng cách
+    alignItems:'center',
+    // width: (width - 40) / 2, // 2 item mỗi hàng, chừa khoảng cách
     marginBottom: 12,
+    margin: 20
   },
 
 
