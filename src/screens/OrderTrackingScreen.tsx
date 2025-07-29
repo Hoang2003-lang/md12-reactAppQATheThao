@@ -10,6 +10,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
@@ -17,15 +18,17 @@ import io from 'socket.io-client';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useIsFocused } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons'
 
-const socket = io('http://10.0.2.2:3001', {
+const socket = io('http://10.0.2.2:3002', {
   transports: ['websocket'],
 });
 
 interface OrderItem {
   _id: string;
   status: string;
-  totalPrice: number;
+  finalTotal: number;
   createdAt: string;
   paymentMethod: string;
   shippingAddress: string;
@@ -40,6 +43,7 @@ interface OrderItem {
 }
 
 const OrderTrackingScreen = () => {
+  const navigation = useNavigation();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
@@ -78,7 +82,6 @@ const OrderTrackingScreen = () => {
             order._id === orderId ? { ...order, status } : order
           )
         );
-        Alert.alert('Trạng thái đơn hàng đã cập nhật', `Đơn hàng ${orderId} hiện tại: ${status}`);
       });
     };
 
@@ -107,8 +110,13 @@ const OrderTrackingScreen = () => {
         {image && <Image source={{ uri: image }} style={styles.image} />}
         <View style={{ flex: 1 }}>
           <Text style={styles.bold}>Mã đơn: {item._id.slice(-6).toUpperCase()}</Text>
-          <Text>Trạng thái: {translateStatus(item.status)}</Text>
-          <Text>Tổng: {item.totalPrice.toLocaleString('vi-VN')}đ</Text>
+          <Text>
+            Trạng thái:{' '}
+            <Text style={{ color: getStatusColor(item.status), fontWeight: 'bold' }}>
+              {translateStatus(item.status)}
+            </Text>
+          </Text>
+          <Text>Tổng thanh toán: {item.finalTotal.toLocaleString('vi-VN')}đ</Text>
         </View>
       </Pressable>
     );
@@ -124,11 +132,16 @@ const OrderTrackingScreen = () => {
             <ScrollView>
               <Text style={styles.modalTitle}>Chi tiết đơn hàng</Text>
               <Text style={styles.modalLabel}>Mã đơn: {selectedOrder._id}</Text>
-              <Text style={styles.modalLabel}>Trạng thái: {translateStatus(selectedOrder.status)}</Text>
+              <Text style={styles.modalLabel}>
+                Trạng thái:{' '}
+                <Text style={{ color: getStatusColor(selectedOrder.status), fontWeight: 'bold' }}>
+                  {translateStatus(selectedOrder.status)}
+                </Text>
+              </Text>
               <Text style={styles.modalLabel}>Ngày đặt: {formatDate(selectedOrder.createdAt)}</Text>
               <Text style={styles.modalLabel}>Địa chỉ giao: {selectedOrder.shippingAddress}</Text>
               <Text style={styles.modalLabel}>Thanh toán: {selectedOrder.paymentMethod.toUpperCase()}</Text>
-              <Text style={styles.modalLabel}>Tổng tiền: {selectedOrder.totalPrice.toLocaleString('vi-VN')}đ</Text>
+              <Text style={styles.modalLabel}>Tổng tiền: {selectedOrder.finalTotal.toLocaleString('vi-VN')}đ</Text>
 
               <Text style={[styles.modalLabel, { marginTop: 10 }]}>Sản phẩm:</Text>
               {selectedOrder.items.map((item, index) => (
@@ -136,6 +149,25 @@ const OrderTrackingScreen = () => {
                   • {item.name} x{item.purchaseQuantity}
                 </Text>
               ))}
+
+              {['waiting', 'pending', 'confirmed'].includes(selectedOrder.status) && (
+                <Pressable
+                  onPress={() => handleCancelOrder(selectedOrder._id)}
+                  style={[styles.closeBtn, { backgroundColor: '#ef4444' }]}
+                >
+                  <Text style={{ color: '#fff' }}>Huỷ đơn hàng</Text>
+                </Pressable>
+              )}
+
+              {selectedOrder.status === 'delivered' && (
+                <Pressable
+                  onPress={() => handleReturnOrder(selectedOrder._id)}
+                  style={[styles.closeBtn, { backgroundColor: '#8b5cf6' }]}
+                >
+                  <Text style={{ color: '#fff' }}>Trả hàng</Text>
+                </Pressable>
+              )}
+
             </ScrollView>
 
             <Pressable onPress={() => setSelectedOrder(null)} style={styles.closeBtn}>
@@ -147,11 +179,38 @@ const OrderTrackingScreen = () => {
     );
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await API.put(`orders/${orderId}/status`, { status: 'cancelled' });
+      Alert.alert('✅ Đơn hàng đã được huỷ');
+      setSelectedOrder(null);
+      fetchOrders();
+    } catch (err) {
+      console.error('Cancel error:', err);
+      Alert.alert('❌ Huỷ đơn thất bại');
+    }
+  };
+
+  const handleReturnOrder = async (orderId: string) => {
+    try {
+      await API.put(`orders/${orderId}/status`, { status: 'returned' });
+      Alert.alert('✅ Trả hàng thành công');
+      setSelectedOrder(null);
+      fetchOrders();
+    } catch (err) {
+      console.error('Return error:', err);
+      Alert.alert('❌ Trả hàng thất bại');
+    }
+  };
+
   if (loading) return <ActivityIndicator style={{ marginTop: 40 }} size="large" color="orange" />;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Đơn hàng của bạn</Text>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Icon name="chevron-back" size={24} color="#000" />
+        <Text style={styles.title1} > Theo dõi đơn hàng </Text>
+      </TouchableOpacity>
       <FlatList
         data={orders}
         removeClippedSubviews={false}
@@ -173,23 +232,51 @@ export default OrderTrackingScreen;
 // ==== Helpers ====
 
 const translateStatus = (status: string) => {
+  console.log('➡️ Trạng thái từ server:', status);
   switch (status) {
+    case 'waiting':
+      return 'Đang chờ xử lý';
     case 'pending':
-      return '🕐 Chờ xác nhận';
+      return 'Chờ xác nhận';
     case 'confirmed':
-      return '✅ Đã xác nhận';
+      return 'Đã xác nhận';
     case 'shipped':
-      return '🚚 Đang giao hàng';
+      return 'Đang giao hàng';
     case 'delivered':
-      return '📦 Đã nhận hàng';
+      return 'Đã nhận hàng';
     case 'returned':
-      return '↩️ Trả hàng';
+      return 'Trả hàng';
     case 'cancelled':
-      return '❌ Đã huỷ';
+      return 'Đã huỷ';
     default:
       return status;
   }
 };
+
+const getStatusColor = (status: string) => {
+  const normalized = status.toLowerCase();
+
+  switch (normalized) {
+    case 'waiting':
+      return '#f59e0b';
+    case 'pending':
+      return '#eab308';
+    case 'confirmed':
+      return '#10b981';
+    case 'shipped':
+      return '#3b82f6';
+    case 'delivered':
+      return '#16a34a';
+    case 'cancelled':
+      return '#ef4444';
+    case 'returned':
+      return '#8b5cf6';
+    default:
+      return '#6b7280';
+  }
+};
+
+
 
 const formatDate = (str: string) => new Date(str).toLocaleDateString('vi-VN');
 
@@ -200,6 +287,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#fffef6', // trắng ngà nhẹ cho sáng tổng thể
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 5,
+    marginBottom: 10,
+  },
+  title1: {
+    fontSize: 20,
+    marginLeft: 70
   },
   title: {
     fontSize: 22,

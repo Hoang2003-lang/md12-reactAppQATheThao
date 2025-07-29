@@ -10,15 +10,9 @@ export default function CheckoutScreen({ route, navigation }: any) {
   const { selectedItems } = route.params;
   const [user, setUser] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState('COD');
-  const [discount, setDiscount] = useState(0);
   const [selectedVoucher, setSelectedVoucher] = useState<any>(null);
   const [showVoucherList, setShowVoucherList] = useState(false);
-
-  const vouchers = [
-    { code: 'GIAM10', label: 'Giảm 10%', discount: 0.1 },
-    { code: 'GIAM20', label: 'Giảm 20%', discount: 0.2 },
-    { code: 'FREESHIP', label: 'Giảm 15%', discount: 0.15 },
-  ];
+  const [voucherList, setVoucherList] = useState<any[]>([]);
 
   const fetchUser = useCallback(async () => {
     const id = await AsyncStorage.getItem('userId');
@@ -28,15 +22,29 @@ export default function CheckoutScreen({ route, navigation }: any) {
     }
   }, []);
 
+  const fetchVouchers = useCallback(async () => {
+    try {
+      const res = await API.get('/vouchers');
+      const now = new Date();
+      const available = res.data.data.filter((v: any) => {
+        const start = new Date(v.startDate);
+        const end = new Date(v.expireDate);
+        return v.status === 'active' && now >= start && now <= end;
+      });
+      setVoucherList(available);
+    } catch (err) {
+      console.error('Lỗi lấy voucher:', err.message);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUser();
-  }, [fetchUser]);
+    fetchVouchers();
+  }, [fetchUser, fetchVouchers]);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchUser();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => {
+    fetchUser();
+  }, []));
 
   const calculateSubtotal = () => {
     return selectedItems.reduce((sum: number, item: any) => {
@@ -45,66 +53,87 @@ export default function CheckoutScreen({ route, navigation }: any) {
     }, 0);
   };
 
+  const calculateDiscount = () => {
+    if (!selectedVoucher) return 0;
+    const subtotal = calculateSubtotal();
+    if (subtotal < selectedVoucher.minOrderAmount) return 0;
+
+    if (selectedVoucher.type === 'fixed' || selectedVoucher.type === 'shipping') {
+      return Math.min(selectedVoucher.discount, selectedVoucher.maxDiscount || selectedVoucher.discount);
+    }
+
+    if (selectedVoucher.type === 'percent') {
+      const percentValue = (selectedVoucher.discount / 100) * subtotal;
+      return Math.min(percentValue, selectedVoucher.maxDiscount || percentValue);
+    }
+
+    return 0;
+  };
+
+  const handleSelectVoucher = (voucher: any) => {
+    const subtotal = calculateSubtotal();
+    if (subtotal < voucher.minOrderAmount) {
+      Alert.alert('Không đủ điều kiện', `Đơn hàng cần tối thiểu ${voucher.minOrderAmount.toLocaleString()} đ để áp dụng`);
+      return;
+    }
+    setSelectedVoucher(voucher);
+    setShowVoucherList(false);
+    Alert.alert('Đã áp dụng', voucher.label);
+  };
+
   const handleConfirmPayment = async () => {
-    if (!user || !user._id) {
-      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng.');
-      return;
-    }
-
-    if (!selectedItems || selectedItems.length === 0) {
-      Alert.alert('Lỗi', 'Giỏ hàng trống.');
-      return;
-    }
-
-    if (!paymentMethod) {
-      Alert.alert('Lỗi', 'Vui lòng chọn phương thức thanh toán.');
-      return;
-    }
-
-    if (!user.address) {
+    if (!user?.address) {
       Alert.alert('Chưa có địa chỉ', 'Vui lòng nhập địa chỉ giao hàng.');
       navigation.navigate('PersonalInfo');
       return;
     }
 
+    if (paymentMethod === 'Online') {
+      navigation.navigate('CheckoutVNPay', {
+        selectedItems,
+        user,
+        voucher: selectedVoucher
+      });
+      return;
+    }
+
+    // Xử lý COD
+    const subtotal = calculateSubtotal();
+    const shippingFee = 30000;
+    const discountAmount = calculateDiscount();
+    const finalTotal = subtotal + shippingFee - discountAmount;
+
+    const generateOrderCode = () => {
+      const now = new Date();
+      const timestamp = now.getTime().toString().slice(-6);
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      return `ORD-${timestamp}-${random}`;
+    };
+
     try {
-      const subtotal = calculateSubtotal();
-      const shippingFee = 20000;
-      const discountAmount = subtotal * discount;
-      const finalTotal = subtotal + shippingFee - discountAmount;
-
-      const generateOrderCode = () => {
-        const now = new Date();
-        const timestamp = now.getTime().toString().slice(-6);
-        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-        return `ORD-${timestamp}-${random}`;
-      };
-
       const orderPayload: any = {
-  userId: user._id,
+        userId: user._id,
         items: selectedItems.map((item: any) => ({
           id_product: item.product_id?._id || item._id,
           name: item.product_id?.name || item.name,
           purchaseQuantity: item.quantity,
           price: item.product_id?.price || item.price
         })),
-        totalPrice: subtotal,
+        totalPrice: finalTotal,
         shippingFee,
         discount: discountAmount,
         finalTotal,
-        paymentMethod: paymentMethod.toLowerCase(),
+        paymentMethod: 'cod',
         shippingAddress: user.address,
         status: 'waiting',
-order_code: generateOrderCode()
+        order_code: generateOrderCode()
       };
 
       if (selectedVoucher?.id) {
         orderPayload.voucherId = selectedVoucher.id;
       }
 
-      console.log('orderPayload gửi đi:', orderPayload);
       await API.post('/orders', orderPayload);
-
       Alert.alert('Thành công', 'Đặt hàng thành công!');
       navigation.navigate('Home');
     } catch (err: any) {
@@ -128,6 +157,11 @@ order_code: generateOrderCode()
     );
   };
 
+  const subtotal = calculateSubtotal();
+  const shippingFee = 30000;
+  const discount = calculateDiscount();
+  const total = subtotal + shippingFee - discount;
+
   return (
     <FlatList
       ListHeaderComponent={
@@ -144,30 +178,16 @@ order_code: generateOrderCode()
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Chọn Voucher</Text>
-            <TouchableOpacity
-              style={styles.dropdownButton}
-              onPress={() => setShowVoucherList(!showVoucherList)}
-            >
-              <Text style={{ flex: 1 }}>
-                {selectedVoucher ? selectedVoucher.label : 'Chọn mã giảm giá'}
-              </Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowVoucherList(!showVoucherList)}>
+              <Text style={{ flex: 1 }}>{selectedVoucher?.label || 'Chọn mã giảm giá'}</Text>
               <Text>▼</Text>
             </TouchableOpacity>
-
             {showVoucherList && (
               <View style={styles.voucherList}>
-                {vouchers.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.voucherItem}
-                    onPress={() => {
-                      setSelectedVoucher(item);
-                      setDiscount(item.discount);
-                      setShowVoucherList(false);
-                      Alert.alert('Thành công', `Áp dụng ${item.label}`);
-                    }}
-                  >
+                {voucherList.map((item, index) => (
+                  <TouchableOpacity key={index} style={styles.voucherItem} onPress={() => handleSelectVoucher(item)}>
                     <Text>{item.label}</Text>
+                    <Text style={{ fontSize: 12, color: '#888' }}>{item.description}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -176,18 +196,15 @@ order_code: generateOrderCode()
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
-            <TouchableOpacity
-              style={[styles.paymentButton, paymentMethod === 'COD' && styles.selected]}
-              onPress={() => setPaymentMethod('COD')}
-            >
-              <Text>Thanh toán khi nhận hàng</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.paymentButton, paymentMethod === 'Online' && styles.selected]}
-              onPress={() => setPaymentMethod('Online')}
-            >
-              <Text>Thanh toán Online</Text>
-            </TouchableOpacity>
+            {['COD', 'Online'].map((method) => (
+              <TouchableOpacity
+                key={method}
+                style={[styles.paymentButton, paymentMethod === method && styles.selected]}
+                onPress={() => setPaymentMethod(method)}
+              >
+                <Text>{method === 'COD' ? 'Thanh toán khi nhận hàng' : 'Thanh toán Online'}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
           <Text style={styles.sectionTitle}>Sản phẩm</Text>
@@ -201,25 +218,21 @@ order_code: generateOrderCode()
         <View style={styles.footerContainer}>
           <View style={styles.totalContainer}>
             <Text style={styles.totalLabel}>Tổng gốc:</Text>
-            <Text style={styles.totalAmount}>{calculateSubtotal().toLocaleString()} đ</Text>
+            <Text style={styles.totalAmount}>{subtotal.toLocaleString()} đ</Text>
           </View>
           {selectedVoucher && (
             <View style={styles.totalContainer}>
               <Text style={styles.totalLabel}>Giảm giá:</Text>
-              <Text style={styles.totalAmount}>
-                -{(calculateSubtotal() * discount).toLocaleString()} đ
-              </Text>
+              <Text style={styles.totalAmount}>- {discount.toLocaleString()} đ</Text>
             </View>
           )}
           <View style={styles.totalContainer}>
             <Text style={styles.totalLabel}>Phí vận chuyển:</Text>
-            <Text style={styles.totalAmount}>20,000 đ</Text>
+            <Text style={styles.totalAmount}>{shippingFee.toLocaleString()} đ</Text>
           </View>
           <View style={styles.totalContainer}>
             <Text style={styles.totalLabel}>Tổng thanh toán:</Text>
-            <Text style={styles.totalAmount}>
-              {(calculateSubtotal() + 20000 - calculateSubtotal() * discount).toLocaleString()} đ
-            </Text>
+            <Text style={styles.totalAmount}>{total.toLocaleString()} đ</Text>
           </View>
           <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmPayment}>
             <Text style={styles.confirmText}>Đặt Hàng</Text>
@@ -249,9 +262,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#ccc', borderRadius: 6, padding: 10,
   },
   voucherList: { marginTop: 5, backgroundColor: '#f1f1f1', borderRadius: 6 },
-  voucherItem: {
-    padding: 10, borderBottomWidth: 1, borderBottomColor: '#ddd'
-  },
+  voucherItem: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#ddd' },
   paymentButton: {
     borderWidth: 1, borderColor: '#ccc', padding: 10, borderRadius: 6, marginTop: 10
   },
