@@ -129,10 +129,14 @@ const HomeScreen = ({ navigation }: any) => {
 
       {/* Top Bar */}
       <View style={styles.topBar}>
-        <View style={styles.searchBox}>
+        <TouchableOpacity
+          style={styles.searchBox}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Search')}
+        >
           <Ionicons name="search" size={18} color="#999" style={{ marginHorizontal: 10 }} />
-          <TextInput placeholder="Tìm kiếm ở đây" placeholderTextColor="#999" style={styles.input} />
-        </View>
+          <Text style={styles.input}>Tìm kiếm ở đây</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Cart')}>
           <View style={{ position: 'relative' }}>
@@ -199,13 +203,13 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
 
         <Section title="Tất cả sản phẩm">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.gridContainer}>
             {products.map((item, index) => (
-              <View key={item._id || `product-${index}`} style={styles.productWrapper}>
+              <View key={item._id || `product-${index}`} style={styles.gridItem}>
                 <ProductCard item={item} navigation={navigation} />
               </View>
             ))}
-          </ScrollView>
+          </View>
         </Section>
 
         {/* Áo đội tuyển */}
@@ -348,10 +352,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-evenly',
+    paddingHorizontal: 0,
   },
   gridItem: {
     alignItems: 'center',
-    margin: 20
+    width: '49%',
   },
   categoryRow: {
     flexDirection: 'row',

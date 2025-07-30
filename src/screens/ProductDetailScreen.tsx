@@ -15,7 +15,13 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [comments, setComments] = useState([]);
+  type Comment = {
+    userName: string;
+    rating: number;
+    content: string;
+    [key: string]: any;
+  };
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [bookmark, setBookMark] = useState(false);
   const [rating, setRating] = useState(5);
@@ -87,6 +93,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         quantity,
         price: product.price,
         total: totalPrice,
+        type: productType,
       };
 
       await API.post('/carts/add', cartItem);

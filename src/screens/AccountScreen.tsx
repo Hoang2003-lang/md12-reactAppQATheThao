@@ -118,10 +118,10 @@ const AccountScreen: React.FC = () => {
         <Text style={[styles.label, { color: '#e11d48' }]}>Đăng xuất</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.row} onPress={() => setConfirmDelete(true)}>
+      {/* <TouchableOpacity style={styles.row} onPress={() => setConfirmDelete(true)}>
         <MCI name="delete-outline" size={22} color="#ef4444" />
         <Text style={[styles.label, { color: '#ef4444' }]}>Xoá hồ sơ</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Modal xác nhận đăng xuất */}
       {confirmLogout && (
