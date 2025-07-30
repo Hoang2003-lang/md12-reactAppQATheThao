@@ -5,11 +5,9 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 import { useIsFocused } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons'
 
-export default function CartScreen() {
-  const navigation = useNavigation();
+export default function CartScreen({ navigation }: any) {
   const [userId, setUserId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,8 +121,8 @@ export default function CartScreen() {
       Alert.alert('Thông báo', 'Vui lòng chọn ít nhất một sản phẩm để mua');
       return;
     }
+    navigation.navigate('Checkout', { selectedItems: selected });
 
-    // navigation.navigate('Checkout', { selectedItems: selected });
   };
 
   const CustomCheckbox = ({ checked, onPress }: { checked: boolean; onPress: () => void }) => (
@@ -185,7 +183,7 @@ export default function CartScreen() {
             </TouchableOpacity>
           </View>
 
-          
+
         </View>
       </View>
     );

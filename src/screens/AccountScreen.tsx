@@ -24,6 +24,7 @@ type RootStackParamList = {
   Cart: undefined;
   Chat: undefined;
   OrderTracking: undefined;
+  PrivacyPolicy: undefined;
 };
 
 
@@ -41,7 +42,7 @@ const menuItems: MenuItem[] = [
   { icon: 'truck-check-outline', label: 'Theo dõi đơn hàng', screen: 'OrderTracking' },
   { icon: 'account-outline', label: 'Thông tin cá nhân', screen: 'PersonalInfo' },
   { icon: 'chat-outline', label: 'Trò chuyện', screen: 'Chat' },
-  { icon: 'shield-lock-outline', label: 'Chính sách và bảo mật' },
+  { icon: 'shield-lock-outline', label: 'Chính sách và bảo mật', screen: 'PrivacyPolicy' },
 ];
 
 const AccountScreen: React.FC = () => {
