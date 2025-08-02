@@ -28,6 +28,7 @@ import ForgotPassword from './src/login/ForgotPassword';
 import TabNavigator from './src/TabNavigator/TabNavigator';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import NotificationScreen from './src/screens/NotificationScreen';
+import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -114,7 +115,8 @@ const App = () => {
           <Stack.Screen name="Notification" component={NotificationScreen} />
           <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
           <Stack.Screen name="Search" component={SearchScreen} />
-          <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Thông tin cá nhân' }} />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+          <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </ActionSheetProvider>

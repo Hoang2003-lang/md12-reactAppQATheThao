@@ -24,6 +24,7 @@ type RootStackParamList = {
   Cart: undefined;
   Chat: undefined;
   OrderTracking: undefined;
+  PrivacyPolicy: undefined;
 };
 
 
@@ -41,7 +42,7 @@ const menuItems: MenuItem[] = [
   { icon: 'truck-check-outline', label: 'Theo dõi đơn hàng', screen: 'OrderTracking' },
   { icon: 'account-outline', label: 'Thông tin cá nhân', screen: 'PersonalInfo' },
   { icon: 'chat-outline', label: 'Trò chuyện', screen: 'Chat' },
-  { icon: 'shield-lock-outline', label: 'Chính sách và bảo mật' },
+  { icon: 'shield-lock-outline', label: 'Chính sách và bảo mật', screen: 'PrivacyPolicy' },
 ];
 
 const AccountScreen: React.FC = () => {
@@ -118,10 +119,10 @@ const AccountScreen: React.FC = () => {
         <Text style={[styles.label, { color: '#e11d48' }]}>Đăng xuất</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.row} onPress={() => setConfirmDelete(true)}>
+      {/* <TouchableOpacity style={styles.row} onPress={() => setConfirmDelete(true)}>
         <MCI name="delete-outline" size={22} color="#ef4444" />
         <Text style={[styles.label, { color: '#ef4444' }]}>Xoá hồ sơ</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Modal xác nhận đăng xuất */}
       {confirmLogout && (

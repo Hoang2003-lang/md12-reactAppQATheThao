@@ -48,6 +48,7 @@ const OrderTrackingScreen = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const isFocused = useIsFocused();
+  const [activeTab, setActiveTab] = useState<string>('waiting');
   const fetchOrders = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -103,20 +104,74 @@ const OrderTrackingScreen = () => {
 
 
   const renderItem = ({ item }: { item: OrderItem }) => {
-    const image = item.items?.[0]?.id_product?.image;
-
     return (
       <Pressable onPress={() => setSelectedOrder(item)} style={styles.orderBox}>
-        {image && <Image source={{ uri: image }} style={styles.image} />}
         <View style={{ flex: 1 }}>
           <Text style={styles.bold}>Mã đơn: {item._id.slice(-6).toUpperCase()}</Text>
-          <Text>
-            Trạng thái:{' '}
-            <Text style={{ color: getStatusColor(item.status), fontWeight: 'bold' }}>
-              {translateStatus(item.status)}
-            </Text>
+          {item.items.map((product, idx) => (
+            <View key={idx} style={styles.productRow}>
+              {product.id_product?.image ? (
+                <Image
+                  source={{ uri: product.id_product.image }}
+                  style={styles.productThumb}
+                />
+              ) : (
+                <View style={[styles.productThumb, { backgroundColor: '#eee' }]} />
+              )}
+              <View style={{ flex: 1 }}>
+                <Text numberOfLines={2} style={styles.productName}>
+                  {product.name} x{product.purchaseQuantity}
+                </Text>
+                <Text style={styles.productPrice}>
+                  {product.price.toLocaleString('vi-VN')}đ
+                </Text>
+              </View>
+            </View>
+          ))}
+          <Text style={styles.totalText}>
+            Tổng thanh toán: {item.finalTotal.toLocaleString('vi-VN')}đ
           </Text>
-          <Text>Tổng thanh toán: {item.finalTotal.toLocaleString('vi-VN')}đ</Text>
+
+          {['waiting', 'pending', 'confirmed'].includes(item.status) ? (
+            <Pressable
+              onPress={() =>
+                Alert.alert(
+                  'Xác nhận huỷ',
+                  'Bạn có muốn huỷ đơn hàng này không?',
+                  [
+                    { text: 'Không', style: 'cancel' },
+                    { text: 'Huỷ đơn', style: 'destructive', onPress: () => handleCancelOrder(item._id) },
+                  ]
+                )
+              }
+              style={[styles.cancelBtn, { backgroundColor: '#ef4444' }]}
+            >
+              <Text style={{ color: '#fff' }}>Huỷ đơn hàng</Text>
+            </Pressable>
+          ) : (
+            <View style={[styles.cancelBtn, { backgroundColor: '#d1d5db' }]}>
+              <Text style={{ color: '#6b7280' }}>Huỷ đơn hàng</Text>
+            </View>
+          )}
+
+          {item.status === 'delivered' && (
+            <Pressable
+              onPress={() =>
+                Alert.alert(
+                  'Xác nhận trả hàng',
+                  'Bạn có muốn trả lại đơn hàng này không?',
+                  [
+                    { text: 'Không', style: 'cancel' },
+                    { text: 'Trả hàng', onPress: () => handleReturnOrder(item._id) },
+                  ]
+                )
+              }
+              style={[styles.actionBtn, { backgroundColor: '#3b82f6' }]}
+            >
+              <Text style={{ color: '#fff' }}>Trả hàng</Text>
+            </Pressable>
+          )}
+
         </View>
       </Pressable>
     );
@@ -149,24 +204,6 @@ const OrderTrackingScreen = () => {
                   • {item.name} x{item.purchaseQuantity}
                 </Text>
               ))}
-
-              {['waiting', 'pending', 'confirmed'].includes(selectedOrder.status) && (
-                <Pressable
-                  onPress={() => handleCancelOrder(selectedOrder._id)}
-                  style={[styles.closeBtn, { backgroundColor: '#ef4444' }]}
-                >
-                  <Text style={{ color: '#fff' }}>Huỷ đơn hàng</Text>
-                </Pressable>
-              )}
-
-              {selectedOrder.status === 'delivered' && (
-                <Pressable
-                  onPress={() => handleReturnOrder(selectedOrder._id)}
-                  style={[styles.closeBtn, { backgroundColor: '#8b5cf6' }]}
-                >
-                  <Text style={{ color: '#fff' }}>Trả hàng</Text>
-                </Pressable>
-              )}
 
             </ScrollView>
 
@@ -205,14 +242,43 @@ const OrderTrackingScreen = () => {
 
   if (loading) return <ActivityIndicator style={{ marginTop: 40 }} size="large" color="orange" />;
 
+  const filteredOrders = activeTab === 'all'
+    ? orders
+    : orders.filter((order) => order.status === activeTab);
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="chevron-back" size={24} color="#000" />
-        <Text style={styles.title1} > Theo dõi đơn hàng </Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
+          <Icon name="chevron-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Theo dõi đơn hàng</Text>
+      </View>
+      <View style={styles.tabContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {statusTabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[
+                styles.tabItem,
+                activeTab === tab.key && styles.tabItemActive,
+              ]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === tab.key && styles.tabTextActive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
       <FlatList
-        data={orders}
+        data={filteredOrders}
         removeClippedSubviews={false}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
@@ -229,7 +295,6 @@ const OrderTrackingScreen = () => {
 
 export default OrderTrackingScreen;
 
-// ==== Helpers ====
 
 const translateStatus = (status: string) => {
   console.log('➡️ Trạng thái từ server:', status);
@@ -276,39 +341,57 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const statusTabs = [
+  { key: 'waiting', label: 'Chờ xử lý' },
+  { key: 'pending', label: 'Chờ xác nhận' },
+  { key: 'confirmed', label: 'Đã xác nhận' },
+  { key: 'shipped', label: 'Đang giao hàng' },
+  { key: 'delivered', label: 'Đã nhận hàng' },
+  { key: 'returned', label: 'Trả hàng' },
+  { key: 'cancelled', label: 'Đã huỷ' },
+];
 
 
 const formatDate = (str: string) => new Date(str).toLocaleDateString('vi-VN');
 
-// ==== Styles ====
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fffef6', // trắng ngà nhẹ cho sáng tổng thể
+    backgroundColor: '#fffef6',
   },
-  backButton: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 5,
+    justifyContent: 'center',
+    height: 55,
     marginBottom: 10,
+    position: 'relative',
   },
-  title1: {
+
+  backIcon: {
+    position: 'absolute',
+    left: 0,
+    paddingHorizontal: 10,
+  },
+
+  headerTitle: {
     fontSize: 20,
-    marginLeft: 70
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   title: {
     fontSize: 22,
     fontWeight: '800',
     marginBottom: 16,
     textAlign: 'center',
-    color: '#d97706', // vàng đậm hơn
+    color: '#d97706',
   },
   orderBox: {
     flexDirection: 'row',
     backgroundColor: '#fef3c7',
-    borderRadius: 16, // bo tròn hơn
+    borderRadius: 16,
     padding: 14,
     marginBottom: 12,
     alignItems: 'center',
@@ -328,9 +411,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
     marginBottom: 4,
-    color: '#78350f', // nâu cam trầm
+    color: '#78350f',
   },
-  // Modal
   modalBackground: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -366,6 +448,77 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 12,
     borderRadius: 10,
+    alignItems: 'center',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  tabItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginRight: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabItemActive: {
+    borderBottomColor: '#f59e0b',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: '#f59e0b',
+    fontWeight: '700',
+  },
+  productRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginVertical: 8,
+  },
+  productThumb: {
+    width: 50,
+    height: 50,
+    borderRadius: 6,
+    marginRight: 10,
+    backgroundColor: '#eee',
+  },
+  productName: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  productPrice: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  totalText: {
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  cancelBtn: {
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  actionBtn: {
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
     alignItems: 'center',
   },
 });

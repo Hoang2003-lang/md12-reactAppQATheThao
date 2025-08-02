@@ -19,7 +19,7 @@ declare global {
 // ✅ Cấu hình URL backend - phù hợp với máy ảo Android
 const BACKEND_URL = __DEV__ 
     ? "http://10.0.2.2:3002"  // IP cho Android Emulator
-    : "http://192.168.0.103:3002"; // IP thật cho device thật
+    : "http://192.168.10.109:3002"; // IP thật cho device thật
 
 interface PaymentResult {
   status: "success" | "error" | "loading";

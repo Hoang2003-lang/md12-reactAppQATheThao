@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View,Text,FlatList,Image,TouchableOpacity,StyleSheet,Alert,ActivityIndicator,
+  View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 import { useIsFocused } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons'
 
 export default function CartScreen({ navigation }: any) {
   const [userId, setUserId] = useState<string | null>(null);
@@ -49,7 +50,7 @@ export default function CartScreen({ navigation }: any) {
     }
   };
 
-  const updateQuantity = async (productId: string, size: string, quantity: number) => {
+  const updateQuantity = async (productId: string, size: string, quantity: number, type: string) => {
     try {
       if (!userId) return;
 
@@ -59,7 +60,7 @@ export default function CartScreen({ navigation }: any) {
           {
             text: 'Xoá',
             style: 'destructive',
-            onPress: () => handleDeleteItem(productId, size),
+            onPress: () => handleDeleteItem(productId, size, type),
           },
         ]);
       }
@@ -68,6 +69,7 @@ export default function CartScreen({ navigation }: any) {
         product_id: productId,
         size,
         quantity,
+        type,
       });
       await fetchCart(userId);
     } catch (err) {
@@ -75,16 +77,17 @@ export default function CartScreen({ navigation }: any) {
     }
   };
 
-  const handleDeleteItem = async (productId: string, size: string) => {
+  const handleDeleteItem = async (productId: string, size: string, type: string) => {
     try {
       if (!userId) return;
 
       await API.delete(`/carts/${userId}/item`, {
-        params: { product_id: productId, size },
+        params: { product_id: productId, size, type },
       });
       await fetchCart(userId);
     } catch (err) {
       console.error('❌ Lỗi xoá item:', err);
+
       Alert.alert('Xoá thất bại', 'Không thể xoá sản phẩm');
     }
   };
@@ -99,7 +102,7 @@ export default function CartScreen({ navigation }: any) {
 
   const calculateSelectedTotal = () => {
     return cartItems.reduce((sum: number, item: any) => {
-const product = item.product_id || item;
+      const product = item.product_id || item;
       const key = `${product._id}_${item.size}`;
       return selectedItems[key]
         ? sum + (product.price || 0) * (item.quantity || 1)
@@ -118,8 +121,8 @@ const product = item.product_id || item;
       Alert.alert('Thông báo', 'Vui lòng chọn ít nhất một sản phẩm để mua');
       return;
     }
-
     navigation.navigate('Checkout', { selectedItems: selected });
+
   };
 
   const CustomCheckbox = ({ checked, onPress }: { checked: boolean; onPress: () => void }) => (
@@ -137,6 +140,7 @@ const product = item.product_id || item;
     return (
       <View style={styles.itemContainer}>
         <CustomCheckbox checked={isChecked} onPress={() => toggleSelectItem(productId, item.size)} />
+
         <Image
           source={{ uri: product.image || 'https://via.placeholder.com/100' }}
           style={styles.image}
@@ -146,35 +150,40 @@ const product = item.product_id || item;
           <Text style={styles.price}>Giá: {product.price?.toLocaleString()} đ</Text>
           <Text style={styles.size}>Size: {item.size}</Text>
           <View style={styles.quantityRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={() => updateQuantity(productId, item.size, item.quantity - 1, item.type)}
+                style={styles.qtyButton}
+              >
+                <Text style={styles.qtyText}>-</Text>
+              </TouchableOpacity>
+              <Text style={styles.quantity}>{item.quantity}</Text>
+              <TouchableOpacity
+                onPress={() => updateQuantity(productId, item.size, item.quantity + 1, item.type)}
+                style={styles.qtyButton}
+              >
+                <Text style={styles.qtyText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
-              onPress={() => updateQuantity(productId, item.size, item.quantity - 1)}
-              style={styles.qtyButton}
+              onPress={() =>
+                Alert.alert('Xác nhận', 'Bạn có chắc muốn xoá sản phẩm này?', [
+                  { text: 'Hủy', style: 'cancel' },
+                  {
+                    text: 'Xoá',
+                    style: 'destructive',
+                    onPress: () => handleDeleteItem(productId, item.size, item.type),
+                  },
+                ])
+              }
+              style={styles.deleteButton}
             >
-              <Text style={styles.qtyText}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.quantity}>{item.quantity}</Text>
-            <TouchableOpacity
-              onPress={() => updateQuantity(productId, item.size, item.quantity + 1)}
-              style={styles.qtyButton}
-            >
-              <Text style={styles.qtyText}>+</Text>
+              <Text style={styles.deleteText}>🗑 Xoá</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={() =>
-              Alert.alert('Xác nhận', 'Bạn có chắc muốn xoá sản phẩm này?', [
-                { text: 'Hủy', style: 'cancel' },
-                {
-                  text: 'Xoá',
-                  style: 'destructive',
-                  onPress: () => handleDeleteItem(productId, item.size),
-                },
-              ])
-            }
-            style={styles.deleteButton}
-          >
-            <Text style={styles.deleteText}>🗑 Xoá</Text>
-          </TouchableOpacity>
+
+
         </View>
       </View>
     );
@@ -182,7 +191,12 @@ const product = item.product_id || item;
 
   return (
     <View style={styles.container}>
-<Text style={styles.title}>🛒 Giỏ hàng của bạn</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
+          <Icon name="chevron-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Giỏ hàng</Text>
+      </View>
       {loading ? (
         <ActivityIndicator size="large" color="orange" />
       ) : cartItems.length === 0 ? (
@@ -211,7 +225,7 @@ const product = item.product_id || item;
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 15, backgroundColor: '#fffef6' },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -219,23 +233,77 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 55,
+    marginBottom: 10,
+    position: 'relative',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  backIcon: {
+    position: 'absolute',
+    left: 0,
+    paddingHorizontal: 10,
+  },
+
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   itemContainer: {
     flexDirection: 'row',
-    padding: 10,
-    marginBottom: 10,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#eee',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  image: {
+    width: 90,
+    height: 90,
+    borderRadius: 10,
+    marginRight: 10,
     borderWidth: 1,
     borderColor: '#ddd',
-    alignItems: 'center',
   },
-  image: { width: 80, height: 80, borderRadius: 5, marginRight: 10 },
-  infoContainer: { flex: 1 },
-  name: { fontSize: 16, fontWeight: 'bold' },
-  price: { fontSize: 14, color: '#444' },
-  size: { fontSize: 14, color: '#555' },
+  infoContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    gap: 4,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  price: {
+    fontSize: 14,
+    color: '#ff6600',
+    fontWeight: 'bold',
+  },
+  size: {
+    fontSize: 13,
+    color: '#777',
+  },
   quantity: { fontSize: 14, color: '#888' },
-  quantityRow: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
+  quantityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 5,
+  },
   qtyButton: {
     padding: 5,
     borderWidth: 1,
@@ -276,11 +344,16 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: 18, fontWeight: 'bold' },
   totalValue: { fontSize: 18, color: 'orange', fontWeight: 'bold' },
   buyNowButton: {
-    backgroundColor: 'orange',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 15,
+    backgroundColor: '#FF7A00',
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 20,
     alignItems: 'center',
+    shadowColor: '#FF7A00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   buyNowText: {
     color: '#fff',
