@@ -19,8 +19,24 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [newComment, setNewComment] = useState('');
   const [bookmark, setBookMark] = useState(false);
   const [rating, setRating] = useState(5);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
 
   const totalPrice = product ? product.price * quantity : 0;
+  // chuyển ảnh
+  const handlePrevImage = () => {
+    if (!product?.images?.length) return;
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? product.images.length - 1 : prevIndex - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    if (!product?.images?.length) return;
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === product.images.length - 1 ? 0 : prevIndex + 1
+    );
+  };
 
   useEffect(() => {
     fetchProduct();
@@ -203,8 +219,31 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         <Icon name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
-      <Image source={{ uri: product.image }} style={styles.image} />
+      <View style={styles.imageContainer}>
+        {/* Nút trái */}
+        <TouchableOpacity
+          onPress={handlePrevImage}
+          style={[styles.navButton, { left: 10 }]}
+        >
+          <Icon name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
 
+        <Image
+          source={{ uri: product.images?.[currentImageIndex] }}
+          style={styles.image}
+        />
+
+        {/* Nút phải */}
+        <TouchableOpacity
+          onPress={handleNextImage}
+          style={[styles.navButton, { right: 10 }]}
+        >
+          <Icon name="chevron-forward" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.imageIndex}>
+          {currentImageIndex + 1} / {product.images?.length}
+        </Text>
+      </View>
       <View style={styles.content}>
         <View style={styles.txt}>
           <Text style={styles.name}>{product.name}</Text>
@@ -341,5 +380,32 @@ const styles = StyleSheet.create({
   cartButton: { backgroundColor: 'orange', padding: 14, alignItems: 'center', borderRadius: 5 },
   cartText: { color: '#fff', fontWeight: 'bold' },
   txt: { flexDirection: "row" },
-  heart: { width: 20, height: 20 }
+  heart: { width: 20, height: 20 },
+  imageContainer: {
+    position: 'relative',
+    height: 300,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+  },
+  navButton: {
+    position: 'absolute',
+    top: '50%',
+    transform: [{ translateY: -15 }],
+    padding: 6,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 20,
+    zIndex: 10,
+  },
+  imageIndex: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    color: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    fontSize: 14,
+  },
 });
