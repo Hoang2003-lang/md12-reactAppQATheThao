@@ -33,7 +33,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
       });
       setVoucherList(available);
     } catch (err) {
-      console.error('Lỗi lấy voucher:', err.message);
+      console.error('Lỗi lấy voucher:', err);
     }
   }, []);
 

@@ -129,10 +129,14 @@ const HomeScreen = ({ navigation }: any) => {
 
       {/* Top Bar */}
       <View style={styles.topBar}>
-        <View style={styles.searchBox}>
+        <TouchableOpacity
+          style={styles.searchBox}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Search')}
+        >
           <Ionicons name="search" size={18} color="#999" style={{ marginHorizontal: 10 }} />
-          <TextInput placeholder="Tìm kiếm ở đây" placeholderTextColor="#999" style={styles.input} />
-        </View>
+          <Text style={styles.input}>Tìm kiếm ở đây</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Cart')}>
           <View style={{ position: 'relative' }}>
@@ -186,26 +190,26 @@ const HomeScreen = ({ navigation }: any) => {
         {/* Khuyến mãi */}
         <View style={{ marginTop: 10 }}>
           <Text style={styles.sectionTitle}>Khuyến mãi</Text>
-          <View style={{ paddingLeft: 45 }}>
+          <View style={{ paddingHorizontal: 10 }}>
             <View style={styles.gridContainer}>
-              {saleProducts.slice(0, 4).map((item, index) => (
-                <View key={item._id || `sale-${index}`} style={styles.gridItem}>
+              {saleProducts.slice(0, 4).map(item => (
+                <View key={item._id} style={styles.gridItem}>
                   <SaleProductCard item={item} navigation={navigation} />
                 </View>
               ))}
             </View>
           </View>
+
         </View>
 
-        {/* Tất cả sản phẩm */}
         <Section title="Tất cả sản phẩm">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.gridContainer}>
             {products.map((item, index) => (
-              <View key={item._id || `product-${index}`} style={styles.productWrapper}>
+              <View key={item._id || `product-${index}`} style={styles.gridItem}>
                 <ProductCard item={item} navigation={navigation} />
               </View>
             ))}
-          </ScrollView>
+          </View>
         </Section>
 
         {/* Áo đội tuyển */}
@@ -329,7 +333,7 @@ const styles = StyleSheet.create({
     marginLeft: 10
   },
   productWrapper1: {
-    width: (width - 40) / 2,
+    width: (width - 20) / 2,
     marginBottom: 15,
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -347,13 +351,12 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 30,
-    paddingLeft: 12
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 0,
   },
   gridItem: {
-    width: '48%',
-    marginBottom: 12,
+    alignItems: 'center',
+    width: '49%',
   },
   categoryRow: {
     flexDirection: 'row',

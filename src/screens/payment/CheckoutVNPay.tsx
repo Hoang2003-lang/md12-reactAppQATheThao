@@ -7,7 +7,7 @@ import API from "../../api"; // �� import API chuẩn
 
 // ✅ Cấu hình URL backend - thay đổi theo môi trường
 const BACKEND_URL = __DEV__ 
-    ? "http://192.168.0.103:3002"  // IP thật của máy bạn
+    ? "http://192.168.10.109:3002"  // IP thật của máy bạn
     : "http://localhost:3002";     // Production URL
 
 const CheckoutVNPay = ({ route, navigation }: any) => {
