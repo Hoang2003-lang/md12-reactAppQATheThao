@@ -14,11 +14,43 @@
       },
       "oauth_client": [
         {
+          "client_id": "985098184266-bomd3q28qlcnhj321ufsars8lbq447eu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.md12_reactapp_qathethao",
+            "certificate_hash": "7ef44ace9ac2e5e289229be502c766fe9f36272c"
+          }
+        },
+        {
           "client_id": "985098184266-gr9eknc6ldq8njhnan5mevahfpnmmr50.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.md12_reactapp_qathethao",
             "certificate_hash": "04a52b1c0fb2ca2c794614405f1fdfdf1ce10846"
+          }
+        },
+        {
+          "client_id": "985098184266-rds8fbe7ele0rfvg76ra6pi8e91q8819.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.md12_reactapp_qathethao",
+            "certificate_hash": "20588fb6e5a8758501c3d8b0a75b9c886d8393ce"
+          }
+        },
+        {
+          "client_id": "985098184266-rn8043j0r23umiril88qcj9pju1knta7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.md12_reactapp_qathethao",
+            "certificate_hash": "09f9d4a13ee279fae45a186e70c400445ed67a50"
+          }
+        },
+        {
+          "client_id": "985098184266-ud9foitbti7rnaq7t33kgp2enqvhlshs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.md12_reactapp_qathethao",
+            "certificate_hash": "4414e5a95b16eaa94d278d5eb18ab6a034fbe4c2"
           }
         },
         {

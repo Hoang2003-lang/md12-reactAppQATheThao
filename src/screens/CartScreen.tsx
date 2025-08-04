@@ -7,6 +7,73 @@ import API from '../api';
 import { useIsFocused } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons'
 
+// Custom Image component với error handling
+const CustomImage = ({ source, style, ...props }: any) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  const handleImageError = () => {
+    console.log('❌ Image failed to load:', source?.uri);
+    setImageError(true);
+    setImageLoading(false);
+  };
+
+  const handleImageLoad = () => {
+    console.log('✅ Image loaded successfully:', source?.uri);
+    setImageLoading(false);
+  };
+
+  if (imageError) {
+    return (
+      <View style={[style, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+        <Icon name="image-outline" size={30} color="#ccc" />
+        <Text style={{ fontSize: 10, color: '#ccc', marginTop: 5 }}>No Image</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={style}>
+      <Image
+        source={source}
+        style={[style, { position: 'absolute' }]}
+        resizeMode="cover"
+        onError={handleImageError}
+        onLoad={handleImageLoad}
+        {...props}
+      />
+      {imageLoading && (
+        <View style={[style, { position: 'absolute', backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="small" color="orange" />
+        </View>
+      )}
+    </View>
+  );
+};
+
+// Helper function để lấy URL ảnh sản phẩm
+const getProductImageUrl = (product: any) => {
+  if (!product) return 'https://via.placeholder.com/100';
+  
+  // Thử lấy từ images array trước
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    return product.images[0];
+  }
+  
+  // Thử lấy từ image field
+  if (product.image) {
+    return product.image;
+  }
+  
+  // Thử lấy từ imageUrl field
+  if (product.imageUrl) {
+    return product.imageUrl;
+  }
+  
+  // Fallback
+  return 'https://via.placeholder.com/100';
+};
+
 export default function CartScreen({ navigation }: any) {
   const [userId, setUserId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState([]);
@@ -39,6 +106,7 @@ export default function CartScreen({ navigation }: any) {
   const fetchCart = async (id: string) => {
     try {
       const res = await API.get(`/carts/${id}`);
+      console.log('🔍 Cart API response:', JSON.stringify(res.data, null, 2));
       if (res.data?.data?.items && Array.isArray(res.data.data.items)) {
         setCartItems(res.data.data.items);
       } else {
@@ -137,12 +205,23 @@ export default function CartScreen({ navigation }: any) {
     const key = `${productId}_${item.size}`;
     const isChecked = !!selectedItems[key];
 
+    console.log('🔍 Cart item structure:', {
+      itemId: item._id,
+      productId,
+      productName: product?.name,
+      productImage: product?.image,
+      productImages: product?.images,
+      finalImageUrl: getProductImageUrl(product),
+      itemSize: item.size,
+      itemQuantity: item.quantity,
+    });
+
     return (
       <View style={styles.itemContainer}>
         <CustomCheckbox checked={isChecked} onPress={() => toggleSelectItem(productId, item.size)} />
 
-        <Image
-          source={{ uri: product.image || 'https://via.placeholder.com/100' }}
+        <CustomImage
+          source={{ uri: getProductImageUrl(product) }}
           style={styles.image}
         />
         <View style={styles.infoContainer}>

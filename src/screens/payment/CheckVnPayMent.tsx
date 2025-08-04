@@ -19,7 +19,7 @@ declare global {
 // ✅ Cấu hình URL backend - phù hợp với máy ảo Android
 const BACKEND_URL = __DEV__ 
     ? "http://10.0.2.2:3002"  // IP cho Android Emulator
-    : "http://192.168.10.109:3002"; // IP thật cho device thật
+    : "http://192.168.1.5:3002"; // IP thật cho device thật
 
 interface PaymentResult {
   status: "success" | "error" | "loading";
@@ -68,7 +68,7 @@ const CheckVnPayMent = () => {
 
       // ✅ Kiểm tra có params VNPay không
       if (!searchParams.vnp_ResponseCode && !searchParams.error) {
-        console.log("⚠️ Không có VNPay params, hiển thị lỗi");
+        console.log("Không có VNPay params, hiển thị lỗi");
         setPaymentResult({
           status: "error",
           title: "Không có thông tin thanh toán",
@@ -78,7 +78,7 @@ const CheckVnPayMent = () => {
       }
 
       // ✅ Xử lý VNPay trực tiếp từ params
-      console.log("📦 VNPay Response Code:", searchParams.vnp_ResponseCode);
+      console.log("VNPay Response Code:", searchParams.vnp_ResponseCode);
       
       if (searchParams.vnp_ResponseCode === "00") {
         // ✅ Thanh toán thành công
