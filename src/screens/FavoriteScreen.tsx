@@ -51,27 +51,22 @@ const FavoriteScreen = ({ navigation }: any) => {
   
             const product = type === 'sale' ? productRes.data.data : productRes.data.product;
   
-            if (
-              product &&
-              typeof product === 'object' &&
-              product.name &&
-              product.price &&
-              product.image
-            ) {
-              return {
-                _id: product._id,
-                name: product.name,
-                price: type === 'sale' ? product.discount_price : product.price,
-                image: product.image,
-                type: type,
-              };
+            return {
+              _id: product._id,
+              name: product.name,
+              price: type === 'sale' ? product.discount_price : product.price,
+              image: product.image,
+              type: type,
+            };
+          } catch (e: any) {
+            // Nếu lỗi 404 thì bỏ qua sản phẩm
+            if (e.response?.status === 404) {
+              console.warn(`Sản phẩm không tồn tại (ID: ${productId}) — Xóa khỏi danh sách yêu thích`);
+              return null;
             } else {
-              console.warn('❌ Thiếu hoặc sai định dạng dữ liệu sản phẩm:', product);
+              console.error('Lỗi khác khi lấy chi tiết sản phẩm:', productId, e);
               return null;
             }
-          } catch (e) {
-            console.error('Lỗi khi lấy chi tiết sản phẩm:', productId, e);
-            return null;
           }
         })
       );
