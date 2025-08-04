@@ -106,7 +106,7 @@ export default function CartScreen({ navigation }: any) {
   const fetchCart = async (id: string) => {
     try {
       const res = await API.get(`/carts/${id}`);
-      console.log('🔍 Cart API response:', JSON.stringify(res.data, null, 2));
+      // console.log('Cart API response:', JSON.stringify(res.data, null, 2));
       if (res.data?.data?.items && Array.isArray(res.data.data.items)) {
         setCartItems(res.data.data.items);
       } else {
@@ -172,8 +172,14 @@ export default function CartScreen({ navigation }: any) {
     return cartItems.reduce((sum: number, item: any) => {
       const product = item.product_id || item;
       const key = `${product._id}_${item.size}`;
+  
+      const isSale = item.type === 'sale';
+      const price = isSale
+        ? product?.discount_price ?? product?.price ?? 0
+        : product?.price ?? 0;
+  
       return selectedItems[key]
-        ? sum + (product.price || 0) * (item.quantity || 1)
+        ? sum + (price || 0) * (item.quantity || 1)
         : sum;
     }, 0);
   };
@@ -204,16 +210,26 @@ export default function CartScreen({ navigation }: any) {
     const productId = product?._id || '';
     const key = `${productId}_${item.size}`;
     const isChecked = !!selectedItems[key];
+    const finalPrice = item.type === 'sale'
+    ? product?.discount_price ?? product?.price ?? 0
+    : product?.price ?? 0;
 
-    console.log('🔍 Cart item structure:', {
-      itemId: item._id,
-      productId,
-      productName: product?.name,
-      productImage: product?.image,
-      productImages: product?.images,
-      finalImageUrl: getProductImageUrl(product),
-      itemSize: item.size,
-      itemQuantity: item.quantity,
+    // console.log('Cart item structure:', {
+    //   itemId: item._id,
+    //   productId,
+    //   productName: product?.name,
+    //   productImage: product?.image,
+    //   productImages: product?.images,
+    //   finalImageUrl: getProductImageUrl(product),
+    //   itemSize: item.size,
+    //   itemQuantity: item.quantity,
+    // });
+
+    console.log('Thông tin sản phẩm', {
+      type: item.type,
+      name: product.name,
+      price: product.price,
+      discountPrice: product.discount_price,
     });
 
     return (
@@ -226,7 +242,7 @@ export default function CartScreen({ navigation }: any) {
         />
         <View style={styles.infoContainer}>
           <Text style={styles.name}>{product.name || 'Sản phẩm'}</Text>
-          <Text style={styles.price}>Giá: {product.price?.toLocaleString()} đ</Text>
+          <Text style={styles.price}>Giá: {finalPrice?.toLocaleString()} đ</Text>
           <Text style={styles.size}>Size: {item.size}</Text>
           <View style={styles.quantityRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
