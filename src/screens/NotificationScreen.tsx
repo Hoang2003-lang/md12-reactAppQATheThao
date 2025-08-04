@@ -9,11 +9,11 @@ import {
 } from 'react-native';
 
 const allNotifications = [
-  { id: '1', time: '10 phút trước', message: '🟢 Đặt hàng thành công #A123', isRead: false },
-  { id: '2', time: '1 giờ trước', message: '🔵 Đơn hàng #A122 đang được giao', isRead: false },
-  { id: '3', time: '3 giờ trước', message: '🔥 Flash Sale 50% áo sơ mi', isRead: true },
-  { id: '4', time: 'Hôm qua', message: '🎁 Mã giảm 20%: SALE20', isRead: true },
-  { id: '5', time: '2 ngày trước', message: '📩 CSKH phản hồi đơn #A120', isRead: true },
+  { id: '1', time: '10 phút trước', message: 'Đặt hàng thành công #A123', isRead: false },
+  { id: '2', time: '1 giờ trước', message: 'Đơn hàng #A122 đang được giao', isRead: false },
+  { id: '3', time: '3 giờ trước', message: 'Flash Sale 50% áo sơ mi', isRead: true },
+  { id: '4', time: 'Hôm qua', message: ' Mã giảm 20%: SALE20', isRead: true },
+  { id: '5', time: '2 ngày trước', message: 'SKH phản hồi đơn #A120', isRead: true },
 ];
 
 const NotificationScreen = ({ navigation }: any) => {

@@ -7,7 +7,7 @@ import API from "../../api"; // �� import API chuẩn
 
 // ✅ Cấu hình URL backend - thay đổi theo môi trường
 const BACKEND_URL = __DEV__ 
-    ? "http://192.168.10.109:3002"  // IP thật của máy bạn
+    ? "http://192.168.1.5:3002"  // IP thật của máy bạn
     : "http://localhost:3002";     // Production URL
 
 const CheckoutVNPay = ({ route, navigation }: any) => {
@@ -74,8 +74,8 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
                 ...(voucher?.id && { voucherId: voucher.id }),
             };
 
-            console.log("🔄 Gửi payload:", payload);
-            console.log("🌐 Backend URL:", BACKEND_URL);
+            console.log("Gửi payload:", payload);
+            console.log(" Backend URL:", BACKEND_URL);
 
             // ✅ Sử dụng URL đúng thay vì localhost
             const res = await axios.post(`${BACKEND_URL}/vnpay/create_order_and_payment`, payload);
@@ -83,14 +83,14 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
             console.log("📦 Response từ server:", res.data);
 
             if (res.data?.success && res.data?.paymentUrl) {
-                console.log("✅ Tạo đơn hàng và link thanh toán thành công:", res.data.order);
+                console.log(" Tạo đơn hàng và link thanh toán thành công:", res.data.order);
                 Linking.openURL(res.data.paymentUrl);
             } else {
-                console.error("❌ Response không hợp lệ:", res.data);
+                console.error("Response không hợp lệ:", res.data);
                 Alert.alert("Lỗi", "Không nhận được URL thanh toán từ server.");
             }
         } catch (err: any) {
-            console.error("❌ Lỗi chi tiết:", {
+            console.error("Lỗi chi tiết:", {
                 message: err.message,
                 response: err.response?.data,
                 status: err.response?.status,
