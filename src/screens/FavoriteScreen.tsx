@@ -55,7 +55,7 @@ const FavoriteScreen = ({ navigation }: any) => {
               _id: product._id,
               name: product.name,
               price: type === 'sale' ? product.discount_price : product.price,
-              image: product.image,
+              image: Array.isArray(product.images) ? product.images[0] : product.image,
               type: type,
             };
           } catch (e: any) {
