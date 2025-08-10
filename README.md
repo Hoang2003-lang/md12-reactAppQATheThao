@@ -1,5 +1,5 @@
 b1 : clone code về chạy npm i 
-b2 : chạy npm start -- --reset-cache hoặc npm run start 
+b2 : chạy npx react-native start --reset-cache hoặc npm run start 
 b3 : kiểm tra xem có lỗi không
 b4 : kiểm tra cấu trúc của các file được tạo
 
