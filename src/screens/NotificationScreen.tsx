@@ -1,68 +1,148 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
   TouchableOpacity,
-  InteractionManager,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import socket from '../socket';
+import Icon from 'react-native-vector-icons/Ionicons';
+import API from '../api';
 
-const allNotifications = [
-  { id: '1', time: '10 phút trước', message: '🟢 Đặt hàng thành công #A123', isRead: false },
-  { id: '2', time: '1 giờ trước', message: '🔵 Đơn hàng #A122 đang được giao', isRead: false },
-  { id: '3', time: '3 giờ trước', message: '🔥 Flash Sale 50% áo sơ mi', isRead: true },
-  { id: '4', time: 'Hôm qua', message: '🎁 Mã giảm 20%: SALE20', isRead: true },
-  { id: '5', time: '2 ngày trước', message: '📩 CSKH phản hồi đơn #A120', isRead: true },
-];
+type NotificationItem = {
+  data: any;
+  _id: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+};
 
-const NotificationScreen = ({ navigation }: any) => {
-  const [filter, setFilter] = useState<'all' | 'read' | 'unread'>('all');
-  const [showUI, setShowUI] = useState(false);
+type RootStackParamList = {
+  OrderTracking: { orderId: string }; 
+};
 
+const NotificationScreen = () => {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  // Kết nối socket và join room
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      setShowUI(true);
-    });
-    return () => task.cancel();
+    const initSocket = async () => {
+      const uid = await AsyncStorage.getItem('userId');
+      console.log("UID từ AsyncStorage:", uid);
+      if (uid) {
+        setUserId(uid);
+
+        if (!socket.connected) {
+          socket.connect();
+        }
+
+        socket.emit('joinRoom', `notification_${uid}`);
+        socket.emit('joinRoom', `order_${uid}`);
+        console.log('Joined rooms for UID:', uid);
+      }
+    };
+
+    initSocket();
+
+    return () => {
+      socket.off('connect');
+    };
   }, []);
 
-  const filtered = allNotifications.filter((item) =>
-    filter === 'read' ? item.isRead : filter === 'unread' ? !item.isRead : true
-  );
+  // Lắng nghe sự kiện socket
+  useEffect(() => {
+    const handleNotification = (data: NotificationItem) => {
+      console.log("Notification received:", data);
+      setNotifications(prev => [data, ...prev]);
+      Alert.alert(data.title, data.message);
+    };
 
-  const renderItem = ({ item }: any) => (
-    <View style={styles.notificationItem}>
-      <Text style={styles.message}>{item.message}</Text>
-      <Text style={styles.time}>{item.time}</Text>
-    </View>
+    socket.on('notification received', handleNotification);
+
+    return () => {
+      socket.off('notification received', handleNotification);
+    };
+  }, []);
+
+  // Gọi API lấy thông báo
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const response = await API.get(`/notifications/user/${userId}`);
+        setNotifications(response.data.data);
+      } catch (error) {
+        console.error("Lỗi lấy thông báo:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [userId]);
+
+  const markAsRead = async (id: string) => {
+    try {
+      await API.put(`/notifications/read/${id}`);
+
+      // Gọi lại API để cập nhật danh sách
+      const response = await API.get(`/notifications/user/${userId}`);
+      setNotifications(response.data.data);
+    } catch (error) {
+      console.error("Lỗi đánh dấu đã đọc:", error);
+    }
+  };
+
+  const renderItem = ({ item }: { item: NotificationItem }) => (
+    <TouchableOpacity
+      style={[styles.item, item.isRead ? styles.read : styles.unread]}
+      onPress={() => {
+        if (item.data?.orderId) {
+          navigation.navigate('OrderTracking', { orderId: item.data?.orderId });
+        } else {
+          Alert.alert(item.title, item.message);
+        }
+
+        if (!item.isRead && item._id.length === 24) {
+          markAsRead(item._id);
+        }
+      }}
+    >
+      <Text style={styles.title}>{item.title}</Text>
+      <Text>{item.message}</Text>
+      <Text style={styles.time}>
+        {new Date(item.createdAt).toLocaleString()}
+      </Text>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
+          <Icon name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Thông Báo</Text>
-        <View style={styles.filterGroup}>
-          <TouchableOpacity onPress={() => setFilter('unread')}>
-            <Text style={[styles.filterText, filter === 'unread' && styles.activeFilter]}>Chưa đọc</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setFilter('read')}>
-            <Text style={[styles.filterText, filter === 'read' && styles.activeFilter]}>Đã đọc</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.headerTitle}>Thông báo</Text>
       </View>
-
-      {showUI && (
+      {loading ? (
+        <ActivityIndicator size="large" />
+      ) : (
         <FlatList
-          data={filtered}
+          data={notifications}
+          keyExtractor={(item) => item._id}
           renderItem={renderItem}
-          keyExtractor={(item) => `notif-${item.id}`}
-          contentContainerStyle={styles.list}
           removeClippedSubviews={false}
-          initialNumToRender={5}
+          contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
     </View>
@@ -70,29 +150,45 @@ const NotificationScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fffef6',
+  },
   header: {
-    backgroundColor: 'orange',
-    paddingTop: 30,
-    paddingBottom: 10,
-    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    height: 55,
+    marginBottom: 10,
+    position: 'relative',
   },
-  backText: { fontSize: 30, color: '#fff', marginRight: 10 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', flex: 1 },
-  filterGroup: { flexDirection: 'row' },
-  filterText: { color: '#fff', marginLeft: 10, fontWeight: '600' },
-  activeFilter: { textDecorationLine: 'underline' },
-  list: { padding: 16, paddingBottom: 30 },
-  notificationItem: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 10,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  backIcon: {
+    position: 'absolute',
+    left: 0,
+    paddingHorizontal: 10,
+  },
+  item: {
     padding: 12,
+    borderRadius: 8,
     marginBottom: 12,
+    borderWidth: 1,
   },
-  message: { fontSize: 16, color: '#333' },
-  time: { fontSize: 12, color: '#888', marginTop: 6 },
+  title: { fontWeight: 'bold', marginBottom: 4 },
+  time: { fontSize: 12, color: '#777', marginTop: 6 },
+  unread: {
+    backgroundColor: '#f0f9ff',
+    borderColor: '#2196F3',
+  },
+  read: {
+    backgroundColor: '#f8f8f8',
+    borderColor: '#ccc',
+  },
 });
 
 export default NotificationScreen;

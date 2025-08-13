@@ -33,7 +33,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
       });
       setVoucherList(available);
     } catch (err) {
-      console.error('Lỗi lấy voucher:', err.message);
+      console.error('Lỗi lấy voucher:', err);
     }
   }, []);
 
@@ -62,7 +62,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
       return Math.min(selectedVoucher.discount, selectedVoucher.maxDiscount || selectedVoucher.discount);
     }
 
-    if (selectedVoucher.type === 'percent') {
+    if (selectedVoucher.type === 'percentage') {
       const percentValue = (selectedVoucher.discount / 100) * subtotal;
       return Math.min(percentValue, selectedVoucher.maxDiscount || percentValue);
     }
@@ -88,6 +88,16 @@ export default function CheckoutScreen({ route, navigation }: any) {
       return;
     }
 
+    if (paymentMethod === 'Online') {
+      navigation.navigate('CheckoutVNPay', {
+        selectedItems,
+        user,
+        voucher: selectedVoucher
+      });
+      return;
+    }
+
+    // Xử lý COD
     const subtotal = calculateSubtotal();
     const shippingFee = 30000;
     const discountAmount = calculateDiscount();
@@ -101,8 +111,8 @@ export default function CheckoutScreen({ route, navigation }: any) {
     };
 
     try {
-         const orderPayload: any = {
-  userId: user._id,
+      const orderPayload: any = {
+        userId: user._id,
         items: selectedItems.map((item: any) => ({
           id_product: item.product_id?._id || item._id,
           name: item.product_id?.name || item.name,
@@ -113,19 +123,17 @@ export default function CheckoutScreen({ route, navigation }: any) {
         shippingFee,
         discount: discountAmount,
         finalTotal,
-        paymentMethod: paymentMethod.toLowerCase(),
+        paymentMethod: 'cod',
         shippingAddress: user.address,
         status: 'waiting',
-order_code: generateOrderCode()
+        order_code: generateOrderCode()
       };
 
-      if (selectedVoucher?.id) {
-        orderPayload.voucherId = selectedVoucher.id;
+      if (selectedVoucher?._id) {
+        orderPayload.voucherId = selectedVoucher._id;
       }
 
-      console.log('orderPayload gửi đi:', orderPayload);
       await API.post('/orders', orderPayload);
-
       Alert.alert('Thành công', 'Đặt hàng thành công!');
       navigation.navigate('Home');
     } catch (err: any) {
@@ -138,7 +146,14 @@ order_code: generateOrderCode()
     const product = item.product_id || item;
     return (
       <View style={styles.itemContainer}>
-        <Image source={{ uri: product.image }} style={styles.image} />
+        <Image
+          source={{
+            uri:
+              (product.images && product.images.length > 0 && product.images[0]) ||
+              'https://via.placeholder.com/150',
+          }}
+          style={styles.image}
+        />
         <View style={styles.infoContainer}>
           <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.detail}>Size: {item.size}</Text>
@@ -153,6 +168,7 @@ order_code: generateOrderCode()
   const shippingFee = 30000;
   const discount = calculateDiscount();
   const total = subtotal + shippingFee - discount;
+
 
   return (
     <FlatList
@@ -203,6 +219,8 @@ order_code: generateOrderCode()
         </View>
       }
       data={selectedItems}
+      extraData={{ selectedVoucher, selectedItems }}
+      removeClippedSubviews={false}
       renderItem={renderProductItem}
       keyExtractor={(_, index) => index.toString()}
       ListFooterComponent={

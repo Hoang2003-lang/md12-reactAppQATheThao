@@ -10,19 +10,20 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
-import io from 'socket.io-client';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useIsFocused } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import socket from '../socket';
 
-const socket = io('http://10.0.2.2:3001', {
-  transports: ['websocket'],
-});
 
 interface OrderItem {
+  order_code: string;
   _id: string;
   status: string;
   finalTotal: number;
@@ -31,6 +32,7 @@ interface OrderItem {
   shippingAddress: string;
   items: {
     id_product: {
+      images: any;
       image: string;
     };
     name: string;
@@ -39,11 +41,15 @@ interface OrderItem {
   }[];
 }
 
+
+
 const OrderTrackingScreen = () => {
+  const navigation = useNavigation();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const isFocused = useIsFocused();
+  const [activeTab, setActiveTab] = useState<string>('waiting');
   const fetchOrders = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -54,7 +60,6 @@ const OrderTrackingScreen = () => {
       const res = await API.get(`/orders/user/${userId}`);
       setOrders(res.data.data || []);
     } catch (err) {
-      // Alert.alert('Lỗi', 'Không thể tải đơn hàng');
     } finally {
       setLoading(false);
     }
@@ -67,7 +72,7 @@ const OrderTrackingScreen = () => {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) return;
 
-      console.log('📲 Joining socket room:', userId);
+      console.log('Joining socket room:', userId);
       // Join đúng phòng
       socket.emit('join order room', userId);
 
@@ -78,7 +83,6 @@ const OrderTrackingScreen = () => {
             order._id === orderId ? { ...order, status } : order
           )
         );
-        Alert.alert('Trạng thái đơn hàng đã cập nhật', `Đơn hàng ${orderId} hiện tại: ${status}`);
       });
     };
 
@@ -88,6 +92,7 @@ const OrderTrackingScreen = () => {
     return () => {
       socket.off('orderStatusUpdated');
     };
+
   }, []);
 
   useFocusEffect(
@@ -99,16 +104,79 @@ const OrderTrackingScreen = () => {
   );
 
 
-  const renderItem = ({ item }: { item: OrderItem }) => {
-    const image = item.items?.[0]?.id_product?.image;
 
+
+  const renderItem = ({ item }: { item: OrderItem }) => {
     return (
       <Pressable onPress={() => setSelectedOrder(item)} style={styles.orderBox}>
-        {image && <Image source={{ uri: image }} style={styles.image} />}
         <View style={{ flex: 1 }}>
-          <Text style={styles.bold}>Mã đơn: {item._id.slice(-6).toUpperCase()}</Text>
-          <Text>Trạng thái: {translateStatus(item.status)}</Text>
-          <Text>Tổng: {item.finalTotal.toLocaleString('vi-VN')}đ</Text>
+          <Text style={styles.bold}>
+            Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
+          </Text>
+          {item.items.map((product, idx) => (
+            <View key={idx} style={styles.productRow}>
+              {product.id_product?.images?.length > 0 ? (
+                <Image
+                  source={{ uri: product.id_product.images[0] }}
+                  style={styles.productThumb}
+                />
+              ) : (
+                <View style={[styles.productThumb, { backgroundColor: '#eee' }]} />
+              )}
+              <View style={{ flex: 1 }}>
+                <Text numberOfLines={2} style={styles.productName}>
+                  {product.name} x{product.purchaseQuantity}
+                </Text>
+                <Text style={styles.productPrice}>
+                  {product.price.toLocaleString('vi-VN')}đ
+                </Text>
+              </View>
+            </View>
+          ))}
+          <Text style={styles.totalText}>
+            Tổng thanh toán: {item.finalTotal.toLocaleString('vi-VN')}đ
+          </Text>
+
+          {['waiting', 'pending'].includes(item.status) ? (
+            <Pressable
+              onPress={() =>
+                Alert.alert(
+                  'Xác nhận huỷ',
+                  'Bạn có muốn huỷ đơn hàng này không?',
+                  [
+                    { text: 'Không', style: 'cancel' },
+                    { text: 'Huỷ đơn', style: 'destructive', onPress: () => handleCancelOrder(item._id) },
+                  ]
+                )
+              }
+              style={[styles.cancelBtn, { backgroundColor: '#ef4444' }]}
+            >
+              <Text style={{ color: '#fff' }}>Huỷ đơn hàng</Text>
+            </Pressable>
+          ) : (
+            <View style={[styles.cancelBtn, { backgroundColor: '#d1d5db' }]}>
+              <Text style={{ color: '#6b7280' }}>Huỷ đơn hàng</Text>
+            </View>
+          )}
+
+          {item.status === 'delivered' && (
+            <Pressable
+              onPress={() =>
+                Alert.alert(
+                  'Xác nhận trả hàng',
+                  'Bạn có muốn trả lại đơn hàng này không?',
+                  [
+                    { text: 'Không', style: 'cancel' },
+                    { text: 'Trả hàng', onPress: () => handleReturnOrder(item._id) },
+                  ]
+                )
+              }
+              style={[styles.actionBtn, { backgroundColor: '#3b82f6' }]}
+            >
+              <Text style={{ color: '#fff' }}>Trả hàng</Text>
+            </Pressable>
+          )}
+
         </View>
       </Pressable>
     );
@@ -123,8 +191,15 @@ const OrderTrackingScreen = () => {
           <View style={styles.modalContent}>
             <ScrollView>
               <Text style={styles.modalTitle}>Chi tiết đơn hàng</Text>
-              <Text style={styles.modalLabel}>Mã đơn: {selectedOrder._id}</Text>
-              <Text style={styles.modalLabel}>Trạng thái: {translateStatus(selectedOrder.status)}</Text>
+              <Text style={styles.modalLabel}>
+                Mã đơn: #{selectedOrder.order_code || selectedOrder._id}
+              </Text>
+              <Text style={styles.modalLabel}>
+                Trạng thái:{' '}
+                <Text style={{ color: getStatusColor(selectedOrder.status), fontWeight: 'bold' }}>
+                  {translateStatus(selectedOrder.status)}
+                </Text>
+              </Text>
               <Text style={styles.modalLabel}>Ngày đặt: {formatDate(selectedOrder.createdAt)}</Text>
               <Text style={styles.modalLabel}>Địa chỉ giao: {selectedOrder.shippingAddress}</Text>
               <Text style={styles.modalLabel}>Thanh toán: {selectedOrder.paymentMethod.toUpperCase()}</Text>
@@ -136,6 +211,7 @@ const OrderTrackingScreen = () => {
                   • {item.name} x{item.purchaseQuantity}
                 </Text>
               ))}
+
             </ScrollView>
 
             <Pressable onPress={() => setSelectedOrder(null)} style={styles.closeBtn}>
@@ -147,13 +223,69 @@ const OrderTrackingScreen = () => {
     );
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await API.put(`orders/${orderId}/status`, { status: 'cancelled' });
+      Alert.alert('Đơn hàng đã được huỷ');
+      setSelectedOrder(null);
+      fetchOrders();
+    } catch (err) {
+      console.error('Cancel error:', err);
+      Alert.alert('Huỷ đơn thất bại');
+    }
+  };
+
+  const handleReturnOrder = async (orderId: string) => {
+    try {
+      await API.put(`orders/${orderId}/status`, { status: 'returned' });
+      Alert.alert('Trả hàng thành công');
+      setSelectedOrder(null);
+      fetchOrders();
+    } catch (err) {
+      console.error('Return error:', err);
+      Alert.alert('Trả hàng thất bại');
+    }
+  };
+
   if (loading) return <ActivityIndicator style={{ marginTop: 40 }} size="large" color="orange" />;
+
+  const filteredOrders = activeTab === 'all'
+    ? orders
+    : orders.filter((order) => order.status === activeTab);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Đơn hàng của bạn</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
+          <Icon name="chevron-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Theo dõi đơn hàng</Text>
+      </View>
+      <View style={styles.tabContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {statusTabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[
+                styles.tabItem,
+                activeTab === tab.key && styles.tabItemActive,
+              ]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === tab.key && styles.tabTextActive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
       <FlatList
-        data={orders}
+        data={filteredOrders}
         removeClippedSubviews={false}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
@@ -170,48 +302,103 @@ const OrderTrackingScreen = () => {
 
 export default OrderTrackingScreen;
 
-// ==== Helpers ====
 
 const translateStatus = (status: string) => {
+  console.log('Trạng thái từ server:', status);
   switch (status) {
+    case 'waiting':
+      return 'Đang chờ xử lý';
     case 'pending':
-      return '🕐 Chờ xác nhận';
+      return 'Chờ xác nhận';
     case 'confirmed':
-      return '✅ Đã xác nhận';
+      return 'Đã xác nhận';
     case 'shipped':
-      return '🚚 Đang giao hàng';
+      return 'Đang giao hàng';
     case 'delivered':
-      return '📦 Đã nhận hàng';
+      return 'Đã nhận hàng';
     case 'returned':
-      return '↩️ Trả hàng';
+      return 'Trả hàng';
     case 'cancelled':
-      return '❌ Đã huỷ';
+      return 'Đã huỷ';
     default:
       return status;
   }
 };
 
+const getStatusColor = (status: string) => {
+  const normalized = status.toLowerCase();
+
+  switch (normalized) {
+    case 'waiting':
+      return '#f59e0b';
+    case 'pending':
+      return '#eab308';
+    case 'confirmed':
+      return '#10b981';
+    case 'shipped':
+      return '#3b82f6';
+    case 'delivered':
+      return '#16a34a';
+    case 'cancelled':
+      return '#ef4444';
+    case 'returned':
+      return '#8b5cf6';
+    default:
+      return '#6b7280';
+  }
+};
+
+const statusTabs = [
+  { key: 'waiting', label: 'Chờ xử lý' },
+  // { key: 'pending', label: 'Chờ xác nhận' },
+  { key: 'confirmed', label: 'Đã xác nhận' },
+  { key: 'shipped', label: 'Đang giao hàng' },
+  { key: 'delivered', label: 'Đã nhận hàng' },
+  { key: 'returned', label: 'Trả hàng' },
+  { key: 'cancelled', label: 'Đã huỷ' },
+];
+
+
 const formatDate = (str: string) => new Date(str).toLocaleDateString('vi-VN');
 
-// ==== Styles ====
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fffef6', // trắng ngà nhẹ cho sáng tổng thể
+    backgroundColor: '#fffef6',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 55,
+    marginBottom: 10,
+    position: 'relative',
+  },
+
+  backIcon: {
+    position: 'absolute',
+    left: 0,
+    paddingHorizontal: 10,
+  },
+
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   title: {
     fontSize: 22,
     fontWeight: '800',
     marginBottom: 16,
     textAlign: 'center',
-    color: '#d97706', // vàng đậm hơn
+    color: '#d97706',
   },
   orderBox: {
     flexDirection: 'row',
     backgroundColor: '#fef3c7',
-    borderRadius: 16, // bo tròn hơn
+    borderRadius: 16,
     padding: 14,
     marginBottom: 12,
     alignItems: 'center',
@@ -231,9 +418,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
     marginBottom: 4,
-    color: '#78350f', // nâu cam trầm
+    color: '#78350f',
   },
-  // Modal
   modalBackground: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -269,6 +455,77 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 12,
     borderRadius: 10,
+    alignItems: 'center',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  tabItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginRight: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabItemActive: {
+    borderBottomColor: '#f59e0b',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: '#f59e0b',
+    fontWeight: '700',
+  },
+  productRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginVertical: 8,
+  },
+  productThumb: {
+    width: 50,
+    height: 50,
+    borderRadius: 6,
+    marginRight: 10,
+    backgroundColor: '#eee',
+  },
+  productName: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  productPrice: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  totalText: {
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  cancelBtn: {
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  actionBtn: {
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
     alignItems: 'center',
   },
 });

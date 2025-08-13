@@ -10,14 +10,34 @@ import Snackbar from 'react-native-snackbar';
 
 const SaleProductDetail = ({ route, navigation }: any) => {
     const { productId } = route.params;
+    const productType = "sale";
     const [product, setProduct] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
+    const [bookmark, setBookMark] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+
     const [rating, setRating] = useState(5);
     console.log('>> productId nhận được:', productId);
+
+    // chuyển ảnh
+    const handlePrevImage = () => {
+        if (!product?.images?.length) return;
+        setCurrentImageIndex((prevIndex) =>
+            prevIndex === 0 ? product.images.length - 1 : prevIndex - 1
+        );
+    };
+
+    const handleNextImage = () => {
+        if (!product?.images?.length) return;
+        setCurrentImageIndex((prevIndex) =>
+            prevIndex === product.images.length - 1 ? 0 : prevIndex + 1
+        );
+    };
 
 
     const totalPrice = product ? product.discount_price * quantity : 0;
@@ -25,6 +45,29 @@ const SaleProductDetail = ({ route, navigation }: any) => {
     useEffect(() => {
         fetchProduct();
     }, [productId]);
+
+    useEffect(() => {
+        const checkBookmark = async () => {
+            try {
+                const userId = await AsyncStorage.getItem('userId');
+                if (!userId) return;
+
+                const res = await API.get(`/favorites/check/${userId}/${productId}`);
+                const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
+                setBookMark(isFav);
+            } catch (error: any) {
+                console.log('❌ Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
+                setBookMark(false);
+            }
+        };
+        checkBookmark();
+    }, [productId]);
+
+    useEffect(() => {
+        return () => {
+            Snackbar.dismiss();
+        };
+    }, []);
 
     const fetchProduct = async () => {
         try {
@@ -60,6 +103,7 @@ const SaleProductDetail = ({ route, navigation }: any) => {
             const cartItem = {
                 user_id: userId,
                 product_id: product._id,
+                type: 'sale',
                 name: product.name,
                 image: product.image,
                 size: selectedSize,
@@ -126,16 +170,108 @@ const SaleProductDetail = ({ route, navigation }: any) => {
         );
     }
 
+    const saveBookmark = async (productId: string, type: 'normal' | 'sale') => {
+        try {
+            const userId = await AsyncStorage.getItem('userId');
+            if (!userId) {
+                return Alert.alert('Bạn cần đăng nhập để dùng tính năng Yêu thích!');
+            }
+
+            await API.post('/favorites/add',
+                {
+                    userId,
+                    productId,
+                    type
+                });
+
+            setBookMark(true);
+            Snackbar.show({
+                text: 'Thêm thành công vào mục Yêu thích!',
+                duration: Snackbar.LENGTH_SHORT,
+                action: {
+                    text: 'Xem',
+                    onPress: () => navigation.navigate('Home', { screen: 'Favorite' }),
+                },
+            });
+        } catch (err: any) {
+            if (err?.response?.status === 400 && err.response?.data?.message?.includes('Sản phẩm đã có')) {
+                setBookMark(true);
+            } else {
+                console.error('❌ Lỗi thêm favorite:', err);
+                Alert.alert('Không thêm được vào Yêu thích!');
+            }
+        }
+    };
+
+    const removeBookmark = async (productId: string, type: 'normal' | 'sale') => {
+        try {
+            const userId = await AsyncStorage.getItem('userId');
+            if (!userId) return;
+
+            await API.delete(`/favorites/${userId}/${productId}?type=${type}`);
+
+            setBookMark(false);
+
+            Snackbar.show({
+                text: 'Xoá thành công khỏi mục Yêu thích!',
+                duration: Snackbar.LENGTH_SHORT,
+            });
+        } catch (err) {
+            console.error('Lỗi xoá favorite:', err);
+            Alert.alert('Không xoá được khỏi Yêu thích!');
+        }
+    };
+
     return (
         <ScrollView style={styles.container}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Icon name="arrow-back" size={24} color="black" />
             </TouchableOpacity>
 
-            <Image source={{ uri: product.image }} style={styles.image} />
+            <View style={styles.imageContainer}>
+                {/* Nút trái */}
+                <TouchableOpacity
+                    onPress={handlePrevImage}
+                    style={[styles.navButton, { left: 10 }]}
+                >
+                    <Icon name="chevron-back" size={24} color="#fff" />
+                </TouchableOpacity>
+
+                <Image
+                    source={{ uri: product.images?.[currentImageIndex] }}
+                    style={styles.image}
+                />
+
+                {/* Nút phải */}
+                <TouchableOpacity
+                    onPress={handleNextImage}
+                    style={[styles.navButton, { right: 10 }]}
+                >
+                    <Icon name="chevron-forward" size={24} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.imageIndex}>
+                    {currentImageIndex + 1} / {product.images?.length}
+                </Text>
+            </View>
+
 
             <View style={styles.content}>
-                <Text style={styles.name}>{product.name}</Text>
+                <View style={styles.txt}>
+                    <Text style={styles.name}>{product.name}</Text>
+                    <TouchableOpacity
+                        onPress={() =>
+                            bookmark ? removeBookmark(product._id, productType) : saveBookmark(product._id, productType)
+                        }>
+                        <Image
+                            source={
+                                bookmark
+                                    ? require('../assets/images/check_fav.png')
+                                    : require('../assets/images/uncheck_fav.png')
+                            }
+                            style={styles.heart}
+                        />
+                    </TouchableOpacity>
+                </View>
                 <Text style={styles.oldPrice}>Giá gốc: {product.price.toLocaleString()} đ</Text>
                 <Text style={styles.price}>Giá KM: {product.discount_price.toLocaleString()} đ</Text>
                 <Text style={styles.discount}>Giảm {product.discount_percent}%</Text>
@@ -234,7 +370,7 @@ const styles = StyleSheet.create({
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     image: { width: '100%', height: 300, resizeMode: 'contain', backgroundColor: '#f9f9f9' },
     content: { padding: 16 },
-    name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
+    name: { fontSize: 20, fontWeight: 'bold', marginBottom: 8, width: 345 },
     oldPrice: { fontSize: 14, color: '#888', textDecorationLine: 'line-through' },
     price: { fontSize: 18, color: 'orange', marginVertical: 4 },
     discount: { fontSize: 14, color: 'red', marginBottom: 8 },
@@ -257,4 +393,35 @@ const styles = StyleSheet.create({
     totalPrice: { fontSize: 16, fontWeight: 'bold', marginBottom: 16 },
     cartButton: { backgroundColor: 'orange', padding: 14, alignItems: 'center', borderRadius: 5 },
     cartText: { color: '#fff', fontWeight: 'bold' },
+    txt: { flexDirection: "row" },
+    heart: { width: 20, height: 20 },
+    imageContainer: {
+        position: 'relative',
+        height: 300,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f9f9f9',
+    },
+    navButton: {
+        position: 'absolute',
+        top: '50%',
+        transform: [{ translateY: -15 }],
+        padding: 6,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        borderRadius: 20,
+        zIndex: 10,
+    },
+    imageIndex: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        color: '#fff',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 10,
+        fontSize: 14,
+    },
+
+
 });

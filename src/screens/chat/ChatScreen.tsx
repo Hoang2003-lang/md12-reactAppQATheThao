@@ -3,12 +3,13 @@ import {
   View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import io from 'socket.io-client';
-import axios from 'axios';
+
 import { Socket } from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Alert } from 'react-native';
 import { useActionSheet } from '@expo/react-native-action-sheet';
+import API from '../../api';
+import socket from '../../socket';
 
 const ChatScreen = ({ navigation }: any) => {
   const [userId, setUserId] = useState('');
@@ -19,7 +20,6 @@ const ChatScreen = ({ navigation }: any) => {
   const flatListRef = useRef<FlatList>(null);
   const { showActionSheetWithOptions } = useActionSheet();
 
-  const API_URL = 'http://192.168.0.104:3002'; // Đổi thành IP thật nếu dùng máy thật
   const adminId = '683e9c91e2aa5ca0fbfb1030';
 
 
@@ -33,7 +33,7 @@ const ChatScreen = ({ navigation }: any) => {
 
       // Gọi API tạo hoặc lấy chatId giữa user và admin
       try {
-        const res = await axios.post(`${API_URL}/api/chats/create`, {
+        const res = await API.post(`/chats/create`, {
           participants: [uid, adminId]
         });
         setChatId(res.data.data._id);
@@ -49,7 +49,8 @@ const ChatScreen = ({ navigation }: any) => {
   useEffect(() => {
     if (!chatId) return;
 
-    socketRef.current = io(API_URL);
+    socketRef.current = socket;
+    socket.connect();
 
     socketRef.current.on('connect', () => {
       console.log('✅ Socket connected');
@@ -109,7 +110,7 @@ const ChatScreen = ({ navigation }: any) => {
   useEffect(() => {
     if (!chatId) return;
 
-    axios.get(`${API_URL}/api/chats/${chatId}`)
+    API.get(`/chats/${chatId}`)
       .then(res => {
         console.log('📦 API response:', res.data);
 
@@ -176,8 +177,6 @@ const ChatScreen = ({ navigation }: any) => {
       </View>
     );
   }
-
-
 
   const handleLongPress = (item: any) => {
     const isUser = item.senderId === userId;
@@ -258,21 +257,9 @@ const ChatScreen = ({ navigation }: any) => {
         data={messages}
         removeClippedSubviews={false}
         keyExtractor={(_, index) => index.toString()}
-        // keyExtractor={(item, index) => `${item.timestamp}-${item.content}-${index}`}
         renderItem={({ item }) => {
           const isUser = item.senderId?.toString() === userId?.toString();
 
-          // return (
-          //   <View style={[styles.message, isUser ? styles.user : styles.admin]}>
-          //     <Text>{item.content}</Text>
-          //     <Text style={styles.time}>
-          //       {new Date(item.timestamp).toLocaleTimeString('vi-VN', {
-          //         hour: '2-digit',
-          //         minute: '2-digit',
-          //       })}
-          //     </Text>
-          //   </View>
-          // );
           return (
             <TouchableOpacity
               onLongPress={() => handleLongPress(item)}
@@ -315,7 +302,6 @@ const ChatScreen = ({ navigation }: any) => {
 
 export default ChatScreen;
 
-// 💅 Style gọn gàng
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   message: {
@@ -330,7 +316,6 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-
   time: {
     fontSize: 12,
     color: '#999',
@@ -379,7 +364,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 1,
-    // marginTop: 10,
     backgroundColor: 'orange',
     color: '#fff',
   },
@@ -387,8 +371,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     padding: 10,
-    // backgroundColor: 'orange',
-    // color: '#fff',
     textAlign: 'center',
   },
   headerContainer: {
@@ -399,12 +381,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: 'orange',
   },
-
   backArea: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-
   deleteButton: {
     padding: 8,
   },

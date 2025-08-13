@@ -27,42 +27,50 @@ const FavoriteScreen = ({ navigation }: any) => {
         setFavoriteItems([]);
         return;
       }
-
-      // B1: Lấy danh sách favorite bằng axios
+  
       const res = await API.get(`/favorites/${userId}`);
       const data = res.data;
-
+  
       if (!Array.isArray(data) || data.length === 0) {
         setFavoriteItems([]);
         return;
       }
-
-      // B2: Lấy chi tiết sản phẩm cho từng yêu thích
+  
       const productDetails = await Promise.all(
         data.map(async (fav: any) => {
           const productId = fav.productId?._id || fav.productId || fav._id;
+          const type = fav.type || 'normal';
+  
           try {
-            const productRes = await API.get(`/products/${productId}`);
-            const product = productRes.data?.data;
-
-            if (product && product.name && product.price && product.image) {
-              return {
-                _id: product._id,
-                name: product.name,
-                price: product.price,
-                image: product.image,
-              };
+            let productRes;
+            if (type === 'sale') {
+              productRes = await API.get(`/sale-products/${productId}`);
             } else {
-              console.warn('Thiếu dữ liệu sản phẩm:', product);
+              productRes = await API.get(`/products/${productId}/detail`);
+            }
+  
+            const product = type === 'sale' ? productRes.data.data : productRes.data.product;
+  
+            return {
+              _id: product._id,
+              name: product.name,
+              price: type === 'sale' ? product.discount_price : product.price,
+              image: Array.isArray(product.images) ? product.images[0] : product.image,
+              type: type,
+            };
+          } catch (e: any) {
+            // Nếu lỗi 404 thì bỏ qua sản phẩm
+            if (e.response?.status === 404) {
+              console.warn(`Sản phẩm không tồn tại (ID: ${productId}) — Xóa khỏi danh sách yêu thích`);
+              return null;
+            } else {
+              console.error('Lỗi khác khi lấy chi tiết sản phẩm:', productId, e);
               return null;
             }
-          } catch (e) {
-            console.error('Lỗi khi lấy sản phẩm:', productId, e);
-            return null;
           }
         })
       );
-
+  
       const filtered = productDetails.filter((p) => p !== null);
       setFavoriteItems(filtered);
     } catch (err) {
@@ -111,13 +119,18 @@ const FavoriteScreen = ({ navigation }: any) => {
           data={favoriteItems}
           keyExtractor={(item) => item._id}
           numColumns={2}
+          contentContainerStyle={{ paddingBottom: 100 }}
           renderItem={({ item }) => (
             <View style={{ flex: 1, margin: 8 }}>
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() =>
-                  navigation.navigate('ProductDetail', { productId: item._id })
-                }>
+                onPress={() => {
+                  if (item.type === 'sale') {
+                    navigation.navigate('SaleProductDetail', { productId: item._id });
+                  } else {
+                    navigation.navigate('ProductDetail', { productId: item._id });
+                  }
+                }}>
                 <Item item={item} />
               </TouchableOpacity>
             </View>

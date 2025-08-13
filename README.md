@@ -1,5 +1,5 @@
 b1 : clone code về chạy npm i 
-b2 : chạy npm start -- --reset-cache hoặc npm run start 
+b2 : chạy npx react-native start --reset-cache hoặc npm run start 
 b3 : kiểm tra xem có lỗi không
 b4 : kiểm tra cấu trúc của các file được tạo
 
@@ -42,9 +42,8 @@ npm install @react-native-firebase/auth@latest
 --
 
 // 4/7: Tài khoản
-<<<<<<< HEAD
-picker
-=======
+admin1@gmail.com
+admin1234
 
 // xử lý khi bị xung đột git
 Bước 1: Lưu code của bạn lại (commit nếu cần)
@@ -61,15 +60,21 @@ git push origin main
 
  Ví dụ xử lý xung đột:
 Xung đột:
-<<<<<<< HEAD
 <Text>Hello from my version</Text>
-=======
 <Text>Hello from their version</Text>
->>>>>>> abc1234
 Bạn muốn giữ cả 2:
 <Text>Hello from my version</Text>
 <Text>Hello from their version</Text>
 
 Hoặc chọn một bên:
 <Text>Hello from my version</Text>
->>>>>>> 4e9fdeff11810d85c68d78a279983019e14e3b7d
+
+
+```
+** test thẻ vnpay **
+
+Ngân hàng:NCB
+Số thẻ	: 9704198526191432198
+Tên chủ thẻ	: NGUYEN VAN A
+Ngày phát hành	: 07/15
+Mật khẩu OTP	: 123456

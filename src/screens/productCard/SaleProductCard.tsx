@@ -11,6 +11,8 @@ import {
 const SaleProductCard = ({ item, navigation }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
 
+    // console.log('Danh sách ảnh:', item.images);
+
   const handlePressIn = () => {
     Animated.spring(scale, {
       toValue: 1.03,
@@ -38,7 +40,8 @@ const SaleProductCard = ({ item, navigation }: any) => {
     >
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
         <View style={styles.imageWrapper}>
-          <Image source={{ uri: item.image }} style={styles.image} />
+          <Image source={{ uri: item.images[0] }} style={styles.image} />
+          
           <View style={styles.discountBadge}>
             <Text style={styles.discountText}>-{item.discount_percent}%</Text>
           </View>

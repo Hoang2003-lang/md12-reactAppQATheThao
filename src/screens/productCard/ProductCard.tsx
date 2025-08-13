@@ -26,7 +26,7 @@ const ProductCard = ({ item, navigation }: any) => {
       onPressOut={handlePressOut}
     >
       <Animated.View style={[styles.productItem, { transform: [{ scale }] }]}>
-        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <Image source={{ uri: item.images?.[0] }} style={styles.productImage} />
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productPrice}>{item.price.toLocaleString()} đ</Text>
       </Animated.View>
