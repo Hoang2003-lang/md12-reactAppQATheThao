@@ -31,6 +31,7 @@ const HomeScreen = ({ navigation }: any) => {
   const [saleProducts, setSaleProducts] = useState<any[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     loadAllData();
@@ -40,6 +41,7 @@ const HomeScreen = ({ navigation }: any) => {
     });
 
     loadCartCount();
+    loadUnreadNotifications();
     return unsubscribe;
   }, []);
 
@@ -57,7 +59,7 @@ const HomeScreen = ({ navigation }: any) => {
       setProducts(productData);
       setSaleProducts(saleProductData);
     } catch (error) {
-      console.error('❌ Lỗi khi tải dữ liệu:', error);
+      console.error('Lỗi khi tải dữ liệu:', error);
     }
   };
 
@@ -95,9 +97,23 @@ const HomeScreen = ({ navigation }: any) => {
       if (err.response?.status === 404) {
         setCartCount(0);
       } else {
-        console.error('❌ Lỗi lấy giỏ hàng:', err);
+        console.error('Lỗi lấy giỏ hàng:', err);
         setCartCount(0);
       }
+    }
+  };
+
+  const loadUnreadNotifications = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) return;
+
+      const res = await API.get(`/notifications/unread-count/${userId}`);
+      const count = res.data?.data || 0;
+      setUnreadCount(count);
+    } catch (error) {
+      console.error("Lỗi khi lấy thông báo chưa đọc:", error);
+      setUnreadCount(0);
     }
   };
 
@@ -154,7 +170,14 @@ const HomeScreen = ({ navigation }: any) => {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
-          <Ionicons name="notifications-outline" size={24} color="#000" />
+          <View style={{ position: 'relative' }}>
+            <Ionicons name="notifications-outline" size={24} color="#000" />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -172,7 +195,7 @@ const HomeScreen = ({ navigation }: any) => {
         >
           {banners.map((b, index) => (
             <TouchableOpacity
-              key={b.id || `banner-${index}`} // ✅ unique key
+              key={b.id || `banner-${index}`}
               activeOpacity={0.8}
               onPress={() => handleBannerPress(b)}
             >
@@ -212,25 +235,6 @@ const HomeScreen = ({ navigation }: any) => {
           </View>
         </Section>
 
-        {/* Áo đội tuyển */}
-        <Section
-          title="Áo đội tuyển quốc gia"
-          onSeeMore={() =>
-            navigation.navigate('Promotion', {
-              title: 'Áo Đội Tuyển Quốc Gia',
-              type: 'national'
-            })
-          }
-        >
-          {products
-            .filter(p => ['vietnam', 'japan', 'england', 'arsenal', 'psg', 'tottenham'].includes(p.categoryCode))
-            .slice(0, 4)
-            .map((item, index) => (
-              <View key={item._id || `national-${index}`} style={styles.productWrapper1}>
-                <ProductCard item={item} navigation={navigation} />
-              </View>
-            ))}
-        </Section>
 
         {/* Danh mục */}
         <Section title="Danh mục">
@@ -238,7 +242,7 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={styles.categoryRow}>
               {categories.map((cat, index) => (
                 <TouchableOpacity
-                  key={cat.code || `cat-${index}`} // ✅ unique key
+                  key={cat.code || `cat-${index}`}
                   style={styles.categoryItem}
                   onPress={() =>
                     navigation.navigate('Category', {

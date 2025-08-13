@@ -62,7 +62,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
       return Math.min(selectedVoucher.discount, selectedVoucher.maxDiscount || selectedVoucher.discount);
     }
 
-    if (selectedVoucher.type === 'percent') {
+    if (selectedVoucher.type === 'percentage') {
       const percentValue = (selectedVoucher.discount / 100) * subtotal;
       return Math.min(percentValue, selectedVoucher.maxDiscount || percentValue);
     }
@@ -129,8 +129,8 @@ export default function CheckoutScreen({ route, navigation }: any) {
         order_code: generateOrderCode()
       };
 
-      if (selectedVoucher?.id) {
-        orderPayload.voucherId = selectedVoucher.id;
+      if (selectedVoucher?._id) {
+        orderPayload.voucherId = selectedVoucher._id;
       }
 
       await API.post('/orders', orderPayload);
@@ -146,7 +146,14 @@ export default function CheckoutScreen({ route, navigation }: any) {
     const product = item.product_id || item;
     return (
       <View style={styles.itemContainer}>
-        <Image source={{ uri: product.image }} style={styles.image} />
+        <Image
+          source={{
+            uri:
+              (product.images && product.images.length > 0 && product.images[0]) ||
+              'https://via.placeholder.com/150',
+          }}
+          style={styles.image}
+        />
         <View style={styles.infoContainer}>
           <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.detail}>Size: {item.size}</Text>
@@ -161,6 +168,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
   const shippingFee = 30000;
   const discount = calculateDiscount();
   const total = subtotal + shippingFee - discount;
+
 
   return (
     <FlatList
@@ -211,6 +219,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
         </View>
       }
       data={selectedItems}
+      extraData={{ selectedVoucher, selectedItems }}
       removeClippedSubviews={false}
       renderItem={renderProductItem}
       keyExtractor={(_, index) => index.toString()}

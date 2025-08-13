@@ -14,18 +14,16 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
-import io from 'socket.io-client';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons'
+import Icon from 'react-native-vector-icons/Ionicons';
+import socket from '../socket';
 
-const socket = io('http://10.0.2.2:3002', {
-  transports: ['websocket'],
-});
 
 interface OrderItem {
+  order_code: string;
   _id: string;
   status: string;
   finalTotal: number;
@@ -34,6 +32,7 @@ interface OrderItem {
   shippingAddress: string;
   items: {
     id_product: {
+      images: any;
       image: string;
     };
     name: string;
@@ -41,6 +40,8 @@ interface OrderItem {
     price: number;
   }[];
 }
+
+
 
 const OrderTrackingScreen = () => {
   const navigation = useNavigation();
@@ -59,7 +60,6 @@ const OrderTrackingScreen = () => {
       const res = await API.get(`/orders/user/${userId}`);
       setOrders(res.data.data || []);
     } catch (err) {
-      // Alert.alert('Lỗi', 'Không thể tải đơn hàng');
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ const OrderTrackingScreen = () => {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) return;
 
-      console.log('📲 Joining socket room:', userId);
+      console.log('Joining socket room:', userId);
       // Join đúng phòng
       socket.emit('join order room', userId);
 
@@ -92,6 +92,7 @@ const OrderTrackingScreen = () => {
     return () => {
       socket.off('orderStatusUpdated');
     };
+
   }, []);
 
   useFocusEffect(
@@ -103,16 +104,20 @@ const OrderTrackingScreen = () => {
   );
 
 
+
+
   const renderItem = ({ item }: { item: OrderItem }) => {
     return (
       <Pressable onPress={() => setSelectedOrder(item)} style={styles.orderBox}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.bold}>Mã đơn: {item._id.slice(-6).toUpperCase()}</Text>
+          <Text style={styles.bold}>
+            Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
+          </Text>
           {item.items.map((product, idx) => (
             <View key={idx} style={styles.productRow}>
-              {product.id_product?.image ? (
+              {product.id_product?.images?.length > 0 ? (
                 <Image
-                  source={{ uri: product.id_product.image }}
+                  source={{ uri: product.id_product.images[0] }}
                   style={styles.productThumb}
                 />
               ) : (
@@ -132,7 +137,7 @@ const OrderTrackingScreen = () => {
             Tổng thanh toán: {item.finalTotal.toLocaleString('vi-VN')}đ
           </Text>
 
-          {['waiting', 'pending', 'confirmed'].includes(item.status) ? (
+          {['waiting', 'pending'].includes(item.status) ? (
             <Pressable
               onPress={() =>
                 Alert.alert(
@@ -186,7 +191,9 @@ const OrderTrackingScreen = () => {
           <View style={styles.modalContent}>
             <ScrollView>
               <Text style={styles.modalTitle}>Chi tiết đơn hàng</Text>
-              <Text style={styles.modalLabel}>Mã đơn: {selectedOrder._id}</Text>
+              <Text style={styles.modalLabel}>
+                Mã đơn: #{selectedOrder.order_code || selectedOrder._id}
+              </Text>
               <Text style={styles.modalLabel}>
                 Trạng thái:{' '}
                 <Text style={{ color: getStatusColor(selectedOrder.status), fontWeight: 'bold' }}>
@@ -219,24 +226,24 @@ const OrderTrackingScreen = () => {
   const handleCancelOrder = async (orderId: string) => {
     try {
       await API.put(`orders/${orderId}/status`, { status: 'cancelled' });
-      Alert.alert('✅ Đơn hàng đã được huỷ');
+      Alert.alert('Đơn hàng đã được huỷ');
       setSelectedOrder(null);
       fetchOrders();
     } catch (err) {
       console.error('Cancel error:', err);
-      Alert.alert('❌ Huỷ đơn thất bại');
+      Alert.alert('Huỷ đơn thất bại');
     }
   };
 
   const handleReturnOrder = async (orderId: string) => {
     try {
       await API.put(`orders/${orderId}/status`, { status: 'returned' });
-      Alert.alert('✅ Trả hàng thành công');
+      Alert.alert('Trả hàng thành công');
       setSelectedOrder(null);
       fetchOrders();
     } catch (err) {
       console.error('Return error:', err);
-      Alert.alert('❌ Trả hàng thất bại');
+      Alert.alert('Trả hàng thất bại');
     }
   };
 
@@ -297,7 +304,7 @@ export default OrderTrackingScreen;
 
 
 const translateStatus = (status: string) => {
-  console.log('➡️ Trạng thái từ server:', status);
+  console.log('Trạng thái từ server:', status);
   switch (status) {
     case 'waiting':
       return 'Đang chờ xử lý';
@@ -343,7 +350,7 @@ const getStatusColor = (status: string) => {
 
 const statusTabs = [
   { key: 'waiting', label: 'Chờ xử lý' },
-  { key: 'pending', label: 'Chờ xác nhận' },
+  // { key: 'pending', label: 'Chờ xác nhận' },
   { key: 'confirmed', label: 'Đã xác nhận' },
   { key: 'shipped', label: 'Đang giao hàng' },
   { key: 'delivered', label: 'Đã nhận hàng' },

@@ -54,22 +54,22 @@ const CustomImage = ({ source, style, ...props }: any) => {
 // Helper function để lấy URL ảnh sản phẩm
 const getProductImageUrl = (product: any) => {
   if (!product) return 'https://via.placeholder.com/100';
-  
+
   // Thử lấy từ images array trước
   if (product.images && Array.isArray(product.images) && product.images.length > 0) {
     return product.images[0];
   }
-  
+
   // Thử lấy từ image field
   if (product.image) {
     return product.image;
   }
-  
+
   // Thử lấy từ imageUrl field
   if (product.imageUrl) {
     return product.imageUrl;
   }
-  
+
   // Fallback
   return 'https://via.placeholder.com/100';
 };
@@ -150,7 +150,7 @@ export default function CartScreen({ navigation }: any) {
       if (!userId) return;
 
       await API.delete(`/carts/${userId}/item`, {
-        params: { product_id: productId, size, type},
+        params: { product_id: productId, size, type },
       });
       await fetchCart(userId);
     } catch (err) {
@@ -172,12 +172,12 @@ export default function CartScreen({ navigation }: any) {
     return cartItems.reduce((sum: number, item: any) => {
       const product = item.product_id || item;
       const key = `${product._id}_${item.size}`;
-  
+
       const isSale = item.type === 'sale';
       const price = isSale
         ? product?.discount_price ?? product?.price ?? 0
         : product?.price ?? 0;
-  
+
       return selectedItems[key]
         ? sum + (price || 0) * (item.quantity || 1)
         : sum;
@@ -211,8 +211,8 @@ export default function CartScreen({ navigation }: any) {
     const key = `${productId}_${item.size}`;
     const isChecked = !!selectedItems[key];
     const finalPrice = item.type === 'sale'
-    ? product?.discount_price ?? product?.price ?? 0
-    : product?.price ?? 0;
+      ? product?.discount_price ?? product?.price ?? 0
+      : product?.price ?? 0;
 
     // console.log('Cart item structure:', {
     //   itemId: item._id,
@@ -262,34 +262,22 @@ export default function CartScreen({ navigation }: any) {
             </View>
 
             <TouchableOpacity
-              onPress={() => updateQuantity(productId, item.size, item.quantity - 1, item.type)}
-              style={styles.qtyButton}
+              onPress={() =>
+                Alert.alert('Xác nhận', 'Bạn có chắc muốn xoá sản phẩm này?', [
+                  { text: 'Hủy', style: 'cancel' },
+                  {
+                    text: 'Xoá',
+                    style: 'destructive',
+                    onPress: () => handleDeleteItem(productId, item.size, item.type),
+                  },
+                ])
+              }
+              style={styles.deleteButton}
             >
-              <Text style={styles.qtyText}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.quantity}>{item.quantity}</Text>
-            <TouchableOpacity
-              onPress={() => updateQuantity(productId, item.size, item.quantity + 1, item.type)}
-              style={styles.qtyButton}
-            >
-              <Text style={styles.qtyText}>+</Text>
+              <Text style={styles.deleteText}>🗑 Xoá</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={() =>
-              Alert.alert('Xác nhận', 'Bạn có chắc muốn xoá sản phẩm này?', [
-                { text: 'Hủy', style: 'cancel' },
-                {
-                  text: 'Xoá',
-                  style: 'destructive',
-                  onPress: () => handleDeleteItem(productId, item.size, item.type),
-                },
-              ])
-            }
-            style={styles.deleteButton}
-          >
-            <Text style={styles.deleteText}>🗑 Xoá</Text>
-          </TouchableOpacity>
+
         </View>
       </View>
     );

@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { BASE_URL } from './constants';
 
 const API = axios.create({
-  baseURL: 'http://192.168.8.208:3002/api', // ví dụ: http://192.168.1.10:3000  timeout: 10000,   
-  timeout: 10000,   
+  baseURL: `${BASE_URL}/api`,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
