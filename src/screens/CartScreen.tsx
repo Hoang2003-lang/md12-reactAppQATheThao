@@ -76,7 +76,7 @@ const getProductImageUrl = (product: any) => {
 
 export default function CartScreen({ navigation }: any) {
   const [userId, setUserId] = useState<string | null>(null);
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<{ [key: string]: boolean }>({});
   const isFocused = useIsFocused();
@@ -105,16 +105,65 @@ export default function CartScreen({ navigation }: any) {
 
   const fetchCart = async (id: string) => {
     try {
+      setLoading(true);
+  
       const res = await API.get(`/carts/${id}`);
-      // console.log('Cart API response:', JSON.stringify(res.data, null, 2));
-      if (res.data?.data?.items && Array.isArray(res.data.data.items)) {
-        setCartItems(res.data.data.items);
-      } else {
+      const items = res.data?.data?.items || [];
+  
+      if (!Array.isArray(items) || items.length === 0) {
         setCartItems([]);
+        return;
       }
+  
+      const validItems = await Promise.all(
+        items.map(async (item) => {
+          const productId =
+            item.product_id?._id ||
+            item.product_id ||
+            item._id;
+  
+          const type = item.type || 'normal';
+  
+          if (!productId) {
+            // console.error(' Không tìm thấy productId trong item:', item);
+            return null;
+          }
+  
+          try {
+            let productRes;
+            if (type === 'sale') {
+              productRes = await API.get(`/sale-products/${productId}`);
+            } else {
+              productRes = await API.get(`/products/${productId}/detail`);
+            }
+  
+            const product =
+              type === 'sale'
+                ? productRes.data.data
+                : productRes.data.product;
+  
+            return {
+              ...item,
+              product_id: product,
+            };
+          } catch (err: any) {
+            if (err.response?.status === 404) {
+              console.warn(`❌ Sản phẩm ${productId} không tồn tại — bỏ khỏi giỏ`);
+              return null;
+            }
+            console.error(`❌ Lỗi lấy chi tiết sản phẩm ${productId}:`, err);
+            return null;
+          }
+        })
+      );
+  
+      setCartItems(validItems.filter(Boolean)); // lọc bỏ null
     } catch (error) {
       console.error('❌ Lỗi khi gọi API giỏ hàng:', error);
       Alert.alert('Lỗi', 'Không thể tải giỏ hàng');
+      setCartItems([]);
+    } finally {
+      setLoading(false);
     }
   };
 

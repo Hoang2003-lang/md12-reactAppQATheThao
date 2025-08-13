@@ -644,7 +644,7 @@ export default function LoginScreen({ navigation }: any) {
         navigation.navigate('Home');
     
       } catch (err) {
-        console.error('Facebook login error:', err);
+        // console.error('Facebook login error:', err);
         Alert.alert('Lỗi đăng nhập bằng Facebook');
       }
     };
