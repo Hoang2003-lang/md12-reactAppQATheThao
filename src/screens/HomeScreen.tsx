@@ -84,8 +84,11 @@ const HomeScreen = ({ navigation }: any) => {
   const loadCartCount = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
-
+      if (!userId) {
+        setCartCount(0); //Reset về 0 nếu không có user
+        return;
+      }
+  
       const res = await API.get(`/carts/${userId}`);
       const items = res.data?.data?.items || [];
       const totalQuantity = items.reduce(
@@ -103,19 +106,23 @@ const HomeScreen = ({ navigation }: any) => {
     }
   };
 
-  const loadUnreadNotifications = async () => {
-    try {
-      const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
-
-      const res = await API.get(`/notifications/unread-count/${userId}`);
-      const count = res.data?.data || 0;
-      setUnreadCount(count);
-    } catch (error) {
-      console.error("Lỗi khi lấy thông báo chưa đọc:", error);
-      setUnreadCount(0);
+  
+const loadUnreadNotifications = async () => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) {
+      setUnreadCount(0); //Reset khi không có user
+      return;
     }
-  };
+
+    const res = await API.get(`/notifications/unread-count/${userId}`);
+    const count = res.data?.data || 0;
+    setUnreadCount(count);
+  } catch (error) {
+    setUnreadCount(0); //Reset khi lỗi
+    console.error("Lỗi khi lấy thông báo chưa đọc:", error);
+  }
+};
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width);

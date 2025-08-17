@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,22 +12,18 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import API from '../api';
-
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { LoginManager } from 'react-native-fbsdk-next';
 
-
-
 type RootStackParamList = {
   Login: undefined;
+  Register: undefined;
   PersonalInfo: undefined;
   Cart: undefined;
   Chat: undefined;
   OrderTracking: undefined;
   PrivacyPolicy: undefined;
 };
-
-
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -49,31 +45,40 @@ const AccountScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const userId = await AsyncStorage.getItem('userId');
+      setIsLoggedIn(!!userId);
+    };
+    const unsubscribe = navigation.addListener('focus', checkLoginStatus);
+    checkLoginStatus();
+    return unsubscribe;
+  }, [navigation]);
 
   const doLogout = async () => {
     try {
-      // ⚠️ Cần cấu hình lại nếu dùng ở ngoài hàm _signInWithGoogle
       GoogleSignin.configure({
         webClientId: '985098184266-s3mp7f1q7t899ef5g3eu2huh3ocarusj.apps.googleusercontent.com',
       });
   
       const currentUser = await GoogleSignin.getCurrentUser();
-
       if (currentUser) {
         await GoogleSignin.revokeAccess();
         await GoogleSignin.signOut();
       }
   
-      await LoginManager.logOut(); // Facebook logout
+      await LoginManager.logOut();
       await AsyncStorage.clear();
   
       Alert.alert('Đã đăng xuất!');
+      setIsLoggedIn(false);
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' }],
       });
     } catch (err) {
-      
       console.error('❌ Logout error:', err);
       Alert.alert('Lỗi', 'Không thể đăng xuất');
     }
@@ -86,10 +91,10 @@ const AccountScreen: React.FC = () => {
         Alert.alert('Lỗi', 'Không tìm thấy tài khoản');
         return;
       }
-
       await API.delete(`/users/${userId}`);
       await AsyncStorage.clear();
       Alert.alert('Tài khoản đã được xoá');
+      setIsLoggedIn(false);
       navigation.navigate('Login');
     } catch (err) {
       Alert.alert('Lỗi', 'Không thể xoá hồ sơ');
@@ -105,24 +110,35 @@ const AccountScreen: React.FC = () => {
           key={m.icon}
           style={styles.row}
           onPress={() => {
-            if (m.screen) {
-              navigation.navigate(m.screen);
-            }
+            if (m.screen) navigation.navigate(m.screen);
           }}>
           <MCI name={m.icon} size={22} />
           <Text style={styles.label}>{m.label}</Text>
         </TouchableOpacity>
       ))}
 
-      <TouchableOpacity style={styles.row} onPress={() => setConfirmLogout(true)}>
-        <MCI name="logout" size={22} color="#e11d48" />
-        <Text style={[styles.label, { color: '#e11d48' }]}>Đăng xuất</Text>
-      </TouchableOpacity>
+      {/* Nếu đã đăng nhập thì hiện nút đăng xuất */}
+      {isLoggedIn && (
+        <TouchableOpacity style={styles.row} onPress={() => setConfirmLogout(true)}>
+          <MCI name="logout" size={22} color="#e11d48" />
+          <Text style={[styles.label, { color: '#e11d48' }]}>Đăng xuất</Text>
+        </TouchableOpacity>
+      )}
 
-      {/* <TouchableOpacity style={styles.row} onPress={() => setConfirmDelete(true)}>
-        <MCI name="delete-outline" size={22} color="#ef4444" />
-        <Text style={[styles.label, { color: '#ef4444' }]}>Xoá hồ sơ</Text>
-      </TouchableOpacity> */}
+      {/* Nếu chưa đăng nhập thì hiện nút đăng nhập & đăng ký */}
+      {!isLoggedIn && (
+        <>
+          <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Login')}>
+            <MCI name="login" size={22} color="#2563eb" />
+            <Text style={[styles.label, { color: '#2563eb' }]}>Đăng nhập</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Register')}>
+            <MCI name="account-plus" size={22} color="#16a34a" />
+            <Text style={[styles.label, { color: '#16a34a' }]}>Đăng ký</Text>
+          </TouchableOpacity>
+        </>
+      )}
 
       {/* Modal xác nhận đăng xuất */}
       {confirmLogout && (
@@ -138,27 +154,6 @@ const AccountScreen: React.FC = () => {
               style={[styles.btn, { backgroundColor: '#4ade80' }]}
               onPress={() => setConfirmLogout(false)}>
               <Text style={styles.btnTxt}>Không</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* Modal xác nhận xoá hồ sơ */}
-      {confirmDelete && (
-        <View style={styles.modal}>
-          <Text style={styles.modalText}>
-            Bạn có chắc chắn muốn xoá hồ sơ không? Hành động này không thể hoàn tác.
-          </Text>
-          <View style={styles.btnWrap}>
-            <TouchableOpacity
-              style={[styles.btn, { backgroundColor: '#ef4444' }]}
-              onPress={deleteProfile}>
-              <Text style={styles.btnTxt}>Xoá</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btn, { backgroundColor: '#9ca3af' }]}
-              onPress={() => setConfirmDelete(false)}>
-              <Text style={styles.btnTxt}>Huỷ</Text>
             </TouchableOpacity>
           </View>
         </View>

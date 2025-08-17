@@ -135,6 +135,16 @@ export default function CheckoutScreen({ route, navigation }: any) {
 
       await API.post('/orders', orderPayload);
       Alert.alert('Thành công', 'Đặt hàng thành công!');
+      // Xóa các sản phẩm trong giỏ hàng
+      for (const item of selectedItems) {
+        await API.delete(`/carts/${user._id}/item`, {
+          params: {
+            product_id: item.product_id?._id || item._id,
+            size: item.size,
+            type: item.type,
+          },
+        });
+      }
       navigation.navigate('Home');
     } catch (err: any) {
       console.error('Lỗi API:', err.response?.data || err.message);

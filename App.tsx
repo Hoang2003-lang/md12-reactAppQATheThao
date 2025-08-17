@@ -29,11 +29,26 @@ import TabNavigator from './src/TabNavigator/TabNavigator';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import NotificationScreen from './src/screens/NotificationScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   const navigationRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Xóa dữ liệu đăng nhập khi khởi động app
+    const clearLoginData = async () => {
+      try {
+        await AsyncStorage.removeItem('userId');
+        await AsyncStorage.removeItem('token');
+        console.log('🗑 Đã xóa userId & token khi khởi động');
+      } catch (err) {
+        console.error('❌ Lỗi khi xóa dữ liệu đăng nhập:', err);
+      }
+    };
+    clearLoginData();
+  }, []);
 
   useEffect(() => {
     // ✅ Xử lý deep link khi app đang chạy
