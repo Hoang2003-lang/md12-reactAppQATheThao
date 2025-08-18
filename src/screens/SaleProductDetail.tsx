@@ -96,8 +96,15 @@ const SaleProductDetail = ({ route, navigation }: any) => {
         try {
             const userId = await AsyncStorage.getItem('userId');
             if (!userId) {
-                Alert.alert('Bạn cần đăng nhập để thêm sản phẩm vào giỏ.');
-                return;
+            Alert.alert(
+                'Yêu cầu đăng nhập',
+                'Bạn cần đăng nhập để thêm sản phẩm vào "giỏ hàng"',
+                [
+                { text: 'Huỷ', style: 'cancel' },
+                { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') }
+                ]
+            );
+            return;
             }
 
             const cartItem = {
@@ -174,7 +181,15 @@ const SaleProductDetail = ({ route, navigation }: any) => {
         try {
             const userId = await AsyncStorage.getItem('userId');
             if (!userId) {
-                return Alert.alert('Bạn cần đăng nhập để dùng tính năng Yêu thích!');
+            Alert.alert(
+                'Yêu cầu đăng nhập',
+                'Bạn cần đăng nhập để thêm sản phẩm vào "yêu thích"',
+                [
+                { text: 'Huỷ', style: 'cancel' },
+                { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') }
+                ]
+            );
+            return;
             }
 
             await API.post('/favorites/add',
