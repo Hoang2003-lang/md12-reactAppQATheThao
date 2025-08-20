@@ -10,6 +10,7 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  FlatList
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +24,8 @@ import { fetchCategories } from '../services/CategoryServices';
 
 const { width } = Dimensions.get('window');
 
+const CARD_WIDTH = width / 2;
+
 const HomeScreen = ({ navigation }: any) => {
   const scrollRef = useRef<ScrollView>(null);
   const [banners, setBanners] = useState<any[]>([]);
@@ -32,6 +35,7 @@ const HomeScreen = ({ navigation }: any) => {
   const [cartCount, setCartCount] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+
 
   useEffect(() => {
     loadAllData();
@@ -189,7 +193,7 @@ const loadUnreadNotifications = async () => {
       </View>
 
       {/* Body */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ backgroundColor: '#EEEEEE' }}>
         {/* Banners */}
         <ScrollView
           ref={scrollRef}
@@ -206,7 +210,9 @@ const loadUnreadNotifications = async () => {
               activeOpacity={0.8}
               onPress={() => handleBannerPress(b)}
             >
-              <Image source={{ uri: b.banner }} style={styles.bannerImage} />
+              <View style={styles.bannerContainer}>
+                <Image source={{ uri: b.banner }} style={styles.bannerImage} />
+              </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -220,27 +226,35 @@ const loadUnreadNotifications = async () => {
         {/* Khuyến mãi */}
         <View style={{ marginTop: 10 }}>
           <Text style={styles.sectionTitle}>Khuyến mãi</Text>
-          <View style={{ paddingHorizontal: 10 }}>
-            <View style={styles.gridContainer}>
-              {saleProducts.slice(0, 4).map(item => (
-                <View key={item._id} style={styles.gridItem}>
-                  <SaleProductCard item={item} navigation={navigation} />
-                </View>
-              ))}
-            </View>
-          </View>
-
+          <FlatList
+            data={saleProducts.slice(0, 4)}
+            keyExtractor={(item, index) => item._id || `sale-${index}`}
+            numColumns={2} // 👈 2 cột
+            columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 10 }}
+            renderItem={({ item }) => (
+              <View style={styles.gridItem}>
+                <SaleProductCard item={item} navigation={navigation} />
+              </View>
+            )}
+            scrollEnabled={false}
+          />
         </View>
 
         <Section title="Tất cả sản phẩm">
-          <View style={styles.gridContainer}>
-            {products.map((item, index) => (
-              <View key={item._id || `product-${index}`} style={styles.gridItem}>
+          <FlatList
+            data={products}
+            keyExtractor={(item, index) => item._id || `product-${index}`}
+            numColumns={2} // 👈 chia 2 cột
+            renderItem={({ item }) => (
+              <View style={styles.gridItem}>
                 <ProductCard item={item} navigation={navigation} />
               </View>
-            ))}
-          </View>
+            )}
+            scrollEnabled={false}
+          />
+
         </Section>
+
 
 
         {/* Danh mục */}
@@ -300,14 +314,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  bannerWrapper: { height: width * 0.6, marginTop: 10 },
-  bannerImage: {
-    width: width * 0.9,
-    height: width * 0.5,
-    resizeMode: 'cover',
-    borderRadius: 10,
-    marginHorizontal: width * 0.05
+  bannerWrapper: {
+    height: width * 0.56,
+    marginTop: 5
   },
+
+  bannerContainer: {
+    width: width - 20,       
+    height: width * 0.5,
+    marginHorizontal: 10,    
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -366,19 +391,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   gridItem: {
-    alignItems: 'center',
-    width: '49%',
+    width: CARD_WIDTH,
+    padding: 5, // khoảng cách nhỏ giữa card
   },
   categoryRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 10
+    marginBottom: 50
   },
   categoryItem: {
     backgroundColor: '#eee',
     borderRadius: 50,
-    width: 70,
-    height: 70,
+    width: 90,
+    height: 90,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

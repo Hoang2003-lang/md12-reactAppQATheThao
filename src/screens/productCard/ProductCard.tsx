@@ -1,21 +1,28 @@
 // src/components/ProductCard.tsx
 import React, { useRef } from 'react';
-import { Text, Image, Pressable, Animated, StyleSheet } from 'react-native';
+import {
+  Text,
+  Image,
+  Pressable,
+  Animated,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 const ProductCard = ({ item, navigation }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 1.03,
-      useNativeDriver: false,
+      toValue: 1.02,
+      useNativeDriver: true,
     }).start();
   };
 
   const handlePressOut = () => {
     Animated.spring(scale, {
       toValue: 1,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   };
 
@@ -24,42 +31,64 @@ const ProductCard = ({ item, navigation }: any) => {
       onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      style={{ flex: 1 }}
     >
-      <Animated.View style={[styles.productItem, { transform: [{ scale }] }]}>
-        <Image source={{ uri: item.images?.[0] }} style={styles.productImage} />
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>{item.price.toLocaleString()} đ</Text>
+      <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+        {/* Ảnh sản phẩm */}
+        <View style={styles.imageWrapper}>
+          <Image source={{ uri: item.images?.[0] }} style={styles.image} />
+        </View>
+
+        {/* Tên sản phẩm */}
+        <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
+          {item.name}
+        </Text>
+
+        {/* Giá */}
+        <View style={styles.priceContainer}>
+          <Text style={styles.price}>
+            {item.price.toLocaleString()} đ
+          </Text>
+        </View>
       </Animated.View>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  productItem: {
-    width: 180,
+  card: {
+  width: "100%",   // chiếm toàn bộ gridItem
+  backgroundColor: "#fff",
+  borderRadius: 8,
+  overflow: "hidden",
+},
+  imageWrapper: {
+    width: '100%',
+    height: 230,
+  },
+  image: {
+    width: '100%',
+    height: 230,
+    resizeMode: 'cover', // ảnh phủ hết
+  },
+  name: {
+    fontSize: 13,
+    color: '#333',
+    marginHorizontal: 6,
+    marginTop: 8,
+    height: 36, 
+  },
+  priceContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 2,
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginHorizontal: 6,
+    marginBottom: 8,
+    marginTop: 6,
   },
-  productImage: {
-    width: 160,
-    height: 170,
-    borderRadius: 10,
-  },
-  productName: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 5,
-  },
-  productPrice: {
-    color: 'red',
+  price: {
+    color: '#d0011b',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 

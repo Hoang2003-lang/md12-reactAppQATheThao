@@ -11,42 +11,57 @@ import {
 const SaleProductCard = ({ item, navigation }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
 
-    // console.log('Danh sách ảnh:', item.images);
-
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 1.03,
-      useNativeDriver: false,
+      toValue: 1.02,
+      useNativeDriver: true,
     }).start();
   };
 
   const handlePressOut = () => {
     Animated.spring(scale, {
       toValue: 1,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   };
 
   return (
     <Pressable
-
-      onPress={() => {
-        // console.log('>> ID sản phẩm được chọn:', item._id);
+      onPress={() =>
         navigation.navigate('SaleProductDetail', { productId: item._id })
-      }
       }
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      style={{ flex: 1 }}
     >
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+        {/* Ảnh sản phẩm */}
         <View style={styles.imageWrapper}>
-          <Image source={{ uri: item.images[0] }} style={styles.image} />
-          
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>-{item.discount_percent}%</Text>
-          </View>
+          <Image
+            source={{ uri: item.images[0] }}
+            style={styles.image}
+          />
+
+          {/* Badge giảm giá */}
+          {item.discount_percent > 0 && (
+            <View style={styles.discountBadge}>
+              <Text style={styles.discountText}>
+                -{item.discount_percent}%
+              </Text>
+            </View>
+          )}
         </View>
-        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+
+        {/* Tên sản phẩm */}
+        <Text
+          style={styles.name}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {item.name}
+        </Text>
+
+        {/* Giá */}
         <View style={styles.priceContainer}>
           <Text style={styles.discountPrice}>
             {item.discount_price.toLocaleString()} đ
@@ -62,34 +77,28 @@ const SaleProductCard = ({ item, navigation }: any) => {
 
 const styles = StyleSheet.create({
   card: {
-    width: 190,
-    alignItems: 'center',
-    marginVertical: 10,
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    width: "100%",   // chiếm toàn bộ gridItem
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    overflow: "hidden",
   },
   imageWrapper: {
-    position: 'relative',
+    width: '100%',
+    height: 230,
   },
   image: {
-    width: 160,
-    height: 150,
-    borderRadius: 10,
+    width: '100%',
+    height: 230,
+    resizeMode: 'cover', // ảnh phủ hết
   },
   discountBadge: {
     position: 'absolute',
-    top: 5,
-    left: 5,
-    backgroundColor: 'red',
-    paddingHorizontal: 6,
+    top: 6,
+    left: 6,
+    backgroundColor: '#ff424f',
+    paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: 5,
+    borderRadius: 3,
   },
   discountText: {
     color: '#fff',
@@ -97,20 +106,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   name: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 5,
-    fontWeight: '500',
+    fontSize: 13,
+    color: '#333',
+    marginHorizontal: 6,
+    marginTop: 8,
+    height: 36,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
+    marginHorizontal: 6,
+    marginBottom: 8,
+    marginTop: 6,
   },
   discountPrice: {
-    color: 'red',
+    color: '#d0011b',
     fontWeight: 'bold',
+    fontSize: 14,
+    marginRight: 6,
   },
   originalPrice: {
     fontSize: 12,
