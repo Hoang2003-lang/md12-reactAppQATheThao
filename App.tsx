@@ -29,6 +29,7 @@ import TabNavigator from './src/TabNavigator/TabNavigator';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import NotificationScreen from './src/screens/NotificationScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
+import ReviewScreen from './src/screens/ReviewScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createNativeStackNavigator();
@@ -132,6 +133,7 @@ const App = () => {
           <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
           <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+          <Stack.Screen name="ReviewScreen" component={ReviewScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </ActionSheetProvider>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,26 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
-import { useIsFocused } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, NavigationProp, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import socket from '../socket';
 
+type RootStackParamList = {
+  ReviewScreen: {
+    products: {
+      productId: string;
+      productName: string;
+      productImage: string;
+    }[];
+  };
+};
+
+
+interface ProductInOrder {
+  _id: string;
+  images?: string[];
+  image?: string;
+}
 
 interface OrderItem {
   order_code: string;
@@ -31,25 +44,20 @@ interface OrderItem {
   paymentMethod: string;
   shippingAddress: string;
   items: {
-    id_product: {
-      images: any;
-      image: string;
-    };
+    id_product: ProductInOrder;
     name: string;
     purchaseQuantity: number;
     price: number;
   }[];
 }
 
-
-
 const OrderTrackingScreen = () => {
-  const navigation = useNavigation();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<string>('waiting');
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const fetchOrders = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -115,9 +123,9 @@ const OrderTrackingScreen = () => {
           </Text>
           {item.items.map((product, idx) => (
             <View key={idx} style={styles.productRow}>
-              {product.id_product?.images?.length > 0 ? (
+              {(product.id_product?.images?.length ?? 0) > 0 ? (
                 <Image
-                  source={{ uri: product.id_product.images[0] }}
+                  source={{ uri: product.id_product.images![0] }}
                   style={styles.productThumb}
                 />
               ) : (
@@ -160,26 +168,39 @@ const OrderTrackingScreen = () => {
           )}
 
           {item.status === 'delivered' && (
-            <Pressable
-              onPress={() =>
-                Alert.alert(
-                  'Xác nhận trả hàng',
-                  'Bạn có muốn trả lại đơn hàng này không?',
-                  [
-                    { text: 'Không', style: 'cancel' },
-                    { text: 'Trả hàng', onPress: () => handleReturnOrder(item._id) },
-                  ]
-                )
-              }
+            <><Pressable
+              onPress={() => Alert.alert(
+                'Xác nhận trả hàng',
+                'Bạn có muốn trả lại đơn hàng này không?',
+                [
+                  { text: 'Không', style: 'cancel' },
+                  { text: 'Trả hàng', onPress: () => handleReturnOrder(item._id) },
+                ]
+              )}
               style={[styles.actionBtn, { backgroundColor: '#3b82f6' }]}
             >
               <Text style={{ color: '#fff' }}>Trả hàng</Text>
             </Pressable>
+              <Pressable
+                onPress={() =>
+                  navigation.navigate('ReviewScreen', {
+                    products: item.items.map((p) => ({
+                      productId: p.id_product._id,
+                      productName: p.name,
+                      productImage: p.id_product.images?.[0] || '',
+                    })),
+                  })
+                }
+                style={[styles.actionBtn, { backgroundColor: '#ef4444' }]}
+              >
+                <Text style={{ color: '#fff' }}>Đánh giá</Text>
+              </Pressable>
+            </>
           )}
 
         </View>
       </Pressable>
-    );
+    )
   };
 
   const renderModal = () => {
