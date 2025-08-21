@@ -262,7 +262,7 @@ const loadUnreadNotifications = async () => {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.categoryRow}>
               {categories.map((cat, index) => (
-                <TouchableOpacity
+                <TouchableOpacity 
                   key={cat.code || `cat-${index}`}
                   style={styles.categoryItem}
                   onPress={() =>

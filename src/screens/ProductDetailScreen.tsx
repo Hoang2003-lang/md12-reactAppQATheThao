@@ -141,6 +141,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         quantity,
         price: product.price,
         total: totalPrice,
+        type: 'normal',
       };
 
       await API.post('/carts/add', cartItem);

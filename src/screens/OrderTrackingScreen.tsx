@@ -48,6 +48,9 @@ interface OrderItem {
     name: string;
     purchaseQuantity: number;
     price: number;
+    productDetails?: {
+      images?: string[];
+    };
   }[];
 }
 
@@ -111,7 +114,14 @@ const OrderTrackingScreen = () => {
     }, [])
   );
 
-
+  useEffect(() => {
+    orders.forEach(order => {
+      order.items.forEach(product => {
+        console.log('product.id_product:', product.id_product);
+        console.log("Ảnh sản phẩm:", product.id_product?.images);
+      });
+    });
+  }, [orders]);
 
 
   const renderItem = ({ item }: { item: OrderItem }) => {
@@ -122,11 +132,11 @@ const OrderTrackingScreen = () => {
             Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
           </Text>
           {item.items.map((product, idx) => (
-            <View key={idx} style={styles.productRow}>
-              {(product.id_product?.images?.length ?? 0) > 0 ? (
+            <View key={idx} style={styles.productRow}> 
+              {(product.productDetails?.images?.length ?? 0) > 0 ? (
                 <Image
-                  source={{ uri: product.id_product.images![0] }}
-                  style={styles.productThumb}
+                  source={{ uri: product.productDetails?.images?.[0] || "https://via.placeholder.com/80" }}
+                  style={{ width: 50, height: 50, borderRadius: 6, marginRight: 10 }}
                 />
               ) : (
                 <View style={[styles.productThumb, { backgroundColor: '#eee' }]} />
