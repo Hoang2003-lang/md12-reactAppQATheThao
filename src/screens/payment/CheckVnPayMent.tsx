@@ -9,16 +9,16 @@ import {
   ScrollView,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import API from "../../api"; // ✅ Sử dụng API instance cho các endpoint thông thường
-import { BASE_URL } from "../../constants"; // ✅ Import BASE_URL từ constants
-import axios from "axios"; // ✅ Import axios để gọi endpoint trực tiếp
+import API from "../../api";
+import { BASE_URL } from "../../constants";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// ✅ Khai báo global type
+// Khai báo global type
 declare global {
   var paymentResultParams: any;
 }
 
-// ✅ Sử dụng BASE_URL từ constants để đồng nhất
 const BACKEND_URL = BASE_URL;
 
 interface PaymentResult {
@@ -30,6 +30,8 @@ interface PaymentResult {
   transactionId?: string;
   bankCode?: string;
   paymentTime?: string;
+  errorCode?: string;
+  errorMessage?: string;
 }
 
 const CheckVnPayMent = () => {
@@ -43,157 +45,115 @@ const CheckVnPayMent = () => {
 
   useEffect(() => {
     checkPaymentResult();
+    
+    // Thêm log để debug deep link
+    console.log(" CheckVnPayMent mounted");
+    console.log("Global payment params:", global.paymentResultParams);
+    console.log(" Route params:", route.params);
+    
+    // Cleanup function to clear params when component unmounts
+    return () => {
+      global.paymentResultParams = null;
+    };
   }, []);
 
   const checkPaymentResult = async () => {
     try {
-      // ✅ Lấy query parameters từ route params (deep link hoặc navigation)
+      // Lấy params từ route (deep link hoặc navigation)
       const params = route.params as any;
-      let searchParams = params?.searchParams || {};
+      let searchParams = params?.searchParams || params || {};
 
-      // ✅ Nếu không có searchParams, thử lấy từ params trực tiếp
-      if (!searchParams || Object.keys(searchParams).length === 0) {
-        searchParams = params || {};
-      }
-
-      // ✅ Kiểm tra global params từ deep link (nếu có)
+      // Kiểm tra global params từ deep link
       if (global.paymentResultParams && Object.keys(global.paymentResultParams).length > 0) {
         searchParams = global.paymentResultParams;
-        // Clear global params sau khi sử dụng
+        console.log(" Sử dụng global params:", searchParams);
+        // Clear params immediately after using them
         global.paymentResultParams = null;
       }
 
-      console.log("🔍 VNPay Search Params:", searchParams);
-      console.log("🌐 Backend URL:", BACKEND_URL);
-      console.log("🔍 Route params:", route.params);
-      console.log("🔍 Global payment params:", global.paymentResultParams);
+      console.log(" Payment Result Params:", searchParams);
+      console.log("Backend URL:", BACKEND_URL);
 
-      // ✅ Kiểm tra có params VNPay không
-      if (!searchParams.vnp_ResponseCode && !searchParams.error) {
-        console.log("Không có VNPay params, hiển thị lỗi");
-        console.log("🔍 Available params:", Object.keys(searchParams));
+      // Xử lý deep link params từ BE redirect
+      if (searchParams.status === "success") {
+        // Thanh toán thành công từ deep link - lấy dữ liệu thực tế từ API
+        const orderCode = searchParams.orderId;
+        console.log(" Xử lý success deep link cho order:", orderCode);
         
-        setPaymentResult({
-          status: "error",
-          title: "Không có thông tin thanh toán",
-          subtitle: "Vui lòng thử lại hoặc liên hệ hỗ trợ",
-        });
+        // Gọi API để lấy thông tin chi tiết đơn hàng
+        await fetchOrderDetails(orderCode);
+        return;
+      } else if (searchParams.status === "failed") {
+        // Thanh toán thất bại từ deep link - lấy dữ liệu thực tế từ API
+        const orderCode = searchParams.orderId;
+        console.log(" Xử lý failed deep link cho order:", orderCode);
+        
+        // Gọi API để lấy thông tin chi tiết đơn hàng
+        await fetchOrderDetails(orderCode);
         return;
       }
 
-      // ✅ Xử lý VNPay trực tiếp từ params
-      console.log("VNPay Response Code:", searchParams.vnp_ResponseCode);
-      
-      if (searchParams.vnp_ResponseCode === "00") {
-        // ✅ Thanh toán thành công
-        const orderCode = searchParams.vnp_OrderInfo?.replace("Thanh_toan_don_hang_", "");
-        const amount = searchParams.vnp_Amount ? Number(searchParams.vnp_Amount) / 100 : undefined;
+      // Xử lý VNPay params trực tiếp
+      if (searchParams.vnp_ResponseCode) {
+        console.log("VNPay Response Code:", searchParams.vnp_ResponseCode);
         
-        setPaymentResult({
-          status: "success",
-          title: "Thanh toán thành công",
-          subtitle: "Đơn hàng của bạn đã được xử lý thành công",
-          orderCode: orderCode,
-          amount: amount,
-          transactionId: searchParams.vnp_TransactionNo,
-          bankCode: searchParams.vnp_BankCode,
-          paymentTime: searchParams.vnp_PayDate,
-        });
-        
-        // ✅ Gọi API để cập nhật trạng thái đơn hàng (nếu chưa được cập nhật)
-        try {
-          if (orderCode) {
-            console.log("🔄 Cập nhật trạng thái đơn hàng:", orderCode);
-            console.log("🌐 Backend URL cho update:", BACKEND_URL);
-            
-            // ✅ Sử dụng API.put thay vì gọi trực tiếp
-            const updateResponse = await API.put(`/orders/${orderCode}/status`, {
-              status: 'paid',
-              paymentStatus: 'completed',
-              paymentMethod: 'vnpay',
-              paymentDetails: {
-                transactionId: searchParams.vnp_TransactionNo,
-                bankCode: searchParams.vnp_BankCode,
-                paymentTime: searchParams.vnp_PayDate,
-                amount: amount
-              }
-            });
-            console.log("✅ Cập nhật trạng thái đơn hàng thành công:", updateResponse.data);
-          }
-        } catch (updateError: any) {
-          console.log("⚠️ Không thể cập nhật trạng thái đơn hàng:", {
-            message: updateError.message,
-            response: updateError.response?.data,
-            status: updateError.response?.status,
-            config: updateError.config
-          });
-          // Không hiển thị lỗi cho user vì thanh toán đã thành công
+        if (searchParams.vnp_ResponseCode === "00") {
+          // Thanh toán thành công - lấy dữ liệu thực tế từ API
+          const orderCode = searchParams.vnp_OrderInfo?.replace("Thanh_toan_don_hang_", "");
+          console.log("VNPay success, lấy thông tin order:", orderCode);
+          
+          // Gọi API để lấy thông tin chi tiết đơn hàng
+          await fetchOrderDetails(orderCode);
+          return;
+          
+        } else if (searchParams.vnp_ResponseCode === "24") {
+          // Khách hàng hủy thanh toán - lấy dữ liệu thực tế từ API
+          const orderCode = searchParams.vnp_OrderInfo?.replace("Thanh_toan_don_hang_", "");
+          console.log(" VNPay cancelled, lấy thông tin order:", orderCode);
+          
+          // Gọi API để lấy thông tin chi tiết đơn hàng
+          await fetchOrderDetails(orderCode);
+          return;
+        } else {
+          // Lỗi khác từ VNPay - lấy dữ liệu thực tế từ API
+          const orderCode = searchParams.vnp_OrderInfo?.replace("Thanh_toan_don_hang_", "");
+          console.log(" VNPay error, lấy thông tin order:", orderCode);
+          
+          // Gọi API để lấy thông tin chi tiết đơn hàng
+          await fetchOrderDetails(orderCode);
+          return;
         }
-        
-      } else if (searchParams.vnp_ResponseCode === "24") {
-        // ✅ Khách hàng hủy thanh toán
-        setPaymentResult({
-          status: "error",
-          title: "Khách hàng hủy thanh toán",
-          subtitle: "Thanh toán đã bị hủy",
-          orderCode: searchParams.vnp_OrderInfo?.replace("Thanh_toan_don_hang_", ""),
-        });
-      } else if (searchParams.error) {
-        // ✅ Xử lý lỗi từ backend
-        let errorTitle = "Thanh toán thất bại";
-        let errorSubtitle = "Đã xảy ra lỗi trong quá trình thanh toán";
-        
-        switch (searchParams.error) {
-          case 'order_not_found':
-            errorTitle = "Không tìm thấy đơn hàng";
-            errorSubtitle = "Đơn hàng có thể chưa được tạo hoặc đã bị xóa";
-            break;
-          case 'update_failed':
-            errorTitle = "Lỗi cập nhật đơn hàng";
-            errorSubtitle = "Thanh toán thành công nhưng không thể cập nhật trạng thái";
-            break;
-          case 'invalid_signature':
-            errorTitle = "Dữ liệu không hợp lệ";
-            errorSubtitle = "Chữ ký thanh toán không đúng";
-            break;
-          case 'server_error':
-            errorTitle = "Lỗi server";
-            errorSubtitle = "Máy chủ gặp sự cố, vui lòng thử lại sau";
-            break;
-          default:
-            errorSubtitle = `Mã lỗi: ${searchParams.error}`;
-        }
-        
-        setPaymentResult({
-          status: "error",
-          title: errorTitle,
-          subtitle: errorSubtitle,
-          orderCode: searchParams.vnp_OrderInfo?.replace("Thanh_toan_don_hang_", ""),
-        });
-      } else {
-        // ✅ Lỗi khác từ VNPay
-        setPaymentResult({
-          status: "error",
-          title: "Thanh toán thất bại",
-          subtitle: `Mã lỗi: ${searchParams.vnp_ResponseCode || "Unknown"}`,
-          orderCode: searchParams.vnp_OrderInfo?.replace("Thanh_toan_don_hang_", ""),
-        });
       }
+
+      // Nếu không có params, thử lấy từ cache hoặc API
+      console.log("Không có params, thử lấy từ cache/API");
+      
+      // Thử lấy từ cache trước - sử dụng orderId từ URL hoặc fallback
+      const orderCode = searchParams.orderId || searchParams.order_code;
+      if (orderCode) {
+        await fetchOrderDetails(orderCode);
+        return;
+      }
+
+      // Nếu không có dữ liệu, hiển thị lỗi
+      setPaymentResult({
+        status: "error",
+        title: "Không có thông tin thanh toán",
+        subtitle: "Vui lòng thử lại hoặc liên hệ hỗ trợ",
+      });
       
     } catch (error: any) {
-      console.error("❌ Lỗi chi tiết:", {
+      console.error(" Lỗi chi tiết:", {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
-        config: error.config
       });
       
-      // ✅ Hiển thị lỗi chi tiết hơn
       let errorMessage = "Không thể kiểm tra trạng thái thanh toán.";
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message === "Network Error") {
-        errorMessage = `Không thể kết nối đến server (${BACKEND_URL}). Vui lòng kiểm tra:\n\n1. Backend server đã chạy chưa?\n2. IP address có đúng không?\n3. Firewall có chặn không?`;
+        errorMessage = `Không thể kết nối đến server (${BACKEND_URL}). Vui lòng kiểm tra kết nối mạng.`;
       }
       
       setPaymentResult({
@@ -204,7 +164,141 @@ const CheckVnPayMent = () => {
     }
   };
 
+
+
+  // Function để xóa toàn bộ giỏ hàng khi thanh toán thành công
+  const clearEntireCart = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        console.log("Không có userId để xóa giỏ hàng");
+        return;
+      }
+
+      console.log("🛒 Xóa toàn bộ giỏ hàng cho user:", userId);
+      
+      // Sử dụng API xóa toàn bộ giỏ hàng
+      await API.delete(`/carts/${userId}`);
+      
+      console.log("✅ Đã xóa toàn bộ giỏ hàng thành công");
+    } catch (error: any) {
+      console.error("❌ Lỗi khi xóa giỏ hàng:", {
+        message: error.message,
+        response: error.response?.data
+      });
+    }
+  };
+
+  // Function để lấy thông tin chi tiết đơn hàng từ API
+  const fetchOrderDetails = async (orderCode: string) => {
+    try {
+      console.log(" Lấy thông tin chi tiết đơn hàng:", orderCode);
+      
+      // Thử lấy từ cache trước
+      try {
+        const cacheResponse = await axios.get(`${BACKEND_URL}/vnpay/get_payment_result`, {
+          params: { order_code: orderCode }
+        });
+        
+        console.log(" Cache response:", cacheResponse.data);
+        
+        if (cacheResponse.data?.success) {
+          const result = cacheResponse.data.data;
+          setPaymentResult({
+            status: result.status === 'success' ? 'success' : 'error',
+            title: result.status === 'success' ? 'Thanh toán thành công' : 'Thanh toán thất bại',
+            subtitle: result.status === 'success' 
+              ? 'Đơn hàng của bạn đã được xử lý thành công'
+              : (result.errorMessage || 'Đã xảy ra lỗi trong quá trình thanh toán'),
+            orderCode: result.orderId,
+            amount: result.amount,
+            transactionId: result.transactionId,
+            errorCode: result.errorCode,
+            errorMessage: result.errorMessage,
+          });
+          
+                     // Nếu thanh toán thành công, xóa toàn bộ giỏ hàng
+           if (result.status === 'success') {
+             await clearEntireCart();
+           }
+          return;
+        }
+      } catch (cacheError: any) {
+        console.log("Không thể lấy từ cache:", cacheError.message);
+      }
+
+      // Nếu không có trong cache, lấy từ database
+      try {
+        const orderResponse = await axios.get(`${BACKEND_URL}/vnpay/check_order_status`, {
+          params: { order_code: orderCode }
+        });
+        
+        console.log(" Order response:", orderResponse.data);
+        
+        if (orderResponse.data?.success) {
+          const order = orderResponse.data.data;
+          
+          if (order.status === 'paid' && order.paymentStatus === 'completed') {
+            setPaymentResult({
+              status: 'success',
+              title: 'Thanh toán thành công',
+              subtitle: 'Đơn hàng của bạn đã được xử lý thành công',
+              orderCode: order.order_code,
+              amount: order.total_amount,
+              transactionId: order.paymentDetails?.transactionId,
+              bankCode: order.paymentDetails?.bankCode,
+              paymentTime: order.paymentDetails?.paymentTime,
+            });
+            
+                         // Xóa toàn bộ giỏ hàng khi thanh toán thành công
+             await clearEntireCart();
+          } else if (order.status === 'payment_failed' || order.paymentStatus === 'failed') {
+            setPaymentResult({
+              status: 'error',
+              title: 'Thanh toán thất bại',
+              subtitle: order.paymentDetails?.errorMessage || 'Đã xảy ra lỗi trong quá trình thanh toán',
+              orderCode: order.order_code,
+              errorCode: order.paymentDetails?.errorCode,
+              errorMessage: order.paymentDetails?.errorMessage,
+            });
+          } else {
+            setPaymentResult({
+              status: 'error',
+              title: 'Trạng thái không xác định',
+              subtitle: 'Không thể xác định trạng thái thanh toán',
+              orderCode: order.order_code,
+            });
+          }
+          return;
+        }
+      } catch (orderError: any) {
+        console.log("Không thể lấy thông tin đơn hàng:", orderError.message);
+      }
+
+      // Nếu không lấy được dữ liệu, hiển thị lỗi
+      setPaymentResult({
+        status: "error",
+        title: "Không tìm thấy thông tin đơn hàng",
+        subtitle: `Không thể tìm thấy đơn hàng với mã: ${orderCode}`,
+        orderCode: orderCode,
+      });
+      
+    } catch (error: any) {
+      console.error(" Lỗi khi lấy thông tin đơn hàng:", error);
+      setPaymentResult({
+        status: "error",
+        title: "Lỗi khi lấy thông tin",
+        subtitle: "Không thể lấy thông tin đơn hàng từ server",
+        orderCode: orderCode,
+      });
+    }
+  };
+
   const handleGoHome = () => {
+    // Clear any remaining payment params
+    global.paymentResultParams = null;
+    
+    // Reset navigation stack to Home
     navigation.reset({
       index: 0,
       routes: [{ name: "Home" as never }],
@@ -212,11 +306,18 @@ const CheckVnPayMent = () => {
   };
 
   const handleBuyAgain = () => {
+    // Clear any remaining payment params
+    global.paymentResultParams = null;
+    
+    // Navigate to Home
     navigation.navigate("Home" as never);
   };
 
   const handleCheckOrder = () => {
-    // ✅ Navigate đến màn hình đơn hàng
+    // Clear any remaining payment params
+    global.paymentResultParams = null;
+    
+    // Navigate to OrderTracking
     navigation.navigate("OrderTracking" as never);
   };
 
@@ -229,153 +330,7 @@ const CheckVnPayMent = () => {
     checkPaymentResult();
   };
 
-  // ✅ Thêm chức năng debug để kiểm tra đơn hàng
-  const handleDebugOrder = async () => {
-    try {
-      console.log("🔍 Debug: Kiểm tra đơn hàng trong database...");
-      
-      // Gọi API debug để kiểm tra đơn hàng - Sử dụng axios trực tiếp cho VNPay endpoints
-      const debugResponse = await axios.get(`${BASE_URL}/vnpay/debug/orders`);
-      console.log("📦 Debug response:", debugResponse.data);
-      
-      if (debugResponse.data?.success) {
-        Alert.alert(
-          "Debug Info", 
-          `Tìm thấy ${debugResponse.data.total || 0} đơn hàng gần nhất.\n\nChi tiết: ${JSON.stringify(debugResponse.data.orders || debugResponse.data.order, null, 2)}`
-        );
-      } else {
-        Alert.alert("Debug Info", "Không tìm thấy đơn hàng nào");
-      }
-    } catch (error: any) {
-      console.error("❌ Debug error:", error);
-      Alert.alert("Debug Error", error.message || "Lỗi khi debug");
-    }
-  };
 
-  // ✅ Thêm chức năng test tạo đơn hàng
-  const handleTestCreateOrder = async () => {
-    try {
-      console.log("🧪 Test: Tạo đơn hàng test...");
-      
-      const testPayload = {
-        userId: "test_user_id", // Cần thay bằng user ID thật
-        items: [
-          {
-            id_product: "test_product_id",
-            name: "Sản phẩm test",
-            purchaseQuantity: 1,
-            price: 100000
-          }
-        ],
-        shippingFee: 30000,
-        paymentMethod: "vnpay",
-        shippingAddress: "Địa chỉ test",
-        order_code: `TEST-${Date.now()}`
-      };
-      
-      // Sử dụng axios trực tiếp cho VNPay endpoints
-      const testResponse = await axios.post(`${BASE_URL}/vnpay/create_order_and_payment`, testPayload);
-      console.log("🧪 Test response:", testResponse.data);
-      
-      Alert.alert(
-        "Test Result", 
-        testResponse.data?.success 
-          ? "Tạo đơn hàng test thành công!" 
-          : "Tạo đơn hàng test thất bại"
-      );
-    } catch (error: any) {
-      console.error("❌ Test error:", error);
-      Alert.alert("Test Error", error.response?.data?.message || error.message);
-    }
-  };
-
-  // ✅ Thêm chức năng kiểm tra kết nối backend
-  const handleCheckConnection = async () => {
-    try {
-      console.log("🔍 Kiểm tra kết nối backend...");
-      
-      // Thử gọi API debug để kiểm tra kết nối - Sử dụng axios trực tiếp cho VNPay endpoints
-      const response = await axios.get(`${BASE_URL}/vnpay/debug/orders`);
-      console.log("✅ Kết nối thành công:", response.status);
-      
-      Alert.alert(
-        "Connection Test", 
-        `✅ Kết nối thành công!\n\nStatus: ${response.status}\nBackend URL: ${BACKEND_URL}`
-      );
-    } catch (error: any) {
-      console.error("❌ Connection error:", error);
-      
-      let errorMessage = "Không thể kết nối đến backend";
-      if (error.response?.status) {
-        errorMessage += `\nStatus: ${error.response.status}`;
-      }
-      if (error.message === "Network Error") {
-        errorMessage += "\n\nNguyên nhân có thể:\n1. Backend server chưa chạy\n2. IP address không đúng\n3. Firewall chặn kết nối";
-      }
-      
-      Alert.alert("Connection Error", errorMessage);
-    }
-  };
-
-  // ✅ Thêm chức năng test endpoint đơn giản
-  const handleTestSimpleEndpoint = async () => {
-    try {
-      console.log("🧪 Test: Kiểm tra endpoint đơn giản...");
-      
-      // Thử gọi một endpoint đơn giản trước - Sử dụng API instance cho regular endpoints
-      const simpleResponse = await API.get(`/orders`);
-      console.log("✅ Simple endpoint thành công:", simpleResponse.status);
-      
-      Alert.alert(
-        "Simple Test", 
-        `✅ Endpoint đơn giản hoạt động!\n\nStatus: ${simpleResponse.status}\nData length: ${simpleResponse.data?.data?.length || 0}`
-      );
-    } catch (error: any) {
-      console.error("❌ Simple test error:", error);
-      
-      let errorMessage = "Endpoint đơn giản không hoạt động";
-      if (error.response?.status) {
-        errorMessage += `\nStatus: ${error.response.status}`;
-      }
-      if (error.response?.data?.message) {
-        errorMessage += `\nMessage: ${error.response.data.message}`;
-      }
-      
-      Alert.alert("Simple Test Error", errorMessage);
-    }
-  };
-
-  // ✅ Thêm chức năng test endpoint trực tiếp
-  const handleTestDirectEndpoint = async () => {
-    try {
-      console.log("🧪 Test: Gọi endpoint trực tiếp bằng axios...");
-      
-      // Test endpoint trực tiếp không qua API instance
-      const directResponse = await axios.get(`${BACKEND_URL}/vnpay/debug/orders`);
-      console.log("✅ Direct endpoint thành công:", directResponse.status);
-      console.log("📦 Direct response data:", directResponse.data);
-      
-      Alert.alert(
-        "Direct Test", 
-        `✅ Endpoint trực tiếp hoạt động!\n\nStatus: ${directResponse.status}\nURL: ${BACKEND_URL}/vnpay/debug/orders\n\nData: ${JSON.stringify(directResponse.data, null, 2)}`
-      );
-    } catch (error: any) {
-      console.error("❌ Direct test error:", error);
-      
-      let errorMessage = "Endpoint trực tiếp không hoạt động";
-      if (error.response?.status) {
-        errorMessage += `\nStatus: ${error.response.status}`;
-      }
-      if (error.response?.data) {
-        errorMessage += `\nResponse: ${JSON.stringify(error.response.data, null, 2)}`;
-      }
-      if (error.message) {
-        errorMessage += `\nMessage: ${error.message}`;
-      }
-      
-      Alert.alert("Direct Test Error", errorMessage);
-    }
-  };
 
   if (paymentResult.status === "loading") {
     return (
@@ -395,7 +350,7 @@ const CheckVnPayMent = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* ✅ Icon Status */}
+        {/* Icon Status */}
         <View style={[
           styles.iconContainer,
           paymentResult.status === "success" ? styles.successIcon : styles.errorIcon
@@ -405,7 +360,7 @@ const CheckVnPayMent = () => {
           </Text>
         </View>
 
-        {/* ✅ Title */}
+        {/* Title */}
         <Text style={[
           styles.title,
           paymentResult.status === "success" ? styles.successTitle : styles.errorTitle
@@ -413,10 +368,10 @@ const CheckVnPayMent = () => {
           {paymentResult.title}
         </Text>
 
-        {/* ✅ Subtitle */}
+        {/* Subtitle */}
         <Text style={styles.subtitle}>{paymentResult.subtitle}</Text>
 
-        {/* ✅ Order Details */}
+        {/* Order Details */}
         {paymentResult.orderCode && (
           <View style={styles.orderDetails}>
             <Text style={styles.orderLabel}>Mã đơn hàng:</Text>
@@ -433,7 +388,7 @@ const CheckVnPayMent = () => {
           </View>
         )}
 
-        {/* ✅ Payment Details (chỉ hiển thị khi thành công) */}
+        {/* Payment Details (chỉ hiển thị khi thành công) */}
         {paymentResult.status === "success" && (
           <>
             {paymentResult.transactionId && (
@@ -461,7 +416,26 @@ const CheckVnPayMent = () => {
           </>
         )}
 
-        {/* ✅ Action Buttons */}
+        {/* Error Details (chỉ hiển thị khi có lỗi) */}
+        {paymentResult.status === "error" && (
+          <>
+            {paymentResult.errorCode && (
+              <View style={styles.orderDetails}>
+                <Text style={styles.orderLabel}>Mã lỗi:</Text>
+                <Text style={styles.orderCode}>{paymentResult.errorCode}</Text>
+              </View>
+            )}
+            
+            {paymentResult.errorMessage && (
+              <View style={styles.orderDetails}>
+                <Text style={styles.orderLabel}>Chi tiết lỗi:</Text>
+                <Text style={styles.orderCode}>{paymentResult.errorMessage}</Text>
+              </View>
+            )}
+          </>
+        )}
+
+        {/* Action Buttons */}
         <View style={styles.buttonContainer}>
           {paymentResult.status === "success" ? (
             <>
@@ -486,41 +460,7 @@ const CheckVnPayMent = () => {
             </>
           )}
 
-          {/* ✅ Debug Buttons - chỉ hiển thị trong development */}
-          {__DEV__ && (
-            <>
-              <TouchableOpacity 
-                style={[styles.debugButton, { marginTop: 20 }]} 
-                onPress={handleDebugOrder}
-              >
-                <Text style={styles.debugButtonText}>🔍 Debug Orders</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.debugButton} 
-                onPress={handleTestCreateOrder}
-              >
-                <Text style={styles.debugButtonText}>🧪 Test Create Order</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.debugButton} 
-                onPress={handleCheckConnection}
-              >
-                <Text style={styles.debugButtonText}>🔗 Kiểm tra kết nối</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.debugButton} 
-                onPress={handleTestSimpleEndpoint}
-              >
-                <Text style={styles.debugButtonText}>🧪 Test Simple Endpoint</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.debugButton} 
-                onPress={handleTestDirectEndpoint}
-              >
-                <Text style={styles.debugButtonText}>🧪 Test Direct Endpoint</Text>
-              </TouchableOpacity>
-            </>
-          )}
+
         </View>
       </View>
     </ScrollView>
@@ -666,24 +606,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
-  debugButton: {
-    backgroundColor: "#f0f0f0",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  debugButtonText: {
-    color: "#333",
-    fontSize: 15,
-    fontWeight: "600",
-  },
+
 });
 
 export default CheckVnPayMent;

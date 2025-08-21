@@ -20,10 +20,28 @@
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
             android:exported="true">
-
-            <intent-filter>
+               <!-- Launcher -->
+               <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Deep Link cho VNPay (custom scheme) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Scheme cho VNPay payment result -->
+                <data android:scheme="f7shop" android:host="payment-result" />
+            </intent-filter>
+            
+            <!-- Universal Link cho VNPay -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Universal link cho VNPay payment result -->
+                <data android:scheme="https" android:host="f7shop.com" android:pathPrefix="/payment-result" />
             </intent-filter>
         </activity>
 
