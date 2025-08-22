@@ -3,12 +3,18 @@ import API from '../api';
 export const fetchSaleProducts = async () => {
   try {
     const res = await API.get('/sale-products');
-    return res.data?.data || [];
+    const products = res.data?.data || [];
+    // Đảm bảo mỗi sản phẩm khuyến mãi có thông tin sold
+    return products.map((product: any) => ({
+      ...product,
+      sold: product.sold || 0
+    }));
   } catch (err) {
     console.error('❌ Lỗi lấy sản phẩm khuyến mãi:', err);
     return [];
   }
 };
+
 // Lấy tất cả sản phẩm khuyến mãi (có isDiscount = true)
 export const getDiscountProducts = async () => {
   try {
@@ -21,10 +27,13 @@ export const getDiscountProducts = async () => {
       throw new Error('API không trả về danh sách sản phẩm hợp lệ.');
     }
 
-    // Lọc sản phẩm có isDiscount = true
-    const discountProducts = products.filter(
-      (product: any) => product.isDiscount === true
-    );
+    // Lọc sản phẩm có isDiscount = true và đảm bảo có sold
+    const discountProducts = products
+      .filter((product: any) => product.isDiscount === true)
+      .map((product: any) => ({
+        ...product,
+        sold: product.sold || 0
+      }));
 
     return discountProducts;
   } catch (error) {

@@ -55,6 +55,9 @@ const SaleProductCard = ({ item, navigation }: any) => {
             {item.price.toLocaleString()} đ
           </Text>
         </View>
+        <View style={styles.soldInfo}>
+          <Text style={styles.soldText}>Đã bán: {item.sold || 0}</Text>
+        </View>
       </Animated.View>
     </Pressable>
   );
@@ -116,6 +119,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
     textDecorationLine: 'line-through',
+  },
+  soldInfo: {
+    marginTop: 4,
+  },
+  soldText: {
+    fontSize: 10,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });
 

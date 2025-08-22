@@ -38,12 +38,12 @@ const App = () => {
   useEffect(() => {
     // Hàm xử lý deep link (đồng bộ với BE redirect)
     const handleDeepLink = (url: string) => {
-      console.log("🔗 Deep link received:", url);
+      console.log(" Deep link received:", url);
 
       // Kiểm tra tất cả các loại deep link có thể có
       if (url.includes('payment-result') || url.includes('f7shop://')) {
         try {
-          console.log("🎯 Processing payment result deep link...");
+          console.log("Processing payment result deep link...");
           
           // Cải thiện parse URL để xử lý tốt hơn
           let searchParams = {};
@@ -58,14 +58,14 @@ const App = () => {
               }
               return params;
             }, {});
-            console.log("📦 Parsed manually:", searchParams);
+            console.log(" Parsed manually:", searchParams);
           } else {
-            console.log("⚠️ No query string found in URL");
+            console.log(" No query string found in URL");
           }
 
           // Kiểm tra xem có params hợp lệ không
           if (Object.keys(searchParams).length > 0) {
-            console.log("✅ Valid params found:", searchParams);
+            console.log(" Valid params found:", searchParams);
             
             // Lưu params vào global để CheckVnPayMent có thể truy cập
             global.paymentResultParams = searchParams;
@@ -73,21 +73,21 @@ const App = () => {
             // Thêm delay nhỏ để đảm bảo navigation sẵn sàng
             setTimeout(() => {
               if (navigationRef.current) {
-                console.log("🚀 Navigating to CheckVnPayMent...");
+                console.log(" Navigating to CheckVnPayMent...");
                 navigationRef.current.navigate('CheckVnPayMent', {
                   searchParams: searchParams,
                 });
               } else {
-                console.log("❌ Navigation ref not available");
+                console.log(" Navigation ref not available");
               }
             }, 100);
           } else {
-            console.log("⚠️ No valid params found in deep link");
+            console.log("No valid params found in deep link");
             
             // Nếu không có params, vẫn navigate để hiển thị màn hình lỗi
             setTimeout(() => {
               if (navigationRef.current) {
-                console.log("🚀 Navigating to CheckVnPayMent without params...");
+                console.log(" Navigating to CheckVnPayMent without params...");
                 navigationRef.current.navigate('CheckVnPayMent', {
                   searchParams: {},
                 });
@@ -95,12 +95,12 @@ const App = () => {
             }, 100);
           }
         } catch (error) {
-          console.error("❌ Error parsing deep link:", error);
+          console.error(" Error parsing deep link:", error);
           
           // Nếu có lỗi parse, vẫn navigate để hiển thị màn hình lỗi
           setTimeout(() => {
             if (navigationRef.current) {
-              console.log("🚀 Navigating to CheckVnPayMent after error...");
+              console.log("Navigating to CheckVnPayMent after error...");
               navigationRef.current.navigate('CheckVnPayMent', {
                 searchParams: {},
               });
@@ -108,7 +108,7 @@ const App = () => {
           }, 100);
         }
       } else {
-        console.log("🔗 Deep link không phải payment-result:", url);
+        console.log(" Deep link không phải payment-result:", url);
       }
     };
 
@@ -117,24 +117,24 @@ const App = () => {
       try {
         const initialURL = await Linking.getInitialURL();
         if (initialURL) {
-          console.log("🚀 Initial URL:", initialURL);
+          console.log(" Initial URL:", initialURL);
           handleDeepLink(initialURL);
         }
       } catch (error) {
-        console.error("❌ Error getting initial URL:", error);
+        console.error(" Error getting initial URL:", error);
       }
     };
 
     // Lắng nghe deep link khi app đang chạy
     const subscription = Linking.addEventListener('url', (event) => {
-      console.log("🔗 URL event:", event.url);
-      console.log("🔗 App state:", event.url);
+      console.log(" URL event:", event.url);
+      console.log(" App state:", event.url);
       handleDeepLink(event.url);
     });
 
     // Thêm listener để kiểm tra app state
     const handleAppStateChange = (nextAppState: string) => {
-      console.log("📱 App state changed to:", nextAppState);
+      console.log("App state changed to:", nextAppState);
     };
 
     // Thêm listener cho app state changes

@@ -1,6 +1,6 @@
 // src/components/ProductCard.tsx
 import React, { useRef } from 'react';
-import { Text, Image, Pressable, Animated, StyleSheet } from 'react-native';
+import { Text, Image, Pressable, Animated, StyleSheet, View } from 'react-native';
 
 const ProductCard = ({ item, navigation }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
@@ -29,6 +29,9 @@ const ProductCard = ({ item, navigation }: any) => {
         <Image source={{ uri: item.images?.[0] }} style={styles.productImage} />
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productPrice}>{item.price.toLocaleString()} đ</Text>
+        <View style={styles.soldInfo}>
+          <Text style={styles.soldText}>Đã bán: {item.sold || 0}</Text>
+        </View>
       </Animated.View>
     </Pressable>
   );
@@ -60,6 +63,14 @@ const styles = StyleSheet.create({
   },
   productPrice: {
     color: 'red',
+  },
+  soldInfo: {
+    marginTop: 4,
+  },
+  soldText: {
+    fontSize: 10,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });
 
