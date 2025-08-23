@@ -58,7 +58,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
         setBookMark(isFav);
       } catch (error: any) {
-        console.log('❌ Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
+        console.log('Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
         setBookMark(false);
       }
     };
@@ -77,7 +77,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
       setProduct(res.data.product);
       setComments(res.data.comments || []);
     } catch (error) {
-      console.error('❌ Lỗi lấy sản phẩm thường:', error);
+      console.error('Lỗi lấy sản phẩm thường:', error);
       Alert.alert('Không thể tải sản phẩm. Vui lòng thử lại sau.');
     } finally {
       setLoading(false);
@@ -128,7 +128,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
       navigation.navigate('Cart');
     } catch (err) {
-      console.error('❌ Lỗi thêm vào giỏ hàng:', err);
+      console.error('Lỗi thêm vào giỏ hàng:', err);
       Alert.alert('Thêm vào giỏ hàng thất bại!');
     }
   };
@@ -140,8 +140,21 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     }
 
     try {
+      // Kiểm tra đăng nhập trước khi gửi bình luận
       const userId = await AsyncStorage.getItem('userId');
       const userName = await AsyncStorage.getItem('userName');
+      
+      if (!userId || !userName) {
+        Alert.alert(
+          'Yêu cầu đăng nhập',
+          'Bạn cần đăng nhập để gửi bình luận. Vui lòng đăng nhập để tiếp tục.',
+          [
+            { text: 'Huỷ', style: 'cancel' },
+            { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') }
+          ]
+        );
+        return;
+      }
 
       const res = await API.post('/comments', {
         productId,
@@ -154,9 +167,9 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
       setComments([res.data, ...comments]);
       setNewComment('');
       setRating(5);
-      Alert.alert('✅ Gửi bình luận thành công!');
+      Alert.alert(' Gửi bình luận thành công!');
     } catch (err) {
-      console.error('❌ Lỗi gửi bình luận:', err);
+      console.error(' Lỗi gửi bình luận:', err);
       Alert.alert('Gửi bình luận thất bại.');
     }
   };
