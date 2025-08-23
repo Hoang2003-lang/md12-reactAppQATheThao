@@ -49,6 +49,10 @@ const ProductCard = ({ item, navigation }: any) => {
           <Text style={styles.price}>
             {item.price.toLocaleString()} đ
           </Text>
+
+          <Text style={styles.sold}>
+            Đã bán {item.sold || 0}
+          </Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -78,8 +82,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     height: 36, 
   },
-  priceContainer: {
+ priceContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between', // chia 2 bên
     alignItems: 'center',
     marginHorizontal: 6,
     marginBottom: 8,
@@ -89,6 +94,10 @@ const styles = StyleSheet.create({
     color: '#d0011b',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  sold: {
+    fontSize: 12,
+    color: '#666',
   },
 });
 
