@@ -6,6 +6,7 @@ import axios from "axios";
 import API from "../../api"; // ✅ Sử dụng API instance cho các endpoint thông thường
 import { BASE_URL } from "../../constants"; // ✅ Import BASE_URL từ constants
 import Icon from 'react-native-vector-icons/Ionicons';
+import { getVNPayReturnUrl, debugVNPayConfig } from "../../config/vnpayConfig"; // ✅ Import VNPay config
 
 // ✅ Sử dụng BASE_URL từ constants để đồng nhất
 const BACKEND_URL = BASE_URL;
@@ -176,6 +177,9 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
             const shippingFee = 30000;
             const finalTotal = subtotal + shippingFee - discount;
 
+            // ✅ Debug VNPay configuration
+            debugVNPayConfig();
+            
             // ✅ Sửa lại payload để phù hợp với backend API
             const payload = {
                 userId: user._id,
@@ -192,7 +196,9 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
                 } : undefined,
                 paymentMethod: "vnpay",
                 shippingAddress: user.address,
-                order_code: orderCode
+                order_code: orderCode,
+                // ✅ Sử dụng cấu hình VNPay để lấy URL return đúng cho platform
+                returnUrl: getVNPayReturnUrl()
             };
 
             console.log("📦 Gửi payload:", payload);

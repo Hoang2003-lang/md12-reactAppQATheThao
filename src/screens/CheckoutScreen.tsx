@@ -45,11 +45,18 @@ export default function CheckoutScreen({ route, navigation }: any) {
   useFocusEffect(useCallback(() => {
     fetchUser();
   }, []));
+  const getFinalPrice = (product: any) => {
+    if (product.discount_percent && product.discount_percent > 0) {
+      return product.price - (product.price * product.discount_percent) / 100;
+    }
+    return product.price;
+  };
 
   const calculateSubtotal = () => {
     return selectedItems.reduce((sum: number, item: any) => {
       const product = item.product_id || item;
-      return sum + (product.price || 0) * (item.quantity || 1);
+      const finalPrice = getFinalPrice(product);
+      return sum + finalPrice * (item.quantity || 1);
     }, 0);
   };
 
@@ -113,12 +120,15 @@ export default function CheckoutScreen({ route, navigation }: any) {
     try {
       const orderPayload: any = {
         userId: user._id,
-        items: selectedItems.map((item: any) => ({
-          id_product: item.product_id?._id || item._id,
-          name: item.product_id?.name || item.name,
-          purchaseQuantity: item.quantity,
-          price: item.product_id?.price || item.price
-        })),
+        items: selectedItems.map((item: any) => {
+          const product = item.product_id || item;
+          return {
+            id_product: product._id,
+            name: product.name,
+            purchaseQuantity: item.quantity,
+            price: getFinalPrice(product)   // ✅ giá sau giảm
+          };
+        }),
         totalPrice: finalTotal,
         shippingFee,
         discount: discountAmount,
@@ -130,7 +140,10 @@ export default function CheckoutScreen({ route, navigation }: any) {
       };
 
       if (selectedVoucher?._id) {
-        orderPayload.voucherId = selectedVoucher._id;
+        orderPayload.voucher = {
+          voucherId: selectedVoucher._id,
+          code: selectedVoucher.code,
+        };
       }
 
       await API.post('/orders', orderPayload);
@@ -168,7 +181,14 @@ export default function CheckoutScreen({ route, navigation }: any) {
           <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.detail}>Size: {item.size}</Text>
           <Text style={styles.detail}>Số lượng: {item.quantity}</Text>
-          <Text style={styles.price}>{product.price?.toLocaleString()} đ</Text>
+          <Text style={styles.price}>
+            {getFinalPrice(product).toLocaleString()} đ
+          </Text>
+          {product.discount_percent > 0 && (
+            <Text style={{ textDecorationLine: 'line-through', color: '#888', fontSize: 12 }}>
+              {product.price.toLocaleString()} đ
+            </Text>
+          )}
         </View>
       </View>
     );

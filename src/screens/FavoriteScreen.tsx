@@ -1,4 +1,4 @@
-import React , { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -27,20 +27,20 @@ const FavoriteScreen = ({ navigation }: any) => {
         setFavoriteItems([]);
         return;
       }
-  
+
       const res = await API.get(`/favorites/${userId}`);
       const data = res.data;
-  
+
       if (!Array.isArray(data) || data.length === 0) {
         setFavoriteItems([]);
         return;
       }
-  
+
       const productDetails = await Promise.all(
         data.map(async (fav: any) => {
           const productId = fav.productId?._id || fav.productId || fav._id;
           const type = fav.type || 'normal';
-  
+
           try {
             let productRes;
             if (type === 'sale') {
@@ -48,9 +48,9 @@ const FavoriteScreen = ({ navigation }: any) => {
             } else {
               productRes = await API.get(`/products/${productId}/detail`);
             }
-  
+
             const product = type === 'sale' ? productRes.data.data : productRes.data.product;
-  
+
             return {
               _id: product._id,
               name: product.name,
@@ -70,7 +70,7 @@ const FavoriteScreen = ({ navigation }: any) => {
           }
         })
       );
-  
+
       const filtered = productDetails.filter((p) => p !== null);
       setFavoriteItems(filtered);
     } catch (err) {
@@ -119,8 +119,7 @@ const FavoriteScreen = ({ navigation }: any) => {
           data={favoriteItems}
           keyExtractor={(item) => item._id}
           numColumns={2}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          renderItem={({ item }) => (
+          contentContainerStyle={{ paddingBottom: 100 }} renderItem={({ item }) => (
             <View style={{ flex: 1, margin: 8 }}>
               <TouchableOpacity
                 activeOpacity={0.9}
