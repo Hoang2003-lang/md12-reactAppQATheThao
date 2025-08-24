@@ -38,6 +38,7 @@ interface OrderItem {
     name: string;
     purchaseQuantity: number;
     price: number;
+    image?: string; // Thêm field image tùy chọn
   }[];
 }
 
@@ -58,8 +59,26 @@ const OrderTrackingScreen = () => {
       }
 
       const res = await API.get(`/orders/user/${userId}`);
+      console.log('📦 Dữ liệu đơn hàng:', JSON.stringify(res.data.data, null, 2));
+      
+      // Debug: Kiểm tra cấu trúc dữ liệu sản phẩm
+      if (res.data.data && res.data.data.length > 0) {
+        const firstOrder = res.data.data[0];
+        if (firstOrder.items && firstOrder.items.length > 0) {
+          const firstProduct = firstOrder.items[0];
+          console.log('🔍 Cấu trúc sản phẩm đầu tiên:', {
+            productName: firstProduct.name,
+            id_product: firstProduct.id_product,
+            images: firstProduct.id_product?.images,
+            image: firstProduct.id_product?.image,
+            hasImages: firstProduct.id_product?.images?.length > 0
+          });
+        }
+      }
+      
       setOrders(res.data.data || []);
     } catch (err) {
+      console.error('❌ Lỗi fetch orders:', err);
     } finally {
       setLoading(false);
     }
@@ -115,14 +134,24 @@ const OrderTrackingScreen = () => {
           </Text>
           {item.items.map((product, idx) => (
             <View key={idx} style={styles.productRow}>
-              {product.id_product?.images?.length > 0 ? (
-                <Image
-                  source={{ uri: product.id_product.images[0] }}
-                  style={styles.productThumb}
-                />
-              ) : (
-                <View style={[styles.productThumb, { backgroundColor: '#eee' }]} />
-              )}
+              {(() => {
+                const imageUri = (product.id_product?.images && product.id_product.images.length > 0 && product.id_product.images[0]) ||
+                                product.id_product?.image;
+                
+                return imageUri ? (
+                  <Image
+                    source={{ uri: imageUri }}
+                    style={styles.productThumb}
+                    onError={(error) => {
+                      console.log('❌ Lỗi load ảnh sản phẩm:', error.nativeEvent.error);
+                    }}
+                  />
+                ) : (
+                  <View style={[styles.productThumb, { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' }]}>
+                    <Icon name="image-outline" size={16} color="#9ca3af" />
+                  </View>
+                );
+              })()}
               <View style={{ flex: 1 }}>
                 <Text numberOfLines={2} style={styles.productName}>
                   {product.name} x{product.purchaseQuantity}
