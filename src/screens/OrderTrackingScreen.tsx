@@ -60,14 +60,14 @@ const OrderTrackingScreen = () => {
       } else {
         setLoading(true);
       }
-      
+
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
         console.log('❌ Không tìm thấy userId');
         setOrders([]);
         return;
       }
-      
+
       socket.emit('join notification room', `notification_${userId}`);
 
       const res = await API.get(`/orders/user/${userId}`);
@@ -75,7 +75,7 @@ const OrderTrackingScreen = () => {
       if (res.data.data && res.data.data.length > 0) {
         console.log('📦 Danh sách trạng thái:', res.data.data.map((order: OrderItem) => order.status));
       }
-      
+
       // Debug: Kiểm tra cấu trúc dữ liệu sản phẩm
       if (res.data.data && res.data.data.length > 0) {
         const firstOrder = res.data.data[0];
@@ -84,22 +84,22 @@ const OrderTrackingScreen = () => {
           status: firstOrder.status,
           itemsCount: firstOrder.items?.length || 0
         });
-        
-                 if (firstOrder.items && firstOrder.items.length > 0) {
-           const firstProduct = firstOrder.items[0];
-           console.log('🔍 Cấu trúc sản phẩm đầu tiên:', {
-             productName: firstProduct.name,
-             id_product: firstProduct.id_product,
-             directImages: firstProduct.images,
-             directImage: firstProduct.image,
-             idProductImages: firstProduct.id_product?.images,
-             idProductImage: firstProduct.id_product?.image,
-             hasDirectImages: firstProduct.images?.length > 0,
-             hasIdProductImages: firstProduct.id_product?.images?.length > 0
-           });
-         }
+
+        if (firstOrder.items && firstOrder.items.length > 0) {
+          const firstProduct = firstOrder.items[0];
+          console.log('🔍 Cấu trúc sản phẩm đầu tiên:', {
+            productName: firstProduct.name,
+            id_product: firstProduct.id_product,
+            directImages: firstProduct.images,
+            directImage: firstProduct.image,
+            idProductImages: firstProduct.id_product?.images,
+            idProductImage: firstProduct.id_product?.image,
+            hasDirectImages: firstProduct.images?.length > 0,
+            hasIdProductImages: firstProduct.id_product?.images?.length > 0
+          });
+        }
       }
-      
+
       if (!res.data.data) {
         console.log('❌ Không có dữ liệu đơn hàng');
         setOrders([]);
@@ -164,61 +164,61 @@ const OrderTrackingScreen = () => {
     return (
       <Pressable onPress={() => setSelectedOrder(item)} style={styles.orderBox}>
         <View style={{ flex: 1 }}>
-                     <View style={styles.orderHeader}>
-             <Text style={styles.bold}>
-               Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
-             </Text>
-             <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-               {translateStatus(item.status)}
-             </Text>
-           </View>
-                     {item.items.map((product, idx) => (
-             <View key={idx} style={styles.productRow}>
-               {(() => {
-                 // Ưu tiên lấy ảnh từ images array trực tiếp, sau đó từ id_product.images, cuối cùng từ image field
-                 const imageUri = (product.images && product.images.length > 0 && product.images[0]) ||
-                                 (product.id_product?.images && product.id_product.images.length > 0 && product.id_product.images[0]) ||
-                                 product.image ||
-                                 product.id_product?.image;
-                 
-                 console.log('🖼️ Ảnh sản phẩm:', {
-                   productName: product.name,
-                   directImages: product.images,
-                   idProductImages: product.id_product?.images,
-                   directImage: product.image,
-                   idProductImage: product.id_product?.image,
-                   finalImageUri: imageUri
-                 });
-                 
-                 return imageUri ? (
-                   <Image
-                     source={{ uri: imageUri }}
-                     style={styles.productThumb}
-                     resizeMode="cover"
-                     onError={(error) => {
-                       console.log('❌ Lỗi load ảnh sản phẩm:', error.nativeEvent.error);
-                     }}
-                     onLoad={() => {
-                       console.log('✅ Load ảnh thành công:', imageUri);
-                     }}
-                   />
-                 ) : (
-                   <View style={[styles.productThumb, { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' }]}>
-                     <Icon name="image-outline" size={16} color="#9ca3af" />
-                   </View>
-                 );
-               })()}
-                             <View style={{ flex: 1 }}>
-                 <Text numberOfLines={2} style={styles.productName}>
-                   {product.name}
-                 </Text>
-                 <Text style={styles.productQuantity}>
-                   Số lượng: {product.purchaseQuantity}
-                 </Text>
-                 <Text style={styles.productPrice}>
-                   {product.price.toLocaleString('vi-VN')}đ
-                 </Text>
-               </View>
+          <View style={styles.orderHeader}>
+            <Text style={styles.bold}>
+              Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
+            </Text>
+            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+              {translateStatus(item.status)}
+            </Text>
+          </View>
+          {item.items.map((product, idx) => (
+            <View key={idx} style={styles.productRow}>
+              {(() => {
+                // Ưu tiên lấy ảnh từ images array trực tiếp, sau đó từ id_product.images, cuối cùng từ image field
+                const imageUri = (product.images && product.images.length > 0 && product.images[0]) ||
+                  (product.id_product?.images && product.id_product.images.length > 0 && product.id_product.images[0]) ||
+                  product.image ||
+                  product.id_product?.image;
+
+                console.log('🖼️ Ảnh sản phẩm:', {
+                  productName: product.name,
+                  directImages: product.images,
+                  idProductImages: product.id_product?.images,
+                  directImage: product.image,
+                  idProductImage: product.id_product?.image,
+                  finalImageUri: imageUri
+                });
+
+                return imageUri ? (
+                  <Image
+                    source={{ uri: imageUri }}
+                    style={styles.productThumb}
+                    resizeMode="cover"
+                    onError={(error) => {
+                      console.log('❌ Lỗi load ảnh sản phẩm:', error.nativeEvent.error);
+                    }}
+                    onLoad={() => {
+                      console.log('✅ Load ảnh thành công:', imageUri);
+                    }}
+                  />
+                ) : (
+                  <View style={[styles.productThumb, { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' }]}>
+                    <Icon name="image-outline" size={16} color="#9ca3af" />
+                  </View>
+                );
+              })()}
+              <View style={{ flex: 1 }}>
+                <Text numberOfLines={2} style={styles.productName}>
+                  {product.name}
+                </Text>
+                <Text style={styles.productQuantity}>
+                  Số lượng: {product.purchaseQuantity}
+                </Text>
+                <Text style={styles.productPrice}>
+                  {product.price.toLocaleString('vi-VN')}đ
+                </Text>
+              </View>
             </View>
           ))}
           <Text style={styles.totalText}>
@@ -264,6 +264,25 @@ const OrderTrackingScreen = () => {
               <Text style={{ color: '#fff' }}>Trả hàng</Text>
             </Pressable>
           )}
+
+          {item.status === 'shipped' && (
+            <Pressable
+              onPress={() =>
+                Alert.alert(
+                  'Xác nhận đã nhận hàng',
+                  'Bạn đã nhận đơn hàng này?',
+                  [
+                    { text: 'Không', style: 'cancel' },
+                    { text: 'Đã nhận hàng', onPress: () => handleConfirmDelivered(item._id) },
+                  ]
+                )
+              }
+              style={[styles.actionBtn, { backgroundColor: '#3b82f6' }]}
+            >
+              <Text style={{ color: '#fff' }}>Đã nhận hàng</Text>
+            </Pressable>
+          )}
+
 
         </View>
       </Pressable>
@@ -335,6 +354,20 @@ const OrderTrackingScreen = () => {
     }
   };
 
+  const handleConfirmDelivered = async (orderId: string) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await API.put(`/orders/${orderId}/status`, { status: 'delivered' }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      Alert.alert("Thành công", "Bạn đã xác nhận đã nhận hàng");
+      fetchOrders(); // refresh lại danh sách
+    } catch (error) {
+      console.log("Lỗi xác nhận đơn hàng:", error);
+      Alert.alert("Lỗi", "Không thể cập nhật trạng thái");
+    }
+  };
+
   if (loading) return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <ActivityIndicator size="large" color="#f59e0b" />
@@ -345,7 +378,7 @@ const OrderTrackingScreen = () => {
   const filteredOrders = activeTab === 'all'
     ? orders
     : orders.filter((order) => order.status === activeTab);
-    
+
   console.log('🔍 Tab hiện tại:', activeTab, 'Số đơn hàng:', filteredOrders.length);
 
   return (
@@ -395,8 +428,8 @@ const OrderTrackingScreen = () => {
         ListEmptyComponent={
           <View style={{ alignItems: 'center', marginTop: 24, paddingHorizontal: 20 }}>
             <Text style={{ textAlign: 'center', fontSize: 16, color: '#6b7280' }}>
-              {activeTab === 'all' 
-                ? 'Không có đơn hàng nào.' 
+              {activeTab === 'all'
+                ? 'Không có đơn hàng nào.'
                 : `Không có đơn hàng nào ở trạng thái "${statusTabs.find(tab => tab.key === activeTab)?.label}".`
               }
             </Text>
@@ -470,7 +503,7 @@ const statusTabs = [
   { key: 'waiting', label: 'Chờ xử lý' },
   // { key: 'pending', label: 'Chờ xác nhận' },
   { key: 'confirmed', label: 'Đã xác nhận' },
-  { key: 'paid', label: 'Đã thanh toán' },
+  // { key: 'paid', label: 'Đã thanh toán' },
   { key: 'shipped', label: 'Đang giao hàng' },
   { key: 'delivered', label: 'Đã nhận hàng' },
   { key: 'returned', label: 'Trả hàng' },

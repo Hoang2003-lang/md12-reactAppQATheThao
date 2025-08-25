@@ -182,10 +182,6 @@ const CheckVnPayMent = () => {
       
       console.log("✅ Đã xóa toàn bộ giỏ hàng thành công");
     } catch (error: any) {
-      console.error("❌ Lỗi khi xóa giỏ hàng:", {
-        message: error.message,
-        response: error.response?.data
-      });
     }
   };
 
@@ -238,7 +234,7 @@ const CheckVnPayMent = () => {
         if (orderResponse.data?.success) {
           const order = orderResponse.data.data;
           
-          if (order.status === 'paid' && order.paymentStatus === 'completed') {
+          if (order.paymentStatus === 'completed') {
             setPaymentResult({
               status: 'success',
               title: 'Thanh toán thành công',
@@ -252,7 +248,7 @@ const CheckVnPayMent = () => {
             
                          // Xóa toàn bộ giỏ hàng khi thanh toán thành công
              await clearEntireCart();
-          } else if (order.status === 'payment_failed' || order.paymentStatus === 'failed') {
+          } else if (order.paymentStatus === 'failed') {
             setPaymentResult({
               status: 'error',
               title: 'Thanh toán thất bại',

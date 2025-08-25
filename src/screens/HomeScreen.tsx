@@ -104,7 +104,6 @@ const HomeScreen = ({ navigation }: any) => {
       if (err.response?.status === 404) {
         setCartCount(0);
       } else {
-        console.error('Lỗi lấy giỏ hàng:', err);
         setCartCount(0);
       }
     }
