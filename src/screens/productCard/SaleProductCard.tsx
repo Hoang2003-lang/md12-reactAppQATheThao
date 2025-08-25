@@ -7,6 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const SaleProductCard = ({ item, navigation }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
@@ -25,6 +26,9 @@ const SaleProductCard = ({ item, navigation }: any) => {
     }).start();
   };
 
+  // Lấy rating (nếu không có thì mặc định 0)
+  const rating = item.averageRating || 0;
+
   return (
     <Pressable
       onPress={() =>
@@ -38,7 +42,7 @@ const SaleProductCard = ({ item, navigation }: any) => {
         {/* Ảnh sản phẩm */}
         <View style={styles.imageWrapper}>
           <Image
-            source={{ uri: item.images[0] }}
+            source={{ uri: item.images?.[0] }}
             style={styles.image}
           />
 
@@ -61,14 +65,33 @@ const SaleProductCard = ({ item, navigation }: any) => {
           {item.name}
         </Text>
 
-        {/* Giá */}
+        {/* Giá + đã bán */}
         <View style={styles.priceContainer}>
-          <Text style={styles.discountPrice}>
-            {item.discount_price.toLocaleString()} đ
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.discountPrice}>
+              {item.discount_price.toLocaleString()} đ
+            </Text>
+            <Text style={styles.originalPrice}>
+              {item.price.toLocaleString()} đ
+            </Text>
+          </View>
+          <Text style={styles.sold}>
+            Đã bán {item.sold || 0}
           </Text>
-          <Text style={styles.originalPrice}>
-            {item.price.toLocaleString()} đ
-          </Text>
+        </View>
+
+        {/* Đánh giá sao */}
+        <View style={styles.ratingContainer}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Ionicons
+              key={index}
+              name={index < Math.round(rating) ? 'star' : 'star-outline'}
+              size={14}
+              color="#FFD700"
+              style={{ marginRight: 2 }}
+            />
+          ))}
+          <Text style={styles.ratingText}>({rating.toFixed(1)})</Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -77,7 +100,7 @@ const SaleProductCard = ({ item, navigation }: any) => {
 
 const styles = StyleSheet.create({
   card: {
-    width: "100%",   // chiếm toàn bộ gridItem
+    width: "100%",
     backgroundColor: "#fff",
     borderRadius: 8,
     overflow: "hidden",
@@ -89,7 +112,7 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 230,
-    resizeMode: 'cover', // ảnh phủ hết
+    resizeMode: 'cover',
   },
   discountBadge: {
     position: 'absolute',
@@ -114,9 +137,9 @@ const styles = StyleSheet.create({
   },
   priceContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginHorizontal: 6,
-    marginBottom: 8,
     marginTop: 6,
   },
   discountPrice: {
@@ -129,6 +152,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
     textDecorationLine: 'line-through',
+  },
+  sold: {
+    fontSize: 12,
+    color: '#666',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 6,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
   },
 });
 
