@@ -24,7 +24,7 @@ import { fetchCategories } from '../services/CategoryServices';
 
 const { width } = Dimensions.get('window');
 
-const CARD_WIDTH = width / 2;
+const CARD_WIDTH = (width - 30) / 2;
 
 const HomeScreen = ({ navigation }: any) => {
   const scrollRef = useRef<ScrollView>(null);
@@ -92,7 +92,7 @@ const HomeScreen = ({ navigation }: any) => {
         setCartCount(0); //Reset về 0 nếu không có user
         return;
       }
-  
+
       const res = await API.get(`/carts/${userId}`);
       const items = res.data?.data?.items || [];
       const totalQuantity = items.reduce(
@@ -110,23 +110,23 @@ const HomeScreen = ({ navigation }: any) => {
     }
   };
 
-  
-const loadUnreadNotifications = async () => {
-  try {
-    const userId = await AsyncStorage.getItem('userId');
-    if (!userId) {
-      setUnreadCount(0); //Reset khi không có user
-      return;
-    }
 
-    const res = await API.get(`/notifications/unread-count/${userId}`);
-    const count = res.data?.data || 0;
-    setUnreadCount(count);
-  } catch (error) {
-    setUnreadCount(0); //Reset khi lỗi
-    console.error("Lỗi khi lấy thông báo chưa đọc:", error);
-  }
-};
+  const loadUnreadNotifications = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        setUnreadCount(0); //Reset khi không có user
+        return;
+      }
+
+      const res = await API.get(`/notifications/unread-count/${userId}`);
+      const count = res.data?.data || 0;
+      setUnreadCount(count);
+    } catch (error) {
+      setUnreadCount(0); //Reset khi lỗi
+      console.error("Lỗi khi lấy thông báo chưa đọc:", error);
+    }
+  };
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -227,7 +227,7 @@ const loadUnreadNotifications = async () => {
         <View style={{ marginTop: 10 }}>
           <Text style={styles.sectionTitle}>Khuyến mãi</Text>
           <FlatList
-            data={saleProducts.slice(0, 4)}
+            data={saleProducts}
             keyExtractor={(item, index) => item._id || `sale-${index}`}
             numColumns={2} // 👈 2 cột
             columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 10 }}
@@ -240,11 +240,14 @@ const loadUnreadNotifications = async () => {
           />
         </View>
 
-        <Section title="Tất cả sản phẩm">
+        <View style={{ marginTop: 10 }}>
+          <Text style={styles.sectionTitle}>Tất cả sản phẩm</Text>
           <FlatList
             data={products}
             keyExtractor={(item, index) => item._id || `product-${index}`}
             numColumns={2} // 👈 chia 2 cột
+            columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 10 }}
+
             renderItem={({ item }) => (
               <View style={styles.gridItem}>
                 <ProductCard item={item} navigation={navigation} />
@@ -252,32 +255,32 @@ const loadUnreadNotifications = async () => {
             )}
             scrollEnabled={false}
           />
-
-        </Section>
-
+        </View>
 
 
-        {/* Danh mục */}
-        <Section title="Danh mục">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.categoryRow}>
-              {categories.map((cat, index) => (
-                <TouchableOpacity 
-                  key={cat.code || `cat-${index}`}
-                  style={styles.categoryItem}
-                  onPress={() =>
-                    navigation.navigate('Category', {
-                      code: cat.code,
-                      title: cat.name
-                    })
-                  }
-                >
-                  <Image source={{ uri: cat.image }} style={styles.categoryImage} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        </Section>
+
+          {/* Danh mục */}
+        <View style={{ marginTop: 10 }}>
+          <Text style={styles.sectionTitle}>Danh mục sản phẩm</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.categoryRow}>
+                {categories.map((cat, index) => (
+                  <TouchableOpacity
+                    key={cat.code || `cat-${index}`}
+                    style={styles.categoryItem}
+                    onPress={() =>
+                      navigation.navigate('Category', {
+                        code: cat.code,
+                        title: cat.name
+                      })
+                    }
+                  >
+                    <Image source={{ uri: cat.image }} style={styles.categoryImage} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
       </ScrollView>
     </View>
   );
@@ -320,9 +323,9 @@ const styles = StyleSheet.create({
   },
 
   bannerContainer: {
-    width: width - 20,       
+    width: width - 20,
     height: width * 0.5,
-    marginHorizontal: 10,    
+    marginHorizontal: 10,
     borderRadius: 12,
     overflow: 'hidden',
   },
