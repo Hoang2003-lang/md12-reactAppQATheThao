@@ -43,16 +43,64 @@ interface OrderItem {
   }[];
 }
 
+// Interface mới cho ProductItem để hiển thị riêng biệt
+interface ProductItem {
+  orderId: string;
+  orderCode: string;
+  orderStatus: string;
+  orderCreatedAt: string;
+  orderPaymentMethod: string;
+  orderShippingAddress: string;
+  orderFinalTotal: number;
+  productName: string;
+  purchaseQuantity: number;
+  price: number;
+  images?: string[];
+  image?: string;
+  id_product?: {
+    images?: any;
+    image?: string;
+  };
+}
 
 
 const OrderTrackingScreen = () => {
   const navigation = useNavigation();
   const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [productItems, setProductItems] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<string>('all');
+  
+  // Hàm chuyển đổi orders thành productItems
+  const convertOrdersToProductItems = useCallback((ordersData: OrderItem[]): ProductItem[] => {
+    const items: ProductItem[] = [];
+    
+    ordersData.forEach(order => {
+      order.items.forEach(product => {
+        items.push({
+          orderId: order._id,
+          orderCode: order.order_code,
+          orderStatus: order.status,
+          orderCreatedAt: order.createdAt,
+          orderPaymentMethod: order.paymentMethod,
+          orderShippingAddress: order.shippingAddress,
+          orderFinalTotal: order.finalTotal,
+          productName: product.name,
+          purchaseQuantity: product.purchaseQuantity,
+          price: product.price,
+          images: product.images,
+          image: product.image,
+          id_product: product.id_product,
+        });
+      });
+    });
+    
+    return items;
+  }, []);
+
   const fetchOrders = useCallback(async (isRefreshing = false) => {
     try {
       if (isRefreshing) {
@@ -103,13 +151,19 @@ const OrderTrackingScreen = () => {
       if (!res.data.data) {
         console.log('❌ Không có dữ liệu đơn hàng');
         setOrders([]);
+        setProductItems([]);
       } else {
         console.log('✅ Có', res.data.data.length, 'đơn hàng');
         setOrders(res.data.data);
+        // Chuyển đổi orders thành productItems
+        const items = convertOrdersToProductItems(res.data.data);
+        setProductItems(items);
+        console.log('📦 Có', items.length, 'sản phẩm được hiển thị');
       }
     } catch (err) {
       console.error('❌ Lỗi fetch orders:', err);
       setOrders([]);
+      setProductItems([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -130,11 +184,15 @@ const OrderTrackingScreen = () => {
       // Đón sự kiện từ server
       socket.on('orderStatusUpdated', ({ orderId, status }) => {
         console.log('🔄 Cập nhật trạng thái đơn hàng:', orderId, '->', status);
-        setOrders((prevOrders) =>
-          prevOrders.map((order) =>
+        setOrders((prevOrders) => {
+          const updatedOrders = prevOrders.map((order) =>
             order._id === orderId ? { ...order, status } : order
-          )
-        );
+          );
+          // Cập nhật productItems khi orders thay đổi
+          const updatedItems = convertOrdersToProductItems(updatedOrders);
+          setProductItems(updatedItems);
+          return updatedOrders;
+        });
       });
     };
 
@@ -160,72 +218,76 @@ const OrderTrackingScreen = () => {
 
 
 
-  const renderItem = ({ item }: { item: OrderItem }) => {
+  const renderItem = ({ item }: { item: ProductItem }) => {
+    // Tìm order tương ứng để hiển thị trong modal
+    const order = orders.find(order => order._id === item.orderId);
+    
     return (
-      <Pressable onPress={() => setSelectedOrder(item)} style={styles.orderBox}>
+      <Pressable onPress={() => order && setSelectedOrder(order)} style={styles.orderBox}>
         <View style={{ flex: 1 }}>
           <View style={styles.orderHeader}>
             <Text style={styles.bold}>
-              Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
+              Mã đơn: #{item.orderCode || item.orderId.slice(-6).toUpperCase()}
             </Text>
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-              {translateStatus(item.status)}
+            <Text style={[styles.statusText, { color: getStatusColor(item.orderStatus) }]}>
+              {translateStatus(item.orderStatus)}
             </Text>
           </View>
-          {item.items.map((product, idx) => (
-            <View key={idx} style={styles.productRow}>
-              {(() => {
-                // Ưu tiên lấy ảnh từ images array trực tiếp, sau đó từ id_product.images, cuối cùng từ image field
-                const imageUri = (product.images && product.images.length > 0 && product.images[0]) ||
-                  (product.id_product?.images && product.id_product.images.length > 0 && product.id_product.images[0]) ||
-                  product.image ||
-                  product.id_product?.image;
+          
+          {/* Hiển thị sản phẩm */}
+          <View style={styles.productRow}>
+            {(() => {
+              // Ưu tiên lấy ảnh từ images array trực tiếp, sau đó từ id_product.images, cuối cùng từ image field
+              const imageUri = (item.images && item.images.length > 0 && item.images[0]) ||
+                (item.id_product?.images && item.id_product.images.length > 0 && item.id_product.images[0]) ||
+                item.image ||
+                item.id_product?.image;
 
-                console.log('🖼️ Ảnh sản phẩm:', {
-                  productName: product.name,
-                  directImages: product.images,
-                  idProductImages: product.id_product?.images,
-                  directImage: product.image,
-                  idProductImage: product.id_product?.image,
-                  finalImageUri: imageUri
-                });
+              console.log('🖼️ Ảnh sản phẩm:', {
+                productName: item.productName,
+                directImages: item.images,
+                idProductImages: item.id_product?.images,
+                directImage: item.image,
+                idProductImage: item.id_product?.image,
+                finalImageUri: imageUri
+              });
 
-                return imageUri ? (
-                  <Image
-                    source={{ uri: imageUri }}
-                    style={styles.productThumb}
-                    resizeMode="cover"
-                    onError={(error) => {
-                      console.log('❌ Lỗi load ảnh sản phẩm:', error.nativeEvent.error);
-                    }}
-                    onLoad={() => {
-                      console.log('✅ Load ảnh thành công:', imageUri);
-                    }}
-                  />
-                ) : (
-                  <View style={[styles.productThumb, { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' }]}>
-                    <Icon name="image-outline" size={16} color="#9ca3af" />
-                  </View>
-                );
-              })()}
-              <View style={{ flex: 1 }}>
-                <Text numberOfLines={2} style={styles.productName}>
-                  {product.name}
-                </Text>
-                <Text style={styles.productQuantity}>
-                  Số lượng: {product.purchaseQuantity}
-                </Text>
-                <Text style={styles.productPrice}>
-                  {product.price.toLocaleString('vi-VN')}đ
-                </Text>
-              </View>
+              return imageUri ? (
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.productThumb}
+                  resizeMode="cover"
+                  onError={(error) => {
+                    console.log('❌ Lỗi load ảnh sản phẩm:', error.nativeEvent.error);
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Load ảnh thành công:', imageUri);
+                  }}
+                />
+              ) : (
+                <View style={[styles.productThumb, { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' }]}>
+                  <Icon name="image-outline" size={16} color="#9ca3af" />
+                </View>
+              );
+            })()}
+            <View style={{ flex: 1 }}>
+              <Text numberOfLines={2} style={styles.productName}>
+                {item.productName}
+              </Text>
+              <Text style={styles.productQuantity}>
+                Số lượng: {item.purchaseQuantity}
+              </Text>
+              <Text style={styles.productPrice}>
+                {item.price.toLocaleString('vi-VN')}đ
+              </Text>
             </View>
-          ))}
+          </View>
+          
           <Text style={styles.totalText}>
-            Tổng thanh toán: {item.finalTotal.toLocaleString('vi-VN')}đ
+            Tổng thanh toán: {item.orderFinalTotal.toLocaleString('vi-VN')}đ
           </Text>
 
-          {['waiting', 'pending'].includes(item.status) ? (
+          {['waiting', 'pending'].includes(item.orderStatus) ? (
             <Pressable
               onPress={() =>
                 Alert.alert(
@@ -233,7 +295,7 @@ const OrderTrackingScreen = () => {
                   'Bạn có muốn huỷ đơn hàng này không?',
                   [
                     { text: 'Không', style: 'cancel' },
-                    { text: 'Huỷ đơn', style: 'destructive', onPress: () => handleCancelOrder(item._id) },
+                    { text: 'Huỷ đơn', style: 'destructive', onPress: () => handleCancelOrder(item.orderId) },
                   ]
                 )
               }
@@ -247,7 +309,7 @@ const OrderTrackingScreen = () => {
             </View>
           )}
 
-          {item.status === 'delivered' && (
+          {item.orderStatus === 'delivered' && (
             <Pressable
               onPress={() =>
                 Alert.alert(
@@ -255,7 +317,7 @@ const OrderTrackingScreen = () => {
                   'Bạn có muốn trả lại đơn hàng này không?',
                   [
                     { text: 'Không', style: 'cancel' },
-                    { text: 'Trả hàng', onPress: () => handleReturnOrder(item._id) },
+                    { text: 'Trả hàng', onPress: () => handleReturnOrder(item.orderId) },
                   ]
                 )
               }
@@ -265,7 +327,7 @@ const OrderTrackingScreen = () => {
             </Pressable>
           )}
 
-          {item.status === 'shipped' && (
+          {item.orderStatus === 'shipped' && (
             <Pressable
               onPress={() =>
                 Alert.alert(
@@ -273,7 +335,7 @@ const OrderTrackingScreen = () => {
                   'Bạn đã nhận đơn hàng này?',
                   [
                     { text: 'Không', style: 'cancel' },
-                    { text: 'Đã nhận hàng', onPress: () => handleConfirmDelivered(item._id) },
+                    { text: 'Đã nhận hàng', onPress: () => handleConfirmDelivered(item.orderId) },
                   ]
                 )
               }
@@ -282,7 +344,6 @@ const OrderTrackingScreen = () => {
               <Text style={{ color: '#fff' }}>Đã nhận hàng</Text>
             </Pressable>
           )}
-
 
         </View>
       </Pressable>
@@ -335,7 +396,15 @@ const OrderTrackingScreen = () => {
       await API.put(`orders/${orderId}/status`, { status: 'cancelled' });
       Alert.alert('Đơn hàng đã được huỷ');
       setSelectedOrder(null);
-      fetchOrders(true); // Refresh data
+      // Cập nhật trạng thái trong orders và productItems
+      setOrders(prevOrders => {
+        const updatedOrders = prevOrders.map(order => 
+          order._id === orderId ? { ...order, status: 'cancelled' } : order
+        );
+        const updatedItems = convertOrdersToProductItems(updatedOrders);
+        setProductItems(updatedItems);
+        return updatedOrders;
+      });
     } catch (err) {
       console.error('Cancel error:', err);
       Alert.alert('Huỷ đơn thất bại');
@@ -347,7 +416,15 @@ const OrderTrackingScreen = () => {
       await API.put(`orders/${orderId}/status`, { status: 'returned' });
       Alert.alert('Trả hàng thành công');
       setSelectedOrder(null);
-      fetchOrders(true); // Refresh data
+      // Cập nhật trạng thái trong orders và productItems
+      setOrders(prevOrders => {
+        const updatedOrders = prevOrders.map(order => 
+          order._id === orderId ? { ...order, status: 'returned' } : order
+        );
+        const updatedItems = convertOrdersToProductItems(updatedOrders);
+        setProductItems(updatedItems);
+        return updatedOrders;
+      });
     } catch (err) {
       console.error('Return error:', err);
       Alert.alert('Trả hàng thất bại');
@@ -361,7 +438,15 @@ const OrderTrackingScreen = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       Alert.alert("Thành công", "Bạn đã xác nhận đã nhận hàng");
-      fetchOrders(); // refresh lại danh sách
+      // Cập nhật trạng thái trong orders và productItems
+      setOrders(prevOrders => {
+        const updatedOrders = prevOrders.map(order => 
+          order._id === orderId ? { ...order, status: 'delivered' } : order
+        );
+        const updatedItems = convertOrdersToProductItems(updatedOrders);
+        setProductItems(updatedItems);
+        return updatedOrders;
+      });
     } catch (error) {
       console.log("Lỗi xác nhận đơn hàng:", error);
       Alert.alert("Lỗi", "Không thể cập nhật trạng thái");
@@ -376,10 +461,10 @@ const OrderTrackingScreen = () => {
   );
 
   const filteredOrders = activeTab === 'all'
-    ? orders
-    : orders.filter((order) => order.status === activeTab);
+    ? productItems
+    : productItems.filter((item) => item.orderStatus === activeTab);
 
-  console.log('🔍 Tab hiện tại:', activeTab, 'Số đơn hàng:', filteredOrders.length);
+  console.log('🔍 Tab hiện tại:', activeTab, 'Số sản phẩm:', filteredOrders.length);
 
   return (
     <View style={styles.container}>
@@ -415,7 +500,7 @@ const OrderTrackingScreen = () => {
       <FlatList
         data={filteredOrders}
         removeClippedSubviews={false}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) => `${item.orderId}_${item.productName}`}
         renderItem={renderItem}
         refreshControl={
           <RefreshControl
@@ -429,8 +514,8 @@ const OrderTrackingScreen = () => {
           <View style={{ alignItems: 'center', marginTop: 24, paddingHorizontal: 20 }}>
             <Text style={{ textAlign: 'center', fontSize: 16, color: '#6b7280' }}>
               {activeTab === 'all'
-                ? 'Không có đơn hàng nào.'
-                : `Không có đơn hàng nào ở trạng thái "${statusTabs.find(tab => tab.key === activeTab)?.label}".`
+                ? 'Không có sản phẩm nào.'
+                : `Không có sản phẩm nào ở trạng thái "${statusTabs.find(tab => tab.key === activeTab)?.label}".`
               }
             </Text>
             <Text style={{ textAlign: 'center', fontSize: 14, color: '#9ca3af', marginTop: 8 }}>
