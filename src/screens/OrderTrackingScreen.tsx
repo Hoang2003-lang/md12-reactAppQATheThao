@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,11 @@ import {
   Pressable,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -31,13 +31,14 @@ interface OrderItem {
   paymentMethod: string;
   shippingAddress: string;
   items: {
-    id_product: {
-      images: any;
-      image: string;
+    id_product?: {
+      images?: any;
+      image?: string;
     };
     name: string;
     purchaseQuantity: number;
     price: number;
+    images?: string[]; // Thêm field images trực tiếp
     image?: string; // Thêm field image tùy chọn
   }[];
 }
@@ -48,41 +49,72 @@ const OrderTrackingScreen = () => {
   const navigation = useNavigation();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const isFocused = useIsFocused();
-  const [activeTab, setActiveTab] = useState<string>('waiting');
-  const fetchOrders = async () => {
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const fetchOrders = useCallback(async (isRefreshing = false) => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
-      if (userId) {
-        socket.emit('join notification room', `notification_${userId}`); // 👈 thêm prefix
+      if (isRefreshing) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
       }
+      
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        console.log('❌ Không tìm thấy userId');
+        setOrders([]);
+        return;
+      }
+      
+      socket.emit('join notification room', `notification_${userId}`);
 
       const res = await API.get(`/orders/user/${userId}`);
-      console.log('📦 Dữ liệu đơn hàng:', JSON.stringify(res.data.data, null, 2));
+      console.log('📦 Số lượng đơn hàng:', res.data.data?.length || 0);
+      if (res.data.data && res.data.data.length > 0) {
+        console.log('📦 Danh sách trạng thái:', res.data.data.map((order: OrderItem) => order.status));
+      }
       
       // Debug: Kiểm tra cấu trúc dữ liệu sản phẩm
       if (res.data.data && res.data.data.length > 0) {
         const firstOrder = res.data.data[0];
-        if (firstOrder.items && firstOrder.items.length > 0) {
-          const firstProduct = firstOrder.items[0];
-          console.log('🔍 Cấu trúc sản phẩm đầu tiên:', {
-            productName: firstProduct.name,
-            id_product: firstProduct.id_product,
-            images: firstProduct.id_product?.images,
-            image: firstProduct.id_product?.image,
-            hasImages: firstProduct.id_product?.images?.length > 0
-          });
-        }
+        console.log('🔍 Đơn hàng đầu tiên:', {
+          orderCode: firstOrder.order_code,
+          status: firstOrder.status,
+          itemsCount: firstOrder.items?.length || 0
+        });
+        
+                 if (firstOrder.items && firstOrder.items.length > 0) {
+           const firstProduct = firstOrder.items[0];
+           console.log('🔍 Cấu trúc sản phẩm đầu tiên:', {
+             productName: firstProduct.name,
+             id_product: firstProduct.id_product,
+             directImages: firstProduct.images,
+             directImage: firstProduct.image,
+             idProductImages: firstProduct.id_product?.images,
+             idProductImage: firstProduct.id_product?.image,
+             hasDirectImages: firstProduct.images?.length > 0,
+             hasIdProductImages: firstProduct.id_product?.images?.length > 0
+           });
+         }
       }
       
-      setOrders(res.data.data || []);
+      if (!res.data.data) {
+        console.log('❌ Không có dữ liệu đơn hàng');
+        setOrders([]);
+      } else {
+        console.log('✅ Có', res.data.data.length, 'đơn hàng');
+        setOrders(res.data.data);
+      }
     } catch (err) {
       console.error('❌ Lỗi fetch orders:', err);
+      setOrders([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchOrders();
@@ -91,12 +123,13 @@ const OrderTrackingScreen = () => {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) return;
 
-      console.log('Joining socket room:', userId);
+      console.log('🔌 Joining socket room:', userId);
       // Join đúng phòng
       socket.emit('join order room', userId);
 
       // Đón sự kiện từ server
       socket.on('orderStatusUpdated', ({ orderId, status }) => {
+        console.log('🔄 Cập nhật trạng thái đơn hàng:', orderId, '->', status);
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order._id === orderId ? { ...order, status } : order
@@ -106,7 +139,7 @@ const OrderTrackingScreen = () => {
     };
 
     setupSocket();
-    fetchOrders(); // có thể tách riêng nếu muốn load khi `isFocused`
+    fetchOrders(); // Load data khi component mount
 
     return () => {
       socket.off('orderStatusUpdated');
@@ -116,10 +149,12 @@ const OrderTrackingScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
+      console.log('🔄 Màn hình được focus - Refresh data');
+      fetchOrders(); // Gọi lại API khi màn hình được focus
       return () => {
         setSelectedOrder(null); // đóng modal nếu còn
       };
-    }, [])
+    }, [fetchOrders])
   );
 
 
@@ -129,37 +164,61 @@ const OrderTrackingScreen = () => {
     return (
       <Pressable onPress={() => setSelectedOrder(item)} style={styles.orderBox}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.bold}>
-            Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
-          </Text>
-          {item.items.map((product, idx) => (
-            <View key={idx} style={styles.productRow}>
-              {(() => {
-                const imageUri = (product.id_product?.images && product.id_product.images.length > 0 && product.id_product.images[0]) ||
-                                product.id_product?.image;
-                
-                return imageUri ? (
-                  <Image
-                    source={{ uri: imageUri }}
-                    style={styles.productThumb}
-                    onError={(error) => {
-                      console.log('❌ Lỗi load ảnh sản phẩm:', error.nativeEvent.error);
-                    }}
-                  />
-                ) : (
-                  <View style={[styles.productThumb, { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' }]}>
-                    <Icon name="image-outline" size={16} color="#9ca3af" />
-                  </View>
-                );
-              })()}
-              <View style={{ flex: 1 }}>
-                <Text numberOfLines={2} style={styles.productName}>
-                  {product.name} x{product.purchaseQuantity}
-                </Text>
-                <Text style={styles.productPrice}>
-                  {product.price.toLocaleString('vi-VN')}đ
-                </Text>
-              </View>
+                     <View style={styles.orderHeader}>
+             <Text style={styles.bold}>
+               Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
+             </Text>
+             <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+               {translateStatus(item.status)}
+             </Text>
+           </View>
+                     {item.items.map((product, idx) => (
+             <View key={idx} style={styles.productRow}>
+               {(() => {
+                 // Ưu tiên lấy ảnh từ images array trực tiếp, sau đó từ id_product.images, cuối cùng từ image field
+                 const imageUri = (product.images && product.images.length > 0 && product.images[0]) ||
+                                 (product.id_product?.images && product.id_product.images.length > 0 && product.id_product.images[0]) ||
+                                 product.image ||
+                                 product.id_product?.image;
+                 
+                 console.log('🖼️ Ảnh sản phẩm:', {
+                   productName: product.name,
+                   directImages: product.images,
+                   idProductImages: product.id_product?.images,
+                   directImage: product.image,
+                   idProductImage: product.id_product?.image,
+                   finalImageUri: imageUri
+                 });
+                 
+                 return imageUri ? (
+                   <Image
+                     source={{ uri: imageUri }}
+                     style={styles.productThumb}
+                     resizeMode="cover"
+                     onError={(error) => {
+                       console.log('❌ Lỗi load ảnh sản phẩm:', error.nativeEvent.error);
+                     }}
+                     onLoad={() => {
+                       console.log('✅ Load ảnh thành công:', imageUri);
+                     }}
+                   />
+                 ) : (
+                   <View style={[styles.productThumb, { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' }]}>
+                     <Icon name="image-outline" size={16} color="#9ca3af" />
+                   </View>
+                 );
+               })()}
+                             <View style={{ flex: 1 }}>
+                 <Text numberOfLines={2} style={styles.productName}>
+                   {product.name}
+                 </Text>
+                 <Text style={styles.productQuantity}>
+                   Số lượng: {product.purchaseQuantity}
+                 </Text>
+                 <Text style={styles.productPrice}>
+                   {product.price.toLocaleString('vi-VN')}đ
+                 </Text>
+               </View>
             </View>
           ))}
           <Text style={styles.totalText}>
@@ -257,7 +316,7 @@ const OrderTrackingScreen = () => {
       await API.put(`orders/${orderId}/status`, { status: 'cancelled' });
       Alert.alert('Đơn hàng đã được huỷ');
       setSelectedOrder(null);
-      fetchOrders();
+      fetchOrders(true); // Refresh data
     } catch (err) {
       console.error('Cancel error:', err);
       Alert.alert('Huỷ đơn thất bại');
@@ -269,18 +328,25 @@ const OrderTrackingScreen = () => {
       await API.put(`orders/${orderId}/status`, { status: 'returned' });
       Alert.alert('Trả hàng thành công');
       setSelectedOrder(null);
-      fetchOrders();
+      fetchOrders(true); // Refresh data
     } catch (err) {
       console.error('Return error:', err);
       Alert.alert('Trả hàng thất bại');
     }
   };
 
-  if (loading) return <ActivityIndicator style={{ marginTop: 40 }} size="large" color="orange" />;
+  if (loading) return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#f59e0b" />
+      <Text style={{ marginTop: 16, color: '#6b7280' }}>Đang tải đơn hàng...</Text>
+    </View>
+  );
 
   const filteredOrders = activeTab === 'all'
     ? orders
     : orders.filter((order) => order.status === activeTab);
+    
+  console.log('🔍 Tab hiện tại:', activeTab, 'Số đơn hàng:', filteredOrders.length);
 
   return (
     <View style={styles.container}>
@@ -318,8 +384,26 @@ const OrderTrackingScreen = () => {
         removeClippedSubviews={false}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchOrders(true)}
+            colors={['#f59e0b']}
+            tintColor="#f59e0b"
+          />
+        }
         ListEmptyComponent={
-          <Text style={{ textAlign: 'center', marginTop: 24 }}>Không có đơn hàng nào.</Text>
+          <View style={{ alignItems: 'center', marginTop: 24, paddingHorizontal: 20 }}>
+            <Text style={{ textAlign: 'center', fontSize: 16, color: '#6b7280' }}>
+              {activeTab === 'all' 
+                ? 'Không có đơn hàng nào.' 
+                : `Không có đơn hàng nào ở trạng thái "${statusTabs.find(tab => tab.key === activeTab)?.label}".`
+              }
+            </Text>
+            <Text style={{ textAlign: 'center', fontSize: 14, color: '#9ca3af', marginTop: 8 }}>
+              Kéo xuống để làm mới
+            </Text>
+          </View>
         }
       />
       {isFocused && renderModal()}
@@ -345,6 +429,8 @@ const translateStatus = (status: string) => {
       return 'Đang giao hàng';
     case 'delivered':
       return 'Đã nhận hàng';
+    case 'paid':
+      return 'Đã thanh toán';
     case 'returned':
       return 'Trả hàng';
     case 'cancelled':
@@ -368,6 +454,8 @@ const getStatusColor = (status: string) => {
       return '#3b82f6';
     case 'delivered':
       return '#16a34a';
+    case 'paid':
+      return '#059669';
     case 'cancelled':
       return '#ef4444';
     case 'returned':
@@ -378,9 +466,11 @@ const getStatusColor = (status: string) => {
 };
 
 const statusTabs = [
+  { key: 'all', label: 'Tất cả' },
   { key: 'waiting', label: 'Chờ xử lý' },
   // { key: 'pending', label: 'Chờ xác nhận' },
   { key: 'confirmed', label: 'Đã xác nhận' },
+  { key: 'paid', label: 'Đã thanh toán' },
   { key: 'shipped', label: 'Đang giao hàng' },
   { key: 'delivered', label: 'Đã nhận hàng' },
   { key: 'returned', label: 'Trả hàng' },
@@ -443,11 +533,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginRight: 14,
   },
+  orderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   bold: {
     fontWeight: '700',
     fontSize: 15,
-    marginBottom: 4,
     color: '#78350f',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   modalBackground: {
     flex: 1,
@@ -519,14 +618,21 @@ const styles = StyleSheet.create({
   productThumb: {
     width: 50,
     height: 50,
-    borderRadius: 6,
+    borderRadius: 8,
     marginRight: 10,
     backgroundColor: '#eee',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   productName: {
     fontSize: 14,
     color: '#111827',
     fontWeight: '500',
+  },
+  productQuantity: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 2,
   },
   productPrice: {
     fontSize: 13,
