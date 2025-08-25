@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const ProductCard = ({ item, navigation }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
@@ -25,6 +26,9 @@ const ProductCard = ({ item, navigation }: any) => {
       useNativeDriver: true,
     }).start();
   };
+
+  // lấy rating (nếu không có thì mặc định 0)
+  const rating = item.averageRating || 0;
 
   return (
     <Pressable
@@ -44,15 +48,28 @@ const ProductCard = ({ item, navigation }: any) => {
           {item.name}
         </Text>
 
-        {/* Giá */}
+        {/* Giá + đã bán */}
         <View style={styles.priceContainer}>
           <Text style={styles.price}>
             {item.price.toLocaleString()} đ
           </Text>
-
           <Text style={styles.sold}>
             Đã bán {item.sold || 0}
           </Text>
+        </View>
+
+        {/* Đánh giá sao */}
+        <View style={styles.ratingContainer}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Ionicons
+              key={index}
+              name={index < Math.round(rating) ? 'star' : 'star-outline'}
+              size={14}
+              color="#FFD700"
+              style={{ marginRight: 2 }}
+            />
+          ))}
+          <Text style={styles.ratingText}>({rating.toFixed(1)})</Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -61,11 +78,11 @@ const ProductCard = ({ item, navigation }: any) => {
 
 const styles = StyleSheet.create({
   card: {
-  width: "100%",   // chiếm toàn bộ gridItem
-  backgroundColor: "#fff",
-  borderRadius: 8,
-  overflow: "hidden",
-},
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
   imageWrapper: {
     width: '100%',
     height: 230,
@@ -73,21 +90,20 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 230,
-    resizeMode: 'cover', // ảnh phủ hết
+    resizeMode: 'cover',
   },
   name: {
     fontSize: 13,
     color: '#333',
     marginHorizontal: 6,
     marginTop: 8,
-    height: 36, 
+    height: 36,
   },
- priceContainer: {
+  priceContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // chia 2 bên
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginHorizontal: 6,
-    marginBottom: 8,
     marginTop: 6,
   },
   price: {
@@ -98,6 +114,18 @@ const styles = StyleSheet.create({
   sold: {
     fontSize: 12,
     color: '#666',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 6,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
   },
 });
 
