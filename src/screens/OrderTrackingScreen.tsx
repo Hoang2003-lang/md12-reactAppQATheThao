@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,13 +11,19 @@ import {
   Pressable,
   ScrollView,
   TouchableOpacity,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import API from '../api';
-import { useFocusEffect, useIsFocused, NavigationProp, useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import socket from '../socket';
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import API from "../api";
+import {
+  useFocusEffect,
+  useIsFocused,
+  NavigationProp,
+  useNavigation,
+} from "@react-navigation/native";
+import Icon from "react-native-vector-icons/Ionicons";
+import socket from "../socket";
 
+// ======================== TYPES ========================
 type RootStackParamList = {
   ReviewScreen: {
     products: {
@@ -28,49 +34,53 @@ type RootStackParamList = {
   };
 };
 
+interface ProductDetails {
+  _id: string;
+  name: string;
+  price: number;
+  discount_price?: number;
+  discount_percent?: number;
+  images: string[];
+  isSaleProduct?: boolean;
+}
 
 interface ProductInOrder {
-  _id: string;
+  id_product: string;
+  name: string;
+  purchaseQuantity: number;
+  price: number;
   images?: string[];
-  image?: string;
+  productDetails?: ProductDetails;
 }
 
 interface OrderItem {
-  order_code: string;
   _id: string;
+  order_code: string;
   status: string;
   finalTotal: number;
   createdAt: string;
   paymentMethod: string;
   shippingAddress: string;
-  items: {
-    id_product: ProductInOrder;
-    name: string;
-    purchaseQuantity: number;
-    price: number;
-    productDetails?: {
-      images?: string[];
-    };
-  }[];
+  items: ProductInOrder[];
 }
 
+// ======================== COMPONENT ========================
 const OrderTrackingScreen = () => {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const isFocused = useIsFocused();
-  const [activeTab, setActiveTab] = useState<string>('waiting');
+  const [activeTab, setActiveTab] = useState<string>("waiting");
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
   const fetchOrders = async () => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
-      if (userId) {
-        socket.emit('join notification room', `notification_${userId}`); // 👈 thêm prefix
-      }
-
+      const userId = await AsyncStorage.getItem("userId");
       const res = await API.get(`/orders/user/${userId}`);
+      console.log("📦 Orders từ API:", JSON.stringify(res.data.data, null, 2));
       setOrders(res.data.data || []);
     } catch (err) {
+      console.error("❌ Lỗi fetchOrders:", err);
     } finally {
       setLoading(false);
     }
@@ -80,15 +90,13 @@ const OrderTrackingScreen = () => {
     fetchOrders();
 
     const setupSocket = async () => {
-      const userId = await AsyncStorage.getItem('userId');
+      const userId = await AsyncStorage.getItem("userId");
       if (!userId) return;
 
-      console.log('Joining socket room:', userId);
-      // Join đúng phòng
-      socket.emit('join order room', userId);
+      console.log("Joining socket room:", userId);
+      socket.emit("join order room", userId);
 
-      // Đón sự kiện từ server
-      socket.on('orderStatusUpdated', ({ orderId, status }) => {
+      socket.on("orderStatusUpdated", ({ orderId, status }) => {
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order._id === orderId ? { ...order, status } : order
@@ -98,126 +106,143 @@ const OrderTrackingScreen = () => {
     };
 
     setupSocket();
-    fetchOrders(); // có thể tách riêng nếu muốn load khi `isFocused`
+    fetchOrders();
 
     return () => {
-      socket.off('orderStatusUpdated');
+      socket.off("orderStatusUpdated");
     };
-
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       return () => {
-        setSelectedOrder(null); // đóng modal nếu còn
+        setSelectedOrder(null);
       };
     }, [])
   );
 
-  useEffect(() => {
-    orders.forEach(order => {
-      order.items.forEach(product => {
-        console.log('product.id_product:', product.id_product);
-        console.log("Ảnh sản phẩm:", product.id_product?.images);
-      });
-    });
-  }, [orders]);
-
-
+  // ======================== RENDER ITEM ========================
   const renderItem = ({ item }: { item: OrderItem }) => {
     return (
-      <Pressable onPress={() => setSelectedOrder(item)} style={styles.orderBox}>
+      <Pressable
+        onPress={() => setSelectedOrder(item)}
+        style={styles.orderBox}
+      >
         <View style={{ flex: 1 }}>
           <Text style={styles.bold}>
             Mã đơn: #{item.order_code || item._id.slice(-6).toUpperCase()}
           </Text>
+
           {item.items.map((product, idx) => (
-            <View key={idx} style={styles.productRow}> 
+            <View key={idx} style={styles.productRow}>
               {(product.productDetails?.images?.length ?? 0) > 0 ? (
                 <Image
-                  source={{ uri: product.productDetails?.images?.[0] || "https://via.placeholder.com/80" }}
-                  style={{ width: 50, height: 50, borderRadius: 6, marginRight: 10 }}
+                  source={{
+                    uri:
+                      product.productDetails?.images?.[0] ||
+                      "https://via.placeholder.com/80",
+                  }}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 6,
+                    marginRight: 10,
+                  }}
                 />
               ) : (
-                <View style={[styles.productThumb, { backgroundColor: '#eee' }]} />
+                <View
+                  style={[styles.productThumb, { backgroundColor: "#eee" }]}
+                />
               )}
               <View style={{ flex: 1 }}>
                 <Text numberOfLines={2} style={styles.productName}>
                   {product.name} x{product.purchaseQuantity}
                 </Text>
                 <Text style={styles.productPrice}>
-                  {product.price.toLocaleString('vi-VN')}đ
+                  {product.price.toLocaleString("vi-VN")}đ
                 </Text>
               </View>
             </View>
           ))}
+
           <Text style={styles.totalText}>
-            Tổng thanh toán: {item.finalTotal.toLocaleString('vi-VN')}đ
+            Tổng thanh toán: {item.finalTotal.toLocaleString("vi-VN")}đ
           </Text>
 
-          {['waiting', 'pending'].includes(item.status) ? (
+          {/* Nút hủy đơn */}
+          {["waiting", "pending"].includes(item.status) ? (
             <Pressable
               onPress={() =>
-                Alert.alert(
-                  'Xác nhận huỷ',
-                  'Bạn có muốn huỷ đơn hàng này không?',
-                  [
-                    { text: 'Không', style: 'cancel' },
-                    { text: 'Huỷ đơn', style: 'destructive', onPress: () => handleCancelOrder(item._id) },
-                  ]
-                )
+                Alert.alert("Xác nhận huỷ", "Bạn có muốn huỷ đơn hàng này không?", [
+                  { text: "Không", style: "cancel" },
+                  {
+                    text: "Huỷ đơn",
+                    style: "destructive",
+                    onPress: () => handleCancelOrder(item._id),
+                  },
+                ])
               }
-              style={[styles.cancelBtn, { backgroundColor: '#ef4444' }]}
+              style={[styles.cancelBtn, { backgroundColor: "#ef4444" }]}
             >
-              <Text style={{ color: '#fff' }}>Huỷ đơn hàng</Text>
+              <Text style={{ color: "#fff" }}>Huỷ đơn hàng</Text>
             </Pressable>
           ) : (
-            <View style={[styles.cancelBtn, { backgroundColor: '#d1d5db' }]}>
-              <Text style={{ color: '#6b7280' }}>Huỷ đơn hàng</Text>
+            <View style={[styles.cancelBtn, { backgroundColor: "#d1d5db" }]}>
+              <Text style={{ color: "#6b7280" }}>Huỷ đơn hàng</Text>
             </View>
           )}
 
-          {item.status === 'delivered' && (
-            <><Pressable
-              onPress={() => Alert.alert(
-                'Xác nhận trả hàng',
-                'Bạn có muốn trả lại đơn hàng này không?',
-                [
-                  { text: 'Không', style: 'cancel' },
-                  { text: 'Trả hàng', onPress: () => handleReturnOrder(item._id) },
-                ]
-              )}
-              style={[styles.actionBtn, { backgroundColor: '#3b82f6' }]}
-            >
-              <Text style={{ color: '#fff' }}>Trả hàng</Text>
-            </Pressable>
+          {/* Nút trả hàng + đánh giá */}
+          {item.status === "delivered" && (
+            <>
               <Pressable
                 onPress={() =>
-                  navigation.navigate('ReviewScreen', {
-                    products: item.items.map((p) => ({
-                      productId: p.id_product._id,
-                      productName: p.name,
-                      productImage: p.id_product.images?.[0] || '',
-                    })),
-                  })
+                  Alert.alert("Xác nhận trả hàng", "Bạn có muốn trả lại đơn hàng này không?", [
+                    { text: "Không", style: "cancel" },
+                    { text: "Trả hàng", onPress: () => handleReturnOrder(item._id) },
+                  ])
                 }
-                style={[styles.actionBtn, { backgroundColor: '#ef4444' }]}
+                style={[styles.actionBtn, { backgroundColor: "#3b82f6" }]}
               >
-                <Text style={{ color: '#fff' }}>Đánh giá</Text>
+                <Text style={{ color: "#fff" }}>Trả hàng</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  const mappedProducts = item.items.map((p) => ({
+                    productId: p.id_product || p.productDetails?._id || "",
+                    productName: p.name || p.productDetails?.name || "Sản phẩm",
+                    productImage:
+                      p.productDetails?.images?.[0] ||
+                      p.images?.[0] ||
+                      "https://via.placeholder.com/80x80.png?text=No+Image",
+                    type: p.productDetails?.isSaleProduct ? "sale" : "normal",
+                  }));
+
+                  console.log("➡️ Product mapping:", mappedProducts);
+                  navigation.navigate("ReviewScreen", { products: mappedProducts });
+                }}
+                style={[styles.actionBtn, { backgroundColor: "#ef4444" }]}
+              >
+                <Text style={{ color: "#fff" }}>Đánh giá</Text>
               </Pressable>
             </>
           )}
-
         </View>
       </Pressable>
-    )
+    );
   };
 
+  // ======================== MODAL ========================
   const renderModal = () => {
     if (!selectedOrder) return null;
-
     return (
-      <Modal animationType="slide" transparent={true} visible={!!selectedOrder} onRequestClose={() => setSelectedOrder(null)}>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={!!selectedOrder}
+        onRequestClose={() => setSelectedOrder(null)}
+      >
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
             <ScrollView>
@@ -226,15 +251,28 @@ const OrderTrackingScreen = () => {
                 Mã đơn: #{selectedOrder.order_code || selectedOrder._id}
               </Text>
               <Text style={styles.modalLabel}>
-                Trạng thái:{' '}
-                <Text style={{ color: getStatusColor(selectedOrder.status), fontWeight: 'bold' }}>
+                Trạng thái:{" "}
+                <Text
+                  style={{
+                    color: getStatusColor(selectedOrder.status),
+                    fontWeight: "bold",
+                  }}
+                >
                   {translateStatus(selectedOrder.status)}
                 </Text>
               </Text>
-              <Text style={styles.modalLabel}>Ngày đặt: {formatDate(selectedOrder.createdAt)}</Text>
-              <Text style={styles.modalLabel}>Địa chỉ giao: {selectedOrder.shippingAddress}</Text>
-              <Text style={styles.modalLabel}>Thanh toán: {selectedOrder.paymentMethod.toUpperCase()}</Text>
-              <Text style={styles.modalLabel}>Tổng tiền: {selectedOrder.finalTotal.toLocaleString('vi-VN')}đ</Text>
+              <Text style={styles.modalLabel}>
+                Ngày đặt: {formatDate(selectedOrder.createdAt)}
+              </Text>
+              <Text style={styles.modalLabel}>
+                Địa chỉ giao: {selectedOrder.shippingAddress}
+              </Text>
+              <Text style={styles.modalLabel}>
+                Thanh toán: {selectedOrder.paymentMethod.toUpperCase()}
+              </Text>
+              <Text style={styles.modalLabel}>
+                Tổng tiền: {selectedOrder.finalTotal.toLocaleString("vi-VN")}đ
+              </Text>
 
               <Text style={[styles.modalLabel, { marginTop: 10 }]}>Sản phẩm:</Text>
               {selectedOrder.items.map((item, index) => (
@@ -242,11 +280,13 @@ const OrderTrackingScreen = () => {
                   • {item.name} x{item.purchaseQuantity}
                 </Text>
               ))}
-
             </ScrollView>
 
-            <Pressable onPress={() => setSelectedOrder(null)} style={styles.closeBtn}>
-              <Text style={{ color: '#fff', fontWeight: '600' }}>Đóng</Text>
+            <Pressable
+              onPress={() => setSelectedOrder(null)}
+              style={styles.closeBtn}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Đóng</Text>
             </Pressable>
           </View>
         </View>
@@ -254,35 +294,36 @@ const OrderTrackingScreen = () => {
     );
   };
 
+  // ======================== API ACTIONS ========================
   const handleCancelOrder = async (orderId: string) => {
     try {
-      await API.put(`orders/${orderId}/status`, { status: 'cancelled' });
-      Alert.alert('Đơn hàng đã được huỷ');
+      await API.put(`orders/${orderId}/status`, { status: "cancelled" });
+      Alert.alert("Đơn hàng đã được huỷ");
       setSelectedOrder(null);
       fetchOrders();
     } catch (err) {
-      console.error('Cancel error:', err);
-      Alert.alert('Huỷ đơn thất bại');
+      console.error("Cancel error:", err);
+      Alert.alert("Huỷ đơn thất bại");
     }
   };
 
   const handleReturnOrder = async (orderId: string) => {
     try {
-      await API.put(`orders/${orderId}/status`, { status: 'returned' });
-      Alert.alert('Trả hàng thành công');
+      await API.put(`orders/${orderId}/status`, { status: "returned" });
+      Alert.alert("Trả hàng thành công");
       setSelectedOrder(null);
       fetchOrders();
     } catch (err) {
-      console.error('Return error:', err);
-      Alert.alert('Trả hàng thất bại');
+      console.error("Return error:", err);
+      Alert.alert("Trả hàng thất bại");
     }
   };
 
-  if (loading) return <ActivityIndicator style={{ marginTop: 40 }} size="large" color="orange" />;
+  if (loading)
+    return <ActivityIndicator style={{ marginTop: 40 }} size="large" color="orange" />;
 
-  const filteredOrders = activeTab === 'all'
-    ? orders
-    : orders.filter((order) => order.status === activeTab);
+  const filteredOrders =
+    activeTab === "all" ? orders : orders.filter((order) => order.status === activeTab);
 
   return (
     <View style={styles.container}>
@@ -292,22 +333,17 @@ const OrderTrackingScreen = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Theo dõi đơn hàng</Text>
       </View>
+
       <View style={styles.tabContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {statusTabs.map((tab) => (
             <TouchableOpacity
               key={tab.key}
-              style={[
-                styles.tabItem,
-                activeTab === tab.key && styles.tabItemActive,
-              ]}
+              style={[styles.tabItem, activeTab === tab.key && styles.tabItemActive]}
               onPress={() => setActiveTab(tab.key)}
             >
               <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab.key && styles.tabTextActive,
-                ]}
+                style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}
               >
                 {tab.label}
               </Text>
@@ -315,21 +351,23 @@ const OrderTrackingScreen = () => {
           ))}
         </ScrollView>
       </View>
+
       <FlatList
         data={filteredOrders}
         removeClippedSubviews={false}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
         ListEmptyComponent={
-          <Text style={{ textAlign: 'center', marginTop: 24 }}>Không có đơn hàng nào.</Text>
+          <Text style={{ textAlign: "center", marginTop: 24 }}>
+            Không có đơn hàng nào.
+          </Text>
         }
       />
+
       {isFocused && renderModal()}
     </View>
   );
-
 };
-
 
 export default OrderTrackingScreen;
 

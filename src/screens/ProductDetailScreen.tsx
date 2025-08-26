@@ -16,6 +16,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   type Comment = {
+    user: any;
     _id: string;
     userId?: { name: string; avatar: string };
     content: string;
@@ -75,39 +76,42 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   const fetchProduct = async () => {
     try {
-      const res = await API.get(`/products/${productId}/detail`);
-  
+      const res = await API.get(`/products/${productId}/detail?type=normal`);
       console.log("📌 Product detail response:", JSON.stringify(res.data, null, 2));
-  
+
       setProduct(res.data.product);
-      setComments(res.data.comments || []);
+
+      // comments đã được populate userId kèm name, avatar từ backend
+      let commentsData = (res.data.comments || []).map((c: any) => ({
+        ...c,
+        userId: c.userId && c.userId.name
+          ? { name: c.userId.name, avatar: c.userId.avatar }
+          : {
+            name: "Người dùng",
+            avatar: "https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg",
+          },
+      }));
+
+
+      // Log thông tin user đã comment
+      console.log("📌 Danh sách comment kèm thông tin user:");
+      commentsData.forEach((c: any) => {
+        console.log(
+          `- User: ${c.user.name}, Avatar: ${c.user.avatar}, Nội dung: ${c.content}, Rating: ${c.rating}`
+        );
+      });
+
+      setComments(commentsData);
       setAverageRating(res.data.averageRating || 0);
       setTotalReviews(res.data.totalReviews || 0);
-      console.log("COMMENTS populated:", comments.map(c => c.userId));
-
-    console.log('Sample populated user:', comments[0]?.userId);
-
-    console.log('comments raw:', comments.slice(0,2));
-
-    console.log(
-      `COMMENTS for Product ${productId}: ${JSON.stringify(
-        comments.map(c => ({
-          user: c.userId?.name || 'Unknown',
-          avatar: c.userId?.avatar || 'N/A',
-          rating: c.rating,
-          content: c.content
-        })),
-        null,
-        2
-      )}`
-    );
     } catch (error) {
-      console.error('❌ Lỗi lấy sản phẩm thường:', error);
-      Alert.alert('Không thể tải sản phẩm. Vui lòng thử lại sau.');
+      console.error("❌ Lỗi lấy sản phẩm thường:", error);
+      Alert.alert("Không thể tải sản phẩm. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
   };
+
 
   const increaseQuantity = () => setQuantity(prev => prev + 1);
   const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
@@ -351,13 +355,13 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
               <View key={idx} style={{ marginBottom: 16, flexDirection: 'row' }}>
                 {/* Avatar */}
                 <Image
-                  source={{ uri: c.userId?.avatar || 'https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg' }}
+                  source={{ uri: c.user?.avatar || 'https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg' }}
                   style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
                 />
                 <View style={{ flex: 1 }}>
                   {/* Tên + Sao */}
                   <Text style={{ fontWeight: '600', marginBottom: 4 }}>
-                    {c.userId?.name || 'Người dùng'}
+                    {c.user?.name || 'Người dùng'}
                   </Text>
                   <View style={{ flexDirection: 'row', marginBottom: 4 }}>
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -373,6 +377,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
                 </View>
               </View>
             ))}
+
           </View>
 
 
