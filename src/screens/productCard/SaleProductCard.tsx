@@ -7,56 +7,91 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const SaleProductCard = ({ item, navigation }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
 
-    // console.log('Danh sách ảnh:', item.images);
-
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 1.03,
-      useNativeDriver: false,
+      toValue: 1.02,
+      useNativeDriver: true,
     }).start();
   };
 
   const handlePressOut = () => {
     Animated.spring(scale, {
       toValue: 1,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   };
 
+  // Lấy rating (nếu không có thì mặc định 0)
+  const rating = item.averageRating || 0;
+
   return (
     <Pressable
-
-      onPress={() => {
-        // console.log('>> ID sản phẩm được chọn:', item._id);
+      onPress={() =>
         navigation.navigate('SaleProductDetail', { productId: item._id })
-      }
       }
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      style={{ flex: 1 }}
     >
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+        {/* Ảnh sản phẩm */}
         <View style={styles.imageWrapper}>
-          <Image source={{ uri: item.images[0] }} style={styles.image} />
-          
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>-{item.discount_percent}%</Text>
-          </View>
+          <Image
+            source={{ uri: item.images?.[0] }}
+            style={styles.image}
+          />
+
+          {/* Badge giảm giá */}
+          {item.discount_percent > 0 && (
+            <View style={styles.discountBadge}>
+              <Text style={styles.discountText}>
+                -{item.discount_percent}%
+              </Text>
+            </View>
+          )}
         </View>
-        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+
+        {/* Tên sản phẩm */}
+        <Text
+          style={styles.name}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {item.name}
+        </Text>
+
+        {/* Giá + đã bán */}
         <View style={styles.priceContainer}>
-          <Text style={styles.discountPrice}>
-            {item.discount_price.toLocaleString()} đ
-          </Text>
-          <Text style={styles.originalPrice}>
-            {item.price.toLocaleString()} đ
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.discountPrice}>
+              {item.discount_price.toLocaleString()} đ
+            </Text>
+            <Text style={styles.originalPrice}>
+              {item.price.toLocaleString()} đ
+            </Text>
+          </View>
+          <Text style={styles.sold}>
+            Đã bán {item.sold || 0}
           </Text>
         </View>
-        <View style={styles.soldInfo}>
-          <Text style={styles.soldText}>Đã bán: {item.sold || 0}</Text>
+
+        {/* Đánh giá sao */}
+        <View style={styles.ratingContainer}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Ionicons
+              key={index}
+              name={index < Math.round(rating) ? 'star' : 'star-outline'}
+              size={14}
+              color="#FFD700"
+              style={{ marginRight: 2 }}
+            />
+          ))}
+          <Text style={styles.ratingText}>({rating.toFixed(1)})</Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -133,14 +168,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginLeft: 4,
-  },
-  soldInfo: {
-    marginTop: 4,
-  },
-  soldText: {
-    fontSize: 10,
-    color: '#666',
-    fontStyle: 'italic',
   },
 });
 

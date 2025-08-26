@@ -1,36 +1,75 @@
 // src/components/ProductCard.tsx
 import React, { useRef } from 'react';
-import { Text, Image, Pressable, Animated, StyleSheet, View } from 'react-native';
+import {
+  Text,
+  Image,
+  Pressable,
+  Animated,
+  StyleSheet,
+  View,
+} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const ProductCard = ({ item, navigation }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 1.03,
-      useNativeDriver: false,
+      toValue: 1.02,
+      useNativeDriver: true,
     }).start();
   };
 
   const handlePressOut = () => {
     Animated.spring(scale, {
       toValue: 1,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   };
+
+  // lấy rating (nếu không có thì mặc định 0)
+  const rating = item.averageRating || 0;
 
   return (
     <Pressable
       onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      style={{ flex: 1 }}
     >
-      <Animated.View style={[styles.productItem, { transform: [{ scale }] }]}>
-        <Image source={{ uri: item.images?.[0] }} style={styles.productImage} />
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>{item.price.toLocaleString()} đ</Text>
-        <View style={styles.soldInfo}>
-          <Text style={styles.soldText}>Đã bán: {item.sold || 0}</Text>
+      <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+        {/* Ảnh sản phẩm */}
+        <View style={styles.imageWrapper}>
+          <Image source={{ uri: item.images?.[0] }} style={styles.image} />
+        </View>
+
+        {/* Tên sản phẩm */}
+        <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
+          {item.name}
+        </Text>
+
+        {/* Giá + đã bán */}
+        <View style={styles.priceContainer}>
+          <Text style={styles.price}>
+            {item.price.toLocaleString()} đ
+          </Text>
+          <Text style={styles.sold}>
+            Đã bán {item.sold || 0}
+          </Text>
+        </View>
+
+        {/* Đánh giá sao */}
+        <View style={styles.ratingContainer}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Ionicons
+              key={index}
+              name={index < Math.round(rating) ? 'star' : 'star-outline'}
+              size={14}
+              color="#FFD700"
+              style={{ marginRight: 2 }}
+            />
+          ))}
+          <Text style={styles.ratingText}>({rating.toFixed(1)})</Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -38,39 +77,55 @@ const ProductCard = ({ item, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  productItem: {
-    width: 180,
+  card: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  imageWrapper: {
+    width: '100%',
+    height: 230,
+  },
+  image: {
+    width: '100%',
+    height: 230,
+    resizeMode: 'cover',
+  },
+  name: {
+    fontSize: 13,
+    color: '#333',
+    marginHorizontal: 6,
+    marginTop: 8,
+    height: 36,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 2,
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginHorizontal: 6,
+    marginTop: 6,
   },
-  productImage: {
-    width: 160,
-    height: 170,
-    borderRadius: 10,
+  price: {
+    color: '#d0011b',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
-  productName: {
+  sold: {
     fontSize: 12,
-    textAlign: 'center',
-    marginTop: 5,
+    color: '#666',
   },
-  productPrice: {
-    color: 'red',
-  },
-  soldInfo: {
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 6,
+    marginBottom: 8,
     marginTop: 4,
   },
-  soldText: {
-    fontSize: 10,
+  ratingText: {
+    fontSize: 12,
     color: '#666',
-    fontStyle: 'italic',
+    marginLeft: 4,
   },
 });
 
