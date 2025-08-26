@@ -16,16 +16,19 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   type Comment = {
-    userName: string;
-    rating: number;
+    user: any;
+    _id: string;
+    userId?: { name: string; avatar: string };
     content: string;
-    [key: string]: any;
+    rating: number;
+    createdAt: string;
   };
   const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState('');
   const [bookmark, setBookMark] = useState(false);
   const [rating, setRating] = useState(5);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
 
 
   const totalPrice = product ? product.price * quantity : 0;
@@ -58,7 +61,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
         setBookMark(isFav);
       } catch (error: any) {
-        console.log('Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
+        console.log('❌ Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
         setBookMark(false);
       }
     };
@@ -73,16 +76,42 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
   const fetchProduct = async () => {
     try {
-      const res = await API.get(`/products/${productId}/detail`);
+      const res = await API.get(`/products/${productId}/detail?type=normal`);
+      console.log("📌 Product detail response:", JSON.stringify(res.data, null, 2));
+
       setProduct(res.data.product);
-      setComments(res.data.comments || []);
+
+      // comments đã được populate userId kèm name, avatar từ backend
+      let commentsData = (res.data.comments || []).map((c: any) => ({
+        ...c,
+        userId: c.userId && c.userId.name
+          ? { name: c.userId.name, avatar: c.userId.avatar }
+          : {
+            name: "Người dùng",
+            avatar: "https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg",
+          },
+      }));
+
+
+      // Log thông tin user đã comment
+      console.log("📌 Danh sách comment kèm thông tin user:");
+      commentsData.forEach((c: any) => {
+        console.log(
+          `- User: ${c.user.name}, Avatar: ${c.user.avatar}, Nội dung: ${c.content}, Rating: ${c.rating}`
+        );
+      });
+
+      setComments(commentsData);
+      setAverageRating(res.data.averageRating || 0);
+      setTotalReviews(res.data.totalReviews || 0);
     } catch (error) {
-      console.error('Lỗi lấy sản phẩm thường:', error);
-      Alert.alert('Không thể tải sản phẩm. Vui lòng thử lại sau.');
+      console.error("❌ Lỗi lấy sản phẩm thường:", error);
+      Alert.alert("Không thể tải sản phẩm. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
   };
+
 
   const increaseQuantity = () => setQuantity(prev => prev + 1);
   const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
@@ -111,12 +140,12 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         user_id: userId,
         product_id: product._id,
         name: product.name,
-        type: "normal",
         image: product.image,
         size: selectedSize,
         quantity,
         price: product.price,
         total: totalPrice,
+        type: 'normal',
       };
 
       await API.post('/carts/add', cartItem);
@@ -128,49 +157,8 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
       navigation.navigate('Cart');
     } catch (err) {
-      console.error('Lỗi thêm vào giỏ hàng:', err);
+      console.error('❌ Lỗi thêm vào giỏ hàng:', err);
       Alert.alert('Thêm vào giỏ hàng thất bại!');
-    }
-  };
-
-  const handleCommentSubmit = async () => {
-    if (!newComment.trim()) {
-      Alert.alert('Vui lòng nhập nội dung bình luận.');
-      return;
-    }
-
-    try {
-      // Kiểm tra đăng nhập trước khi gửi bình luận
-      const userId = await AsyncStorage.getItem('userId');
-      const userName = await AsyncStorage.getItem('userName');
-      
-      if (!userId || !userName) {
-        Alert.alert(
-          'Yêu cầu đăng nhập',
-          'Bạn cần đăng nhập để gửi bình luận. Vui lòng đăng nhập để tiếp tục.',
-          [
-            { text: 'Huỷ', style: 'cancel' },
-            { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') }
-          ]
-        );
-        return;
-      }
-
-      const res = await API.post('/comments', {
-        productId,
-        userId,
-        userName,
-        content: newComment,
-        rating
-      });
-
-      setComments([res.data, ...comments]);
-      setNewComment('');
-      setRating(5);
-      Alert.alert(' Gửi bình luận thành công!');
-    } catch (err) {
-      console.error(' Lỗi gửi bình luận:', err);
-      Alert.alert('Gửi bình luận thất bại.');
     }
   };
 
@@ -178,15 +166,15 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     try {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
-      Alert.alert(
-        'Yêu cầu đăng nhập',
-        'Bạn cần đăng nhập để thêm sản phẩm vào "yêu thích"',
-        [
-          { text: 'Huỷ', style: 'cancel' },
-          { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') }
-        ]
-      );
-      return;
+        Alert.alert(
+          'Yêu cầu đăng nhập',
+          'Bạn cần đăng nhập để thêm sản phẩm vào "yêu thích"',
+          [
+            { text: 'Huỷ', style: 'cancel' },
+            { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') }
+          ]
+        );
+        return;
       }
 
       await API.post('/favorites/add', {
@@ -296,6 +284,22 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
             />
           </TouchableOpacity>
         </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 4 }}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Text
+              key={star}
+              style={{
+                fontSize: 16,
+                color: star <= (product.averageRating || 0) ? 'orange' : '#ccc',
+              }}
+            >
+              ★
+            </Text>
+          ))}
+          <Text style={{ marginLeft: 6, color: '#555' }}>
+            ({product.totalReviews || 0} đánh giá)
+          </Text>
+        </View>
 
         <Text style={styles.price}>Giá: {product.price.toLocaleString()} đ</Text>
         <Text style={styles.stock}>Kho: {product.stock}</Text>
@@ -342,43 +346,41 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         </TouchableOpacity>
 
         <View style={{ marginTop: 24 }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Bình luận:</Text>
-          {comments.length === 0 ? (
-            <Text>Chưa có bình luận nào.</Text>
-          ) : (
-            comments.map((comment: any, index: number) => (
-              <View key={index} style={{ marginVertical: 8 }}>
-                <Text style={{ fontWeight: 'bold' }}>{comment.userName}</Text>
-                <Text>Đánh giá: {comment.rating}⭐</Text>
-                <Text>{comment.content}</Text>
+          <View style={{ marginTop: 24 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 8 }}>
+              Đánh giá & Bình luận:
+            </Text>
+
+            {comments.map((c, idx) => (
+              <View key={idx} style={{ marginBottom: 16, flexDirection: 'row' }}>
+                {/* Avatar */}
+                <Image
+                  source={{ uri: c.user?.avatar || 'https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg' }}
+                  style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
+                />
+                <View style={{ flex: 1 }}>
+                  {/* Tên + Sao */}
+                  <Text style={{ fontWeight: '600', marginBottom: 4 }}>
+                    {c.user?.name || 'Người dùng'}
+                  </Text>
+                  <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Icon
+                        key={star}
+                        name={star <= c.rating ? 'star' : 'star-outline'}
+                        size={16}
+                        color={star <= c.rating ? '#facc15' : '#9ca3af'}
+                      />
+                    ))}
+                  </View>
+                  <Text>{c.content}</Text>
+                </View>
               </View>
-            ))
-          )}
-
-          <Text style={{ marginTop: 16 }}>Viết bình luận:</Text>
-          <TextInput
-            placeholder="Nhập bình luận..."
-            value={newComment}
-            onChangeText={setNewComment}
-            style={{
-              borderColor: '#ccc',
-              borderWidth: 1,
-              padding: 8,
-              borderRadius: 4,
-              marginVertical: 8,
-            }}
-          />
-
-          <Text>Chọn đánh giá:</Text>
-          <View style={{ flexDirection: 'row', marginVertical: 8 }}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                <Text style={{ fontSize: 20, color: rating >= star ? 'orange' : '#ccc' }}>★</Text>
-              </TouchableOpacity>
             ))}
+
           </View>
 
-          <Button title="Gửi bình luận" onPress={handleCommentSubmit} />
+
         </View>
       </View>
     </ScrollView>

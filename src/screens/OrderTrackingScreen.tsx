@@ -17,9 +17,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import socket from '../socket';
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+
+type RootStackParamList = {
+  ReviewScreen: {
+    products: {
+      productId: string;
+      productName: string;
+      productImage: string;
+    }[];
+  };
+};
+
 
 
 interface OrderItem {
@@ -58,14 +69,16 @@ interface ProductItem {
   images?: string[];
   image?: string;
   id_product?: {
+    _id?: string;
     images?: any;
     image?: string;
   };
+  
 }
 
 
 const OrderTrackingScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [productItems, setProductItems] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,11 +86,14 @@ const OrderTrackingScreen = () => {
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<string>('all');
-  
+ 
+
+
+
   // Hàm chuyển đổi orders thành productItems
   const convertOrdersToProductItems = useCallback((ordersData: OrderItem[]): ProductItem[] => {
     const items: ProductItem[] = [];
-    
+
     ordersData.forEach(order => {
       order.items.forEach(product => {
         items.push({
@@ -97,7 +113,7 @@ const OrderTrackingScreen = () => {
         });
       });
     });
-    
+
     return items;
   }, []);
 
@@ -221,7 +237,7 @@ const OrderTrackingScreen = () => {
   const renderItem = ({ item }: { item: ProductItem }) => {
     // Tìm order tương ứng để hiển thị trong modal
     const order = orders.find(order => order._id === item.orderId);
-    
+
     return (
       <Pressable onPress={() => order && setSelectedOrder(order)} style={styles.orderBox}>
         <View style={{ flex: 1 }}>
@@ -233,7 +249,7 @@ const OrderTrackingScreen = () => {
               {translateStatus(item.orderStatus)}
             </Text>
           </View>
-          
+
           {/* Hiển thị sản phẩm */}
           <View style={styles.productRow}>
             {(() => {
@@ -282,7 +298,7 @@ const OrderTrackingScreen = () => {
               </Text>
             </View>
           </View>
-          
+
           <Text style={styles.totalText}>
             Tổng thanh toán: {item.orderFinalTotal.toLocaleString('vi-VN')}đ
           </Text>
@@ -345,6 +361,30 @@ const OrderTrackingScreen = () => {
             </Pressable>
           )}
 
+          {item.orderStatus === 'delivered' && (
+            <Pressable
+              onPress={() => {
+                // Chuẩn bị dữ liệu sản phẩm để gửi sang ReviewScreen
+                const reviewProducts = [{
+                  productId: item.id_product?._id || "",   // hoặc item.id_product nếu là string
+                  productName: item.productName,
+                  productImage:
+                    (item.images && item.images[0]) ||
+                    (item.id_product?.images && item.id_product.images[0]) ||
+                    item.image ||
+                    item.id_product?.image ||
+                    "https://via.placeholder.com/150"
+                }];
+
+                navigation.navigate("ReviewScreen", { products: reviewProducts });
+              }}
+              style={[styles.actionBtn, { backgroundColor: '#f59e0b' }]}
+            >
+              <Text style={{ color: '#fff' }}>Đánh giá</Text>
+            </Pressable>
+          )}
+
+
         </View>
       </Pressable>
     );
@@ -398,7 +438,7 @@ const OrderTrackingScreen = () => {
       setSelectedOrder(null);
       // Cập nhật trạng thái trong orders và productItems
       setOrders(prevOrders => {
-        const updatedOrders = prevOrders.map(order => 
+        const updatedOrders = prevOrders.map(order =>
           order._id === orderId ? { ...order, status: 'cancelled' } : order
         );
         const updatedItems = convertOrdersToProductItems(updatedOrders);
@@ -418,7 +458,7 @@ const OrderTrackingScreen = () => {
       setSelectedOrder(null);
       // Cập nhật trạng thái trong orders và productItems
       setOrders(prevOrders => {
-        const updatedOrders = prevOrders.map(order => 
+        const updatedOrders = prevOrders.map(order =>
           order._id === orderId ? { ...order, status: 'returned' } : order
         );
         const updatedItems = convertOrdersToProductItems(updatedOrders);
@@ -440,7 +480,7 @@ const OrderTrackingScreen = () => {
       Alert.alert("Thành công", "Bạn đã xác nhận đã nhận hàng");
       // Cập nhật trạng thái trong orders và productItems
       setOrders(prevOrders => {
-        const updatedOrders = prevOrders.map(order => 
+        const updatedOrders = prevOrders.map(order =>
           order._id === orderId ? { ...order, status: 'delivered' } : order
         );
         const updatedItems = convertOrdersToProductItems(updatedOrders);
