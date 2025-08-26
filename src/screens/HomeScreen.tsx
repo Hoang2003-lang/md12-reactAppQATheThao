@@ -319,9 +319,9 @@ const styles = StyleSheet.create({
   },
 
   bannerContainer: {
-    width: width - 20,       
+    width: width - 20,
     height: width * 0.5,
-    marginHorizontal: 10,    
+    marginHorizontal: 10,
     borderRadius: 12,
     overflow: 'hidden',
   },
