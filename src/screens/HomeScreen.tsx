@@ -22,6 +22,7 @@ import { fetchSaleProducts } from '../services/SaleProducts';
 import { fetchBanners } from '../services/BannerServices';
 import { fetchCategories } from '../services/CategoryServices';
 
+
 const { width } = Dimensions.get('window');
 
 const CARD_WIDTH = (width - 30) / 2;
