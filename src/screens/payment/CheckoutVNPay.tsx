@@ -127,10 +127,22 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
         return `ORD-${timestamp}-${random}`;
     };
 
+
+    const getFinalPrice = (product: any) => {
+        if (product.discount_percent && product.discount_percent > 0) {
+            return product.price - (product.price * product.discount_percent) / 100;
+        }
+        if (product.salePrice && product.salePrice < product.price) {
+            return product.salePrice;
+        }
+        return product.price || 0;
+    };
+
     const calculateSubtotal = () => {
         return selectedItems.reduce((sum: number, item: any) => {
             const product = item.product_id || item;
-            return sum + (product.price || 0) * (item.quantity || 1);
+            const finalPrice = getFinalPrice(product);
+            return sum + finalPrice * (item.quantity || 1);
         }, 0);
     };
 
@@ -177,18 +189,22 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
             const shippingFee = 30000;
             const finalTotal = subtotal + shippingFee - discount;
 
+
             // ✅ Debug VNPay configuration
             debugVNPayConfig();
-            
+
             // ✅ Sửa lại payload để phù hợp với backend API
             const payload = {
                 userId: user._id,
-                items: selectedItems.map((item: any) => ({
-                    id_product: item.product_id?._id || item._id,
-                    name: item.product_id?.name || item.name,
-                    purchaseQuantity: item.quantity || 1,
-                    price: item.product_id?.price || item.price,
-                })),
+                items: selectedItems.map((item: any) => {
+                    const product = item.product_id || item;
+                    return {
+                        id_product: product._id,
+                        name: product.name,
+                        purchaseQuantity: item.quantity,
+                        price: getFinalPrice(product)   // ✅ giá sau giảm
+                    };
+                }),
                 shippingFee,
                 voucher: voucher ? {
                     voucherId: voucher.id || voucher._id,
@@ -200,6 +216,8 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
                 // ✅ Sử dụng cấu hình VNPay để lấy URL return đúng cho platform
                 returnUrl: getVNPayReturnUrl()
             };
+
+
 
             console.log("📦 Gửi payload:", payload);
             console.log("🌐 Backend URL:", BACKEND_URL);
@@ -262,7 +280,7 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
                         image: product.image,
                         finalImageUrl: getProductImageUrl(product),
                     });
-
+                    const finalPrice = getFinalPrice(product);
                     return (
                         <View style={styles.itemRow}>
                             {/* Sử dụng CustomImage để load ảnh */}
@@ -274,10 +292,22 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.name}>{product.name}</Text>
                                 <Text>Số lượng: {item.quantity}</Text>
-                                <Text>Đơn giá: {product.price.toLocaleString()}₫</Text>
-                                <Text style={{ color: "orange", fontWeight: "bold" }}>
+                                {/* <Text>Đơn giá: {product.price.toLocaleString()}₫</Text> */}
+                                {product.discount_percent > 0 ? (
+                                    <>
+                                        <Text style={{ color: "orange", fontWeight: "bold" }}>
+                                            Giá KM: {finalPrice.toLocaleString()}₫
+                                        </Text>
+                                        <Text style={{ textDecorationLine: "line-through", color: "#888", fontSize: 12 }}>
+                                            {product.price.toLocaleString()}₫
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <Text>Đơn giá: {finalPrice.toLocaleString()}₫</Text>
+                                )}
+                                {/* <Text style={{ color: "orange", fontWeight: "bold" }}>
                                     Thành tiền: {(product.price * item.quantity).toLocaleString()}₫
-                                </Text>
+                                </Text> */}
                             </View>
                         </View>
                     );
