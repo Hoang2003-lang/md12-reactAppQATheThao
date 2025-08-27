@@ -24,18 +24,19 @@ const ReviewScreen = () => {
 
     useEffect(() => {
         if (products) {
-          console.log("📌 Products truyền sang ReviewScreen:", JSON.stringify(products, null, 3));
-      
-          setReviews(
-            products.map((p: any) => ({
-              productId: p.productId,
-              rating: 0,
-              content: '',
-              type: p.type, // 👈 giữ type từ OrderTrackingScreen
-            }))
-          );
+            console.log("📌 Products truyền sang ReviewScreen:", JSON.stringify(products, null, 3));
+
+            setReviews(
+                products.map((p: any) => ({
+                    productId: p.productId,
+                    rating: 0,
+                    content: '',
+                    type: p.type,
+                    orderId: p.orderId,
+                }))
+            );
         }
-      }, [products]);
+    }, [products]);
 
     const handleSetRating = (productId: string, rating: number) => {
         setReviews((prev) =>
@@ -51,65 +52,70 @@ const ReviewScreen = () => {
 
     const handleSubmit = async () => {
         try {
-          const storedUserId = await AsyncStorage.getItem('userId');
-          if (!storedUserId) {
-            Alert.alert('Yêu cầu đăng nhập', 'Bạn cần đăng nhập để gửi đánh giá');
-            return;
-          }
-      
-          const userId: string = storedUserId;
-          setSubmitting(true);
-      
-          if (reviews.length === 1) {
-            // ====== CHỈ 1 SẢN PHẨM: GỌI /comments/add ======
-            const single = reviews[0];
-            const payload = {
-              userId,
-              productId: single.productId,
-              rating: single.rating,
-              content: single.content,
-              type: single.type || "normal",
-            };
-      
-            console.log("📌 Submitting to /comments/add:", payload);
-            const res = await API.post('/comments/add', payload);
-      
-            if (res.data.success) {
-              Alert.alert('Thành công', 'Đánh giá của bạn đã được gửi!');
-              navigation.goBack();
-            } else {
-              Alert.alert('Lỗi', 'Không thể gửi đánh giá, vui lòng thử lại!');
+            const storedUserId = await AsyncStorage.getItem('userId');
+            if (!storedUserId) {
+                Alert.alert('Yêu cầu đăng nhập', 'Bạn cần đăng nhập để gửi đánh giá');
+                return;
             }
-          } else {
-            // ====== NHIỀU SẢN PHẨM: GỌI /comments/add-multi ======
-            const payload = {
-              userId,
-              reviews: reviews.map(r => ({
-                productId: r.productId,
-                rating: r.rating,
-                content: r.content,
-                type: r.type || "normal",
-              }))
-            };
-      
-            console.log("📌 Submitting to /comments/add-multi:", payload);
-            const res = await API.post('/comments/add-multi', payload);
-      
-            if (res.data.success) {
-              Alert.alert('Thành công', 'Đánh giá của bạn đã được gửi!');
-              navigation.goBack();
+
+            const userId: string = storedUserId;
+            setSubmitting(true);
+
+            if (reviews.length === 1) {
+                // ====== CHỈ 1 SẢN PHẨM: GỌI /comments/add ======
+                const single = reviews[0];
+                const payload = {
+                    userId,
+                    orderId: single.orderId,
+                    productId: single.productId,
+                    rating: single.rating,
+                    content: single.content,
+                    type: single.type || "normal",
+                };
+
+                console.log("📌 Submitting to /comments/add:", payload);
+                const res = await API.post('/comments/add', payload);
+                console.log("✅ API response:", res.data);
+
+
+                if (res.data.comment) {
+                    Alert.alert('Thành công', res.data.message || 'Đánh giá của bạn đã được gửi!');
+                    navigation.goBack();
+                } else {
+                    Alert.alert('Lỗi', res.data.message || 'Không thể gửi đánh giá, vui lòng thử lại!');
+                }
             } else {
-              Alert.alert('Lỗi', 'Không thể gửi đánh giá, vui lòng thử lại!');
+                // ====== NHIỀU SẢN PHẨM: GỌI /comments/add-multi ======
+                const payload = {
+                    userId,
+                    orderId: products[0]?.orderId,
+                    reviews: reviews.map(r => ({
+                        productId: r.productId,
+                        rating: r.rating,
+                        content: r.content,
+                        type: r.type || "normal",
+                    }))
+                };
+
+                console.log("📌 Submitting to /comments/add-multi:", payload);
+                const res = await API.post('/comments/add-multi', payload);
+
+
+                if (res.data.comments && res.data.comments.length > 0) {
+                    Alert.alert('Thành công', res.data.message || 'Đánh giá của bạn đã được gửi!');
+                    navigation.goBack();
+                } else {
+                    Alert.alert('Lỗi', res.data.message || 'Không thể gửi đánh giá, vui lòng thử lại!');
+                }
             }
-          }
         } catch (err: any) {
-          console.error('❌ Submit error:', err.response?.data || err.message);
-          Alert.alert('Lỗi', 'Không thể gửi đánh giá.');
+            console.error('❌ Submit error:', err.response?.data || err.message);
+            Alert.alert('Lỗi', 'Không thể gửi đánh giá.');
         } finally {
-          setSubmitting(false);
+            setSubmitting(false);
         }
-      };
-      
+    };
+
 
 
     return (

@@ -113,8 +113,18 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   };
 
 
-  const increaseQuantity = () => setQuantity(prev => prev + 1);
-  const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
+  const increaseQuantity = () => {
+    if (!product) return;
+    if (quantity < product.stock) {
+      setQuantity(prev => prev + 1);
+    }
+  };
+
+  const decreaseQuantity = () => {
+    if (quantity > 1) setQuantity(prev => prev - 1);
+  };
+
+  const isIncreaseDisabled = !product || quantity >= product.stock;
 
   const handleAddToCart = async () => {
     if (!selectedSize) {
@@ -333,11 +343,26 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
           <TouchableOpacity style={styles.qtyButton} onPress={decreaseQuantity}>
             <Text style={styles.qtyText}>-</Text>
           </TouchableOpacity>
+
           <Text style={styles.qtyNumber}>{quantity}</Text>
-          <TouchableOpacity style={styles.qtyButton} onPress={increaseQuantity}>
+
+          <TouchableOpacity
+            style={[
+              styles.qtyButton,
+              quantity >= product.stock && { opacity: 0.4 }
+            ]}
+            onPress={increaseQuantity}
+            disabled={quantity >= product.stock}
+          >
             <Text style={styles.qtyText}>+</Text>
           </TouchableOpacity>
         </View>
+
+        {quantity >= product.stock && (
+          <Text style={{ color: 'red', marginTop: 4 }}>
+            Số lượng sản phẩm bạn chọn đã vượt quá số lượng sản phẩm trong kho
+          </Text>
+        )}
 
         <Text style={styles.totalPrice}>Tổng: {totalPrice.toLocaleString()} đ</Text>
 

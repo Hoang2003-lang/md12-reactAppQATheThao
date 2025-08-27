@@ -42,7 +42,10 @@ interface OrderItem {
   paymentMethod: string;
   shippingAddress: string;
   items: {
+    isReviewed: boolean;
+    productDetails: any;
     id_product?: {
+      _id?: string;
       images?: any;
       image?: string;
     };
@@ -73,7 +76,8 @@ interface ProductItem {
     images?: any;
     image?: string;
   };
-  
+  isReviewed?: boolean;
+
 }
 
 
@@ -86,7 +90,7 @@ const OrderTrackingScreen = () => {
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<string>('all');
- 
+
 
 
 
@@ -110,6 +114,8 @@ const OrderTrackingScreen = () => {
           images: product.images,
           image: product.image,
           id_product: product.id_product,
+          isReviewed: product.isReviewed || false,
+
         });
       });
     });
@@ -177,7 +183,6 @@ const OrderTrackingScreen = () => {
         console.log('📦 Có', items.length, 'sản phẩm được hiển thị');
       }
     } catch (err) {
-      console.error('❌ Lỗi fetch orders:', err);
       setOrders([]);
       setProductItems([]);
     } finally {
@@ -237,6 +242,8 @@ const OrderTrackingScreen = () => {
   const renderItem = ({ item }: { item: ProductItem }) => {
     // Tìm order tương ứng để hiển thị trong modal
     const order = orders.find(order => order._id === item.orderId);
+    console.log('🔍 isReviewed:', item.productName, ':', item.isReviewed);
+
 
     return (
       <Pressable onPress={() => order && setSelectedOrder(order)} style={styles.orderBox}>
@@ -259,14 +266,14 @@ const OrderTrackingScreen = () => {
                 item.image ||
                 item.id_product?.image;
 
-              console.log('🖼️ Ảnh sản phẩm:', {
-                productName: item.productName,
-                directImages: item.images,
-                idProductImages: item.id_product?.images,
-                directImage: item.image,
-                idProductImage: item.id_product?.image,
-                finalImageUri: imageUri
-              });
+              // console.log('🖼️ Ảnh sản phẩm:', {
+              //   productName: item.productName,
+              //   directImages: item.images,
+              //   idProductImages: item.id_product?.images,
+              //   directImage: item.image,
+              //   idProductImage: item.id_product?.image,
+              //   finalImageUri: imageUri
+              // });
 
               return imageUri ? (
                 <Image
@@ -362,26 +369,41 @@ const OrderTrackingScreen = () => {
           )}
 
           {item.orderStatus === 'delivered' && (
-            <Pressable
-              onPress={() => {
-                // Chuẩn bị dữ liệu sản phẩm để gửi sang ReviewScreen
-                const reviewProducts = [{
-                  productId: item.id_product?._id || "",   // hoặc item.id_product nếu là string
-                  productName: item.productName,
-                  productImage:
-                    (item.images && item.images[0]) ||
-                    (item.id_product?.images && item.id_product.images[0]) ||
-                    item.image ||
-                    item.id_product?.image ||
-                    "https://via.placeholder.com/150"
-                }];
+            item.isReviewed ? (
+              <View style={[styles.actionBtn, { backgroundColor: "#d1d5db" }]}>
+                <Text style={{ color: "#6b7280" }}>Đã đánh giá</Text>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => {
+                  const order = orders.find(order => order._id === item.orderId);
 
-                navigation.navigate("ReviewScreen", { products: reviewProducts });
-              }}
-              style={[styles.actionBtn, { backgroundColor: '#f59e0b' }]}
-            >
-              <Text style={{ color: '#fff' }}>Đánh giá</Text>
-            </Pressable>
+                  if (!order) {
+                    console.warn('Không tìm thấy order tương ứng với item', item.productName);
+                    return null;
+                  }
+
+                  const mappedProducts = (order?.items || []).map((p) => ({
+                    orderId: order._id,
+                    productId: p.id_product?._id || p.productDetails?._id || "",
+                    productName: p.name || p.productDetails?.name || "Sản phẩm",
+                    productImage:
+                      p.productDetails?.images?.[0] ||
+                      p.images?.[0] ||
+                      p.id_product?.images?.[0] ||
+                      p.image ||
+                      p.id_product?.image ||
+                      "https://via.placeholder.com/80x80.png?text=No+Image",
+                    type: p.productDetails?.isSaleProduct ? "sale" : "normal",
+                  }));
+
+                  navigation.navigate("ReviewScreen", { products: mappedProducts });
+                }}
+                style={[styles.actionBtn, { backgroundColor: "#f59e0b" }]}
+              >
+                <Text style={{ color: "#fff" }}>Đánh giá</Text>
+              </Pressable>
+            )
           )}
 
 
@@ -554,8 +576,8 @@ const OrderTrackingScreen = () => {
           <View style={{ alignItems: 'center', marginTop: 24, paddingHorizontal: 20 }}>
             <Text style={{ textAlign: 'center', fontSize: 16, color: '#6b7280' }}>
               {activeTab === 'all'
-                ? 'Không có sản phẩm nào.'
-                : `Không có sản phẩm nào ở trạng thái "${statusTabs.find(tab => tab.key === activeTab)?.label}".`
+                ? 'Không có sản phẩm nào'
+                : `Không có sản phẩm nào ở trạng thái "${statusTabs.find(tab => tab.key === activeTab)?.label}"`
               }
             </Text>
             <Text style={{ textAlign: 'center', fontSize: 14, color: '#9ca3af', marginTop: 8 }}>

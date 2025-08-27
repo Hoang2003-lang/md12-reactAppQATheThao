@@ -65,21 +65,21 @@ const SaleProductDetail = ({ route, navigation }: any) => {
   const fetchProduct = async () => {
     try {
       const endpoint = productType === 'sale'
-  ? `/sale-products/${productId}/detail`
-  : `/products/${productId}/detail`;
+        ? `/sale-products/${productId}/detail`
+        : `/products/${productId}/detail`;
 
       const res = await API.get(endpoint);
-  
+
       // Nếu có field data thì lấy, nếu không thì lấy cả res.data
       const productData = res.data?.data ?? res.data ?? null;
       setProduct(productData);
-  
+
       const rawComments: any[] = Array.isArray(res.data?.comments)
         ? res.data.comments
         : Array.isArray(productData?.comments)
-        ? productData.comments
-        : [];
-  
+          ? productData.comments
+          : [];
+
       const normalized: Comment[] = rawComments.map((c) => {
         const populatedUser =
           c && typeof c.userId === 'object' && c.userId !== null ? c.userId : null;
@@ -94,7 +94,7 @@ const SaleProductDetail = ({ route, navigation }: any) => {
           },
         };
       });
-  
+
       setComments(normalized);
       setAverageRating(Number(res.data?.averageRating ?? productData?.averageRating ?? 0));
       setTotalReviews(Number(res.data?.totalReviews ?? productData?.totalReviews ?? 0));
@@ -105,10 +105,20 @@ const SaleProductDetail = ({ route, navigation }: any) => {
       setLoading(false);
     }
   };
-  
 
-  const increaseQuantity = () => setQuantity((prev) => prev + 1);
-  const decreaseQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+
+  const increaseQuantity = () => {
+    if (!product) return;
+    if (quantity < product.stock) {
+      setQuantity(prev => prev + 1);
+    }
+  };
+
+  const decreaseQuantity = () => {
+    if (quantity > 1) setQuantity(prev => prev - 1);
+  };
+
+  const isIncreaseDisabled = !product || quantity >= product.stock;
 
   const handleAddToCart = async () => {
     if (!selectedSize) {
@@ -308,11 +318,26 @@ const SaleProductDetail = ({ route, navigation }: any) => {
           <TouchableOpacity style={styles.qtyButton} onPress={decreaseQuantity}>
             <Text style={styles.qtyText}>-</Text>
           </TouchableOpacity>
+
           <Text style={styles.qtyNumber}>{quantity}</Text>
-          <TouchableOpacity style={styles.qtyButton} onPress={increaseQuantity}>
+
+          <TouchableOpacity
+            style={[
+              styles.qtyButton,
+              quantity >= product.stock && { opacity: 0.4 }
+            ]}
+            onPress={increaseQuantity}
+            disabled={quantity >= product.stock}
+          >
             <Text style={styles.qtyText}>+</Text>
           </TouchableOpacity>
         </View>
+
+        {quantity >= product.stock && (
+          <Text style={{ color: 'red', marginTop: 4 }}>
+            Số lượng sản phẩm bạn chọn đã vượt quá số lượng sản phẩm trong kho
+          </Text>
+        )}
 
         <Text style={styles.totalPrice}>Tổng: {totalPrice.toLocaleString()} đ</Text>
 

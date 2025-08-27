@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Linking, AppState } from 'react-native';
+import { Linking, AppState, LogBox } from 'react-native';
 import SplashScreen from './src/screens/SplashScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SearchScreen from './src/screens/SearchScreen';
@@ -30,6 +30,8 @@ import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import NotificationScreen from './src/screens/NotificationScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import ReviewScreen from './src/screens/ReviewScreen';
+
+LogBox.ignoreAllLogs(true);
 
 const Stack = createNativeStackNavigator();
 

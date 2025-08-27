@@ -2,23 +2,27 @@ import { FacebookAuthProvider, getAuth, signInWithCredential } from '@react-nati
 import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 
 export async function onFacebookButtonPress() {
-  // Attempt login with permissions
+  
+  //Khi người dùng nhấn nút Facebook, gọi LoginManager.logInWithPermissions() để yêu cầu quyền truy cập
   const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
 
+  //Nếu người dùng hủy đăng nhập, hàm sẽ ném lỗi và không tiếp tục
   if (result.isCancelled) {
     throw 'User cancelled the login process';
   }
 
-  // Once signed in, get the users AccessToken
+  //Lấy AccessToken của Facebook hiện tại
   const data = await AccessToken.getCurrentAccessToken();
 
+  //Nếu không lấy được token (ví dụ lỗi mạng, lỗi SDK), ném lỗi
   if (!data) {
     throw 'Something went wrong obtaining access token';
   }
 
-  // Create a Firebase credential with the AccessToken
+  //Dùng token Facebook tạo credential của Firebase
+  // Credential này là “chứng chỉ” để Firebase biết người dùng đã đăng nhập bằng Facebook
   const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
 
-  // Sign-in the user with the credential
+  //Trả về Promise của user Firebase, bao gồm thông tin uid, email, name, v.v
   return signInWithCredential(getAuth(), facebookCredential);
 }
