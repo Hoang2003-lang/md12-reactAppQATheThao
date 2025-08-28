@@ -167,7 +167,7 @@ export default function CartScreen({ navigation }: any) {
     }
   };
 
-  const updateQuantity = async (productId: string, size: string, quantity: number, type: 'normal' | 'sale') => {
+  const updateQuantity = async (productId: string, size: string, color: string, quantity: number, type: 'normal' | 'sale') => {
     try {
       if (!userId) return;
 
@@ -177,7 +177,7 @@ export default function CartScreen({ navigation }: any) {
           {
             text: 'Xoá',
             style: 'destructive',
-            onPress: () => handleDeleteItem(productId, size, type),
+            onPress: () => handleDeleteItem(productId, size, color, type),
           },
         ]);
       }
@@ -185,6 +185,7 @@ export default function CartScreen({ navigation }: any) {
       await API.put(`/carts/${userId}/item`, {
         product_id: productId,
         size,
+        color,
         quantity,
         type,
       });
@@ -194,12 +195,12 @@ export default function CartScreen({ navigation }: any) {
     }
   };
 
-  const handleDeleteItem = async (productId: string, size: string, type: 'normal' | 'sale') => {
+  const handleDeleteItem = async (productId: string, size: string, color: string, type: 'normal' | 'sale') => {
     try {
       if (!userId) return;
 
       await API.delete(`/carts/${userId}/item`, {
-        params: { product_id: productId, size, type },
+        params: { product_id: productId, size, color, type },
       });
       await fetchCart(userId);
     } catch (err) {
@@ -209,8 +210,8 @@ export default function CartScreen({ navigation }: any) {
     }
   };
 
-  const toggleSelectItem = (productId: string, size: string) => {
-    const key = `${productId}_${size}`;
+  const toggleSelectItem = (productId: string, size: string, color: string) => {
+    const key = `${productId}_${size}_${color}`;
     setSelectedItems((prev) => ({
       ...prev,
       [key]: !prev[key],
@@ -220,7 +221,7 @@ export default function CartScreen({ navigation }: any) {
   const calculateSelectedTotal = () => {
     return cartItems.reduce((sum: number, item: any) => {
       const product = item.product_id || item;
-      const key = `${product._id}_${item.size}`;
+      const key = `${product._id}_${item.size}_${item.color}`;
 
       const isSale = item.type === 'sale';
       const price = isSale
@@ -236,7 +237,7 @@ export default function CartScreen({ navigation }: any) {
   const handleBuyNow = () => {
     const selected = cartItems.filter((item: any) => {
       const product = item.product_id || item;
-      const key = `${product._id}_${item.size}`;
+      const key = `${product._id}_${item.size}_${item.color}`;
       return selectedItems[key];
     });
 
@@ -257,7 +258,7 @@ export default function CartScreen({ navigation }: any) {
   const renderItem = ({ item }: any) => {
     const product = item.product_id || item;
     const productId = product?._id || '';
-    const key = `${productId}_${item.size}`;
+    const key = `${productId}_${item.size}_${item.color}`;
     const isChecked = !!selectedItems[key];
     const finalPrice = item.type === 'sale'
       ? product?.discount_price ?? product?.price ?? 0
@@ -283,7 +284,7 @@ export default function CartScreen({ navigation }: any) {
 
     return (
       <View style={styles.itemContainer}>
-        <CustomCheckbox checked={isChecked} onPress={() => toggleSelectItem(productId, item.size)} />
+        <CustomCheckbox checked={isChecked} onPress={() => toggleSelectItem(productId, item.size, item.color)} />
 
         <CustomImage
           source={{ uri: getProductImageUrl(product) }}
@@ -293,17 +294,18 @@ export default function CartScreen({ navigation }: any) {
           <Text style={styles.name}>{product.name || 'Sản phẩm'}</Text>
           <Text style={styles.price}>Giá: {finalPrice?.toLocaleString()} đ</Text>
           <Text style={styles.size}>Size: {item.size}</Text>
+          <Text style={styles.size}>Màu: {item.color}</Text>
           <View style={styles.quantityRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TouchableOpacity
-                onPress={() => updateQuantity(productId, item.size, item.quantity - 1, item.type)}
+                onPress={() => updateQuantity(productId, item.size, item.color, item.quantity - 1, item.type)}
                 style={styles.qtyButton}
               >
                 <Text style={styles.qtyText}>-</Text>
               </TouchableOpacity>
               <Text style={styles.quantity}>{item.quantity}</Text>
               <TouchableOpacity
-                onPress={() => updateQuantity(productId, item.size, item.quantity + 1, item.type)}
+                onPress={() => updateQuantity(productId, item.size, item.color, item.quantity + 1, item.type)}
                 style={styles.qtyButton}
               >
                 <Text style={styles.qtyText}>+</Text>
@@ -317,7 +319,7 @@ export default function CartScreen({ navigation }: any) {
                   {
                     text: 'Xoá',
                     style: 'destructive',
-                    onPress: () => handleDeleteItem(productId, item.size, item.type),
+                    onPress: () => handleDeleteItem(productId, item.size, item.color, item.type),
                   },
                 ])
               }

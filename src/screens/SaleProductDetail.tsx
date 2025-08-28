@@ -34,6 +34,7 @@ const SaleProductDetail = ({ route, navigation }: any) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   const images: string[] = Array.isArray(product?.images) ? product.images : [];
   const totalPrice = product ? (product.discount_price || 0) * quantity : 0;
@@ -125,6 +126,10 @@ const SaleProductDetail = ({ route, navigation }: any) => {
       Alert.alert('Vui lòng chọn size trước khi thêm vào giỏ hàng.');
       return;
     }
+    if (!selectedColor) {
+      Alert.alert('Vui lòng chọn màu trước khi thêm vào giỏ hàng.');
+      return;
+    }
 
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -142,6 +147,7 @@ const SaleProductDetail = ({ route, navigation }: any) => {
         name: product.name,
         image: product.image || images[0],
         size: selectedSize,
+        color: selectedColor,
         quantity,
         price: product.discount_price,
         total: totalPrice,
@@ -311,6 +317,29 @@ const SaleProductDetail = ({ route, navigation }: any) => {
           </View>
         )}
 
+        <View style={styles.colorRow}>
+          <Text style={styles.label}>Màu:</Text>
+          {product.colors?.map((color: string) => (
+            <TouchableOpacity
+              key={color}
+              style={[
+                styles.colorBox,
+                selectedColor === color && styles.colorBoxSelected,
+              ]}
+              onPress={() => setSelectedColor(color)}
+            >
+              <Text
+                style={[
+                  styles.colorText,
+                  selectedColor === color && styles.colorTextSelected,
+                ]}
+              >
+                {color}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {!!product.description && <Text style={styles.description}>{product.description}</Text>}
 
         {/* Quantity */}
@@ -443,4 +472,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 14,
   },
+  colorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
+  colorBox: {
+    borderWidth: 1, borderColor: '#ccc', borderRadius: 4,
+    paddingVertical: 6, paddingHorizontal: 12,
+    marginRight: 8, marginBottom: 8,
+  },
+  colorBoxSelected: { borderColor: 'orange', backgroundColor: '#ffe6cc' },
+  colorText: { fontSize: 14 },
+  colorTextSelected: { color: 'orange', fontWeight: 'bold' },
 });

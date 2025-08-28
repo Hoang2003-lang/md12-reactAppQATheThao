@@ -29,6 +29,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
 
   const totalPrice = product ? product.price * quantity : 0;
@@ -150,8 +151,9 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         user_id: userId,
         product_id: product._id,
         name: product.name,
-        image: product.image,
+        image: product.images?.[0] || "",
         size: selectedSize,
+        color: selectedColor,   // ✅ thêm màu
         quantity,
         price: product.price,
         total: totalPrice,
@@ -337,6 +339,29 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
           ))}
         </View>
 
+        <View style={styles.colorRow}>
+          <Text style={styles.label}>Màu:</Text>
+          {product.colors?.map((color: string) => (
+            <TouchableOpacity
+              key={color}
+              style={[
+                styles.colorBox,
+                selectedColor === color && styles.colorBoxSelected,
+              ]}
+              onPress={() => setSelectedColor(color)}
+            >
+              <Text
+                style={[
+                  styles.colorText,
+                  selectedColor === color && styles.colorTextSelected,
+                ]}
+              >
+                {color}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <Text style={styles.description}>{product.description}</Text>
 
         <View style={styles.quantityRow}>
@@ -470,4 +495,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 14,
   },
+  colorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
+  colorBox: {
+    borderWidth: 1, borderColor: '#ccc', borderRadius: 4,
+    paddingVertical: 6, paddingHorizontal: 12,
+    marginRight: 8, marginBottom: 8,
+  },
+  colorBoxSelected: { borderColor: 'orange', backgroundColor: '#ffe6cc' },
+  colorText: { fontSize: 14 },
+  colorTextSelected: { color: 'orange', fontWeight: 'bold' },
 });
