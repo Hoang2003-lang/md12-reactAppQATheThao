@@ -214,6 +214,7 @@ const ChatScreen = ({ navigation }: any) => {
     });
   };
 
+
   const deleteMessage = (messageId: string) => {
     socketRef.current?.emit('delete message', {
       chatId,
@@ -221,7 +222,7 @@ const ChatScreen = ({ navigation }: any) => {
     });
   };
 
-  // xoá đoạn chat
+
   const clearChat = () => {
     Alert.alert(
       'Xác nhận',
@@ -238,6 +239,8 @@ const ChatScreen = ({ navigation }: any) => {
       ]
     );
   };
+
+
 
   return (
     <View style={styles.container}>
