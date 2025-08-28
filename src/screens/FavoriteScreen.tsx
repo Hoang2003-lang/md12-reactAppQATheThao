@@ -149,12 +149,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    backgroundColor: '#EC761E',
-    paddingBottom: 8,
-    paddingTop: 3,
+    backgroundColor: 'orange',
+    padding: 10,
     textAlign: 'center',
-    fontSize: 30,
-    fontWeight: 500,
+    fontSize: 23,
+    fontWeight: 'bold',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -187,5 +186,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     flex: 1,
     fontSize: 16,
+    color: '#888'
   },
 });

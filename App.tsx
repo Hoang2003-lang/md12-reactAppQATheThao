@@ -30,6 +30,7 @@ import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import NotificationScreen from './src/screens/NotificationScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import ReviewScreen from './src/screens/ReviewScreen';
+import SizeGuide from './src/screens/SizeGuide';
 
 LogBox.ignoreAllLogs(true);
 
@@ -185,6 +186,8 @@ const App = () => {
           <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
           <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
           <Stack.Screen name="ReviewScreen" component={ReviewScreen} />
+          <Stack.Screen name="SizeGuide" component={SizeGuide} />
+
 
         </Stack.Navigator>
       </NavigationContainer>

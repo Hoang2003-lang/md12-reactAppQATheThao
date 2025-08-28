@@ -73,9 +73,6 @@ const SearchScreen = ({ navigation }: any) => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
-                    <Icon name="chevron-back" size={24} color="#000" />
-                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Tìm kiếm sản phẩm</Text>
             </View>
 
@@ -173,9 +170,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 50,
         marginBottom: 10,
+        padding: 10,
         position: 'relative',
+        backgroundColor: 'orange'
     },
 
     backIcon: {
@@ -185,7 +183,7 @@ const styles = StyleSheet.create({
     },
 
     headerTitle: {
-        fontSize: 20,
+        fontSize: 23,
         fontWeight: 'bold',
         textAlign: 'center',
     },

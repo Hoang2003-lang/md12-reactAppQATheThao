@@ -48,10 +48,10 @@ const SaleProductDetail = ({ route, navigation }: any) => {
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) return;
 
-        const res = await API.get(
-          `/favorites/check/${userId}/${productId}?type=${productType}`
-        );
+        const res = await API.get(`/favorites/check/${userId}/${productId}?type=${productType}`);
+
         const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
+
         setBookMark(isFav);
       } catch {
         setBookMark(false);
@@ -308,6 +308,10 @@ const SaleProductDetail = ({ route, navigation }: any) => {
                 </Text>
               </TouchableOpacity>
             ))}
+
+            <TouchableOpacity onPress={() => navigation.navigate("SizeGuide")}>
+              <Text style={styles.sizeGuideText}>Hướng dẫn chọn size</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -442,5 +446,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 10,
     fontSize: 14,
+  },
+  sizeGuideText: {
+    fontSize: 16,
+    color: 'orange',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    marginTop: 8,
+    marginBottom: 16,
   },
 });
