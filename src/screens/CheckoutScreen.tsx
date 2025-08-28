@@ -141,7 +141,9 @@ export default function CheckoutScreen({ route, navigation }: any) {
             id_product: product._id,
             name: product.name,
             purchaseQuantity: item.quantity,
-            price: getFinalPrice(product)   // ✅ giá sau giảm
+            price: getFinalPrice(product),   // ✅ giá sau giảm
+            size: item.size || null,   // ✅ thêm
+            color: item.color || null, // ✅ thêm
           };
         }),
         totalPrice: finalTotal,
@@ -169,6 +171,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
           params: {
             product_id: item.product_id?._id || item._id,
             size: item.size,
+            color: item.color,
             type: item.type,
           },
         });
@@ -195,6 +198,7 @@ export default function CheckoutScreen({ route, navigation }: any) {
         <View style={styles.infoContainer}>
           <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.detail}>Size: {item.size}</Text>
+          <Text style={styles.detail}>Màu: {item.color}</Text>
           <Text style={styles.detail}>Số lượng: {item.quantity}</Text>
           {/* <Text style={styles.price}>{product.price?.toLocaleString()} đ</Text> */}
           <Text style={styles.price}>

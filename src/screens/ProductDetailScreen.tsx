@@ -29,6 +29,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
 
   const totalPrice = product ? product.price * quantity : 0;
@@ -153,8 +154,9 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         user_id: userId,
         product_id: product._id,
         name: product.name,
-        image: product.image,
+        image: product.images?.[0] || "",
         size: selectedSize,
+        color: selectedColor,   // ✅ thêm màu
         quantity,
         price: product.price,
         total: totalPrice,
@@ -349,10 +351,6 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
           ))}
         </View>
 
-        <TouchableOpacity onPress={() => navigation.navigate("SizeGuide")}>
-          <Text style={styles.sizeGuideText}>Hướng dẫn chọn size</Text>
-        </TouchableOpacity>
-
         <Text style={styles.description}>{product.description}</Text>
 
         <View style={styles.quantityRow}>
@@ -485,13 +483,5 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 10,
     fontSize: 14,
-  },
-  sizeGuideText: {
-    fontSize: 16,
-    color: 'orange',
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-    marginTop: 8,
-    marginBottom: 16,
   },
 });
