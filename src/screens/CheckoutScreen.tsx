@@ -5,6 +5,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import API from '../api';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function CheckoutScreen({ route, navigation }: any) {
   const { selectedItems } = route.params;
@@ -55,12 +56,12 @@ export default function CheckoutScreen({ route, navigation }: any) {
 
 
   const calculateSubtotal = () => {
-  return selectedItems.reduce((sum: number, item: any) => {
-    const product = item.product_id || item;
-    const finalPrice = getFinalPrice(product);
-    return sum + finalPrice * (item.quantity || 1);
-  }, 0);
-};
+    return selectedItems.reduce((sum: number, item: any) => {
+      const product = item.product_id || item;
+      const finalPrice = getFinalPrice(product);
+      return sum + finalPrice * (item.quantity || 1);
+    }, 0);
+  };
 
   const calculateDiscount = () => {
     if (!selectedVoucher) return 0;
@@ -92,6 +93,12 @@ export default function CheckoutScreen({ route, navigation }: any) {
 
   const handleConfirmPayment = async () => {
     if (!user?.address) {
+      Alert.alert('Chưa có địa chỉ', 'Vui lòng nhập địa chỉ giao hàng.');
+      navigation.navigate('PersonalInfo');
+      return;
+    }
+
+    if (!user?.address || user.address.trim() === '' || user.address.trim().toLowerCase() === 'chưa cập nhật') {
       Alert.alert('Chưa có địa chỉ', 'Vui lòng nhập địa chỉ giao hàng.');
       navigation.navigate('PersonalInfo');
       return;
@@ -213,7 +220,16 @@ export default function CheckoutScreen({ route, navigation }: any) {
     <FlatList
       ListHeaderComponent={
         <View style={styles.container}>
-          <Text style={styles.title}>Thanh Toán</Text>
+          
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Icon name="arrow-back" size={24} color="black" /> 
+            </TouchableOpacity>
+
+            <Text style={styles.title}>Thanh Toán</Text>
+          </View>
+          
+
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Địa chỉ giao hàng</Text>
@@ -292,8 +308,14 @@ export default function CheckoutScreen({ route, navigation }: any) {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    
+    // backgroundColor: "green"
+  },
   container: { padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 },
+  title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 16, width: 150, marginLeft: 70 },
   section: { marginBottom: 20 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
   itemContainer: {
@@ -327,5 +349,11 @@ const styles = StyleSheet.create({
     borderRadius: 8, alignItems: 'center',
   },
   confirmText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  footerContainer: { marginBottom: 40 }
+  footerContainer: { marginBottom: 40 },
+  backButton: {
+    padding: 4,
+    
+    // backgroundColor: 'green'
+  },
+
 });
