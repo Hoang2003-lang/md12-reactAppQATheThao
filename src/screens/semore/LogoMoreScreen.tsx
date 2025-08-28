@@ -59,7 +59,7 @@ const LogoMoreScreen = ({ navigation, route }: any) => {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" color="#000" style={{ marginTop: 20, margin: 10 }} />
       ) : (
         <FlatList
           data={products}
@@ -80,7 +80,8 @@ export default LogoMoreScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff'
+    backgroundColor: '#f3f3f3ff',
+    
   },
   headerRow: {
     flexDirection: 'row',
@@ -99,14 +100,20 @@ const styles = StyleSheet.create({
     flex: 1
   },
   list: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
     paddingBottom: 20,
   },
   productWrapper: {
-    width: (width - 40) / 2,
-    marginBottom: 15,
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 10,
-  },
+  width: (width - 30) / 2, // 2 cột
+  margin: 5,               // khoảng cách đều giữa các item
+  backgroundColor: '#fff',
+  borderRadius: 8,
+  overflow: 'hidden',
+  elevation: 2, // bóng nhẹ (Android)
+  shadowColor: '#000', // bóng iOS
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+},
+
 });
