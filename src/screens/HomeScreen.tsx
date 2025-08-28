@@ -149,9 +149,9 @@ const HomeScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <TouchableOpacity style={styles.header}>
+      <View style={styles.header}>
         <Text style={styles.text}>F7 Shop</Text>
-      </TouchableOpacity>
+      </View>
 
       {/* Top Bar */}
       <View style={styles.topBar}>

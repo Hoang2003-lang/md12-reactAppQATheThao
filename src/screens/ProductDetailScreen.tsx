@@ -52,6 +52,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
     fetchProduct();
   }, [productId]);
 
+  //Kiểm tra bookmark khi load sản phẩm
   useEffect(() => {
     const checkBookmark = async () => {
       try {
@@ -59,10 +60,12 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         if (!userId) return;
 
         const res = await API.get(`/favorites/check/${userId}/${productId}?type=${productType}`);
+
         const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
         setBookMark(isFav);
+
       } catch (error: any) {
-        console.log('❌ Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
+        console.log('Lỗi kiểm tra trạng thái yêu thích:', error?.response?.data || error.message);
         setBookMark(false);
       }
     };
@@ -78,7 +81,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
   const fetchProduct = async () => {
     try {
       const res = await API.get(`/products/${productId}/detail?type=normal`);
-      console.log("📌 Product detail response:", JSON.stringify(res.data, null, 2));
+      console.log("Product detail response:", JSON.stringify(res.data, null, 2));
 
       setProduct(res.data.product);
 
@@ -95,7 +98,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
 
       // Log thông tin user đã comment
-      console.log("📌 Danh sách comment kèm thông tin user:");
+      console.log("Danh sách comment kèm thông tin user:");
       commentsData.forEach((c: any) => {
         console.log(
           `- User: ${c.user.name}, Avatar: ${c.user.avatar}, Nội dung: ${c.content}, Rating: ${c.rating}`
@@ -106,7 +109,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
       setAverageRating(res.data.averageRating || 0);
       setTotalReviews(res.data.totalReviews || 0);
     } catch (error) {
-      console.error("❌ Lỗi lấy sản phẩm thường:", error);
+      console.error("Lỗi lấy sản phẩm thường:", error);
       Alert.alert("Không thể tải sản phẩm. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
@@ -169,13 +172,15 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
 
       navigation.navigate('Cart');
     } catch (err) {
-      console.error('❌ Lỗi thêm vào giỏ hàng:', err);
+      console.error('Lỗi thêm vào giỏ hàng:', err);
       Alert.alert('Thêm vào giỏ hàng thất bại!');
     }
   };
 
+  //Thêm sản phẩm yêu thích
   const saveBookmark = async () => {
     try {
+      //Kiểm tra xem user đã đăng nhập chưa
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
         Alert.alert(
@@ -195,7 +200,9 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
         type: productType
       });
 
+      //Nếu thành công thì chuyển trạng thái
       setBookMark(true);
+
       Snackbar.show({
         text: 'Thêm thành công vào mục Yêu thích!',
         duration: Snackbar.LENGTH_SHORT,
@@ -204,16 +211,21 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
           onPress: () => navigation.navigate('Home', { screen: 'Favorite' }),
         },
       });
+
     } catch (err: any) {
+
+      //Nếu sản phẩm đã tồn tại trong yêu thích
       if (err?.response?.status === 400 && err.response?.data?.message?.includes('Sản phẩm đã có')) {
         setBookMark(true);
+
       } else {
-        console.error('❌ Lỗi thêm favorite:', err);
+        console.error('Lỗi thêm favorite:', err);
         Alert.alert('Không thêm được vào Yêu thích!');
       }
     }
   };
 
+  //Gỡ bỏ sản phẩm yêu thích
   const removeBookmark = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -334,29 +346,6 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
                 ]}
               >
                 {size}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.colorRow}>
-          <Text style={styles.label}>Màu:</Text>
-          {product.colors?.map((color: string) => (
-            <TouchableOpacity
-              key={color}
-              style={[
-                styles.colorBox,
-                selectedColor === color && styles.colorBoxSelected,
-              ]}
-              onPress={() => setSelectedColor(color)}
-            >
-              <Text
-                style={[
-                  styles.colorText,
-                  selectedColor === color && styles.colorTextSelected,
-                ]}
-              >
-                {color}
               </Text>
             </TouchableOpacity>
           ))}
@@ -495,13 +484,4 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 14,
   },
-  colorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
-  colorBox: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 4,
-    paddingVertical: 6, paddingHorizontal: 12,
-    marginRight: 8, marginBottom: 8,
-  },
-  colorBoxSelected: { borderColor: 'orange', backgroundColor: '#ffe6cc' },
-  colorText: { fontSize: 14 },
-  colorTextSelected: { color: 'orange', fontWeight: 'bold' },
 });

@@ -102,78 +102,78 @@ const AccountScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>F7 Shop</Text>
-
-      {menuItems.map((m) => (
-        <TouchableOpacity
-          key={m.icon}
-          style={styles.row}
-          onPress={() => {
-            if (m.screen) navigation.navigate(m.screen);
-          }}>
-          <MCI name={m.icon} size={22} />
-          <Text style={styles.label}>{m.label}</Text>
-        </TouchableOpacity>
-      ))}
-
-      {/* Nếu đã đăng nhập thì hiện nút đăng xuất */}
-      {isLoggedIn && (
-        <TouchableOpacity style={styles.row} onPress={() => setConfirmLogout(true)}>
-          <MCI name="logout" size={22} color="#e11d48" />
-          <Text style={[styles.label, { color: '#e11d48' }]}>Đăng xuất</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Nếu chưa đăng nhập thì hiện nút đăng nhập & đăng ký */}
-      {!isLoggedIn && (
-        <>
-          <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Login')}>
-            <MCI name="login" size={22} color="#2563eb" />
-            <Text style={[styles.label, { color: '#2563eb' }]}>Đăng nhập</Text>
+    <><View>
+      <Text style={styles.header}>Hồ sơ</Text>
+    </View><View style={styles.container}>
+        
+        {menuItems.map((m) => (
+          <TouchableOpacity
+            key={m.icon}
+            style={styles.row}
+            onPress={() => {
+              if (m.screen) navigation.navigate(m.screen);
+            } }>
+            <MCI name={m.icon} size={22} />
+            <Text style={styles.label}>{m.label}</Text>
           </TouchableOpacity>
+        ))}
 
-          <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Register')}>
-            <MCI name="account-plus" size={22} color="#16a34a" />
-            <Text style={[styles.label, { color: '#16a34a' }]}>Đăng ký</Text>
+        {/* Nếu đã đăng nhập thì hiện nút đăng xuất */}
+        {isLoggedIn && (
+          <TouchableOpacity style={styles.row} onPress={() => setConfirmLogout(true)}>
+            <MCI name="logout" size={22} color="#e11d48" />
+            <Text style={[styles.label, { color: '#e11d48' }]}>Đăng xuất</Text>
           </TouchableOpacity>
-        </>
-      )}
+        )}
 
-      {/* Modal xác nhận đăng xuất */}
-      {confirmLogout && (
-        <View style={styles.modal}>
-          <Text style={styles.modalText}>Bạn có muốn đăng xuất tài khoản không?</Text>
-          <View style={styles.btnWrap}>
-            <TouchableOpacity
-              style={[styles.btn, { backgroundColor: '#f87171' }]}
-              onPress={doLogout}>
-              <Text style={styles.btnTxt}>Có</Text>
+        {/* Nếu chưa đăng nhập thì hiện nút đăng nhập & đăng ký */}
+        {!isLoggedIn && (
+          <>
+            <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Login')}>
+              <MCI name="login" size={22} color="#2563eb" />
+              <Text style={[styles.label, { color: '#2563eb' }]}>Đăng nhập</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btn, { backgroundColor: '#4ade80' }]}
-              onPress={() => setConfirmLogout(false)}>
-              <Text style={styles.btnTxt}>Không</Text>
+
+            <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Register')}>
+              <MCI name="account-plus" size={22} color="#16a34a" />
+              <Text style={[styles.label, { color: '#16a34a' }]}>Đăng ký</Text>
             </TouchableOpacity>
+          </>
+        )}
+
+        {/* Modal xác nhận đăng xuất */}
+        {confirmLogout && (
+          <View style={styles.modal}>
+            <Text style={styles.modalText}>Bạn có muốn đăng xuất tài khoản không?</Text>
+            <View style={styles.btnWrap}>
+              <TouchableOpacity
+                style={[styles.btn, { backgroundColor: '#f87171' }]}
+                onPress={doLogout}>
+                <Text style={styles.btnTxt}>Có</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btn, { backgroundColor: '#4ade80' }]}
+                onPress={() => setConfirmLogout(false)}>
+                <Text style={styles.btnTxt}>Không</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View></>
   );
 };
 
 export default AccountScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
+  container: { flex: 1, backgroundColor: '#fff', paddingLeft: 20, paddingRight: 20 },
   header: {
-    fontSize: 22,
-    fontWeight: '700',
-    alignSelf: 'center',
-    marginBottom: 12,
+    fontSize: 23,
+    fontWeight: 'bold',
+    textAlign: 'center',
     backgroundColor: 'orange',
     padding: 10,
-    borderRadius: 8,
+    
   },
   row: {
     flexDirection: 'row',

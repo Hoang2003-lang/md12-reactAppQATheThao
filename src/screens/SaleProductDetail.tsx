@@ -49,10 +49,10 @@ const SaleProductDetail = ({ route, navigation }: any) => {
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) return;
 
-        const res = await API.get(
-          `/favorites/check/${userId}/${productId}?type=${productType}`
-        );
+        const res = await API.get(`/favorites/check/${userId}/${productId}?type=${productType}`);
+
         const isFav = res.data?.isFavorite ?? res.data?.exists ?? false;
+
         setBookMark(isFav);
       } catch {
         setBookMark(false);
@@ -314,6 +314,10 @@ const SaleProductDetail = ({ route, navigation }: any) => {
                 </Text>
               </TouchableOpacity>
             ))}
+
+            <TouchableOpacity onPress={() => navigation.navigate("SizeGuide")}>
+              <Text style={styles.sizeGuideText}>Hướng dẫn chọn size</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -472,13 +476,4 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 14,
   },
-  colorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
-  colorBox: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 4,
-    paddingVertical: 6, paddingHorizontal: 12,
-    marginRight: 8, marginBottom: 8,
-  },
-  colorBoxSelected: { borderColor: 'orange', backgroundColor: '#ffe6cc' },
-  colorText: { fontSize: 14 },
-  colorTextSelected: { color: 'orange', fontWeight: 'bold' },
 });
