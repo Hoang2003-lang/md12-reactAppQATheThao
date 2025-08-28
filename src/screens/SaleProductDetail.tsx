@@ -315,9 +315,9 @@ const SaleProductDetail = ({ route, navigation }: any) => {
               </TouchableOpacity>
             ))}
 
-            <TouchableOpacity onPress={() => navigation.navigate("SizeGuide")}>
+            {/* <TouchableOpacity onPress={() => navigation.navigate("SizeGuide")}>
               <Text style={styles.sizeGuideText}>Hướng dẫn chọn size</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         )}
 
@@ -476,4 +476,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 14,
   },
+  colorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
+  colorBox: {
+    borderWidth: 1, borderColor: '#ccc', borderRadius: 4,
+    paddingVertical: 6, paddingHorizontal: 12,
+    marginRight: 8, marginBottom: 8,
+  },
+  colorBoxSelected: { borderColor: 'orange', backgroundColor: '#ffe6cc' },
+  colorText: { fontSize: 14 },
+  colorTextSelected: { color: 'orange', fontWeight: 'bold' },
 });

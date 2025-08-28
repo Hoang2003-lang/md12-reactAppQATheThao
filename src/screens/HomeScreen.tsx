@@ -21,6 +21,7 @@ import { fetchAllProducts } from '../services/ProductServices';
 import { fetchSaleProducts } from '../services/SaleProducts';
 import { fetchBanners } from '../services/BannerServices';
 import { fetchCategories } from '../services/CategoryServices';
+import { RefreshControl } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -35,6 +36,7 @@ const HomeScreen = ({ navigation }: any) => {
   const [cartCount, setCartCount] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
 
   useEffect(() => {
@@ -65,6 +67,14 @@ const HomeScreen = ({ navigation }: any) => {
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu:', error);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadAllData();  // gọi lại API load toàn bộ dữ liệu
+    await loadCartCount();
+    await loadUnreadNotifications();
+    setRefreshing(false);
   };
 
   const handleBannerPress = (banner: any) => {
@@ -192,7 +202,13 @@ const HomeScreen = ({ navigation }: any) => {
       </View>
 
       {/* Body */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ backgroundColor: '#EEEEEE' }}>
+      <ScrollView 
+      showsVerticalScrollIndicator={false} 
+      contentContainerStyle={{ backgroundColor: '#EEEEEE' }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['orange']} />
+      }
+      >
         {/* Banners */}
         <ScrollView
           ref={scrollRef}

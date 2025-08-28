@@ -91,7 +91,9 @@ const SaleProductCard = ({ item, navigation }: any) => {
               style={{ marginRight: 2 }}
             />
           ))}
-          <Text style={styles.ratingText}>({rating.toFixed(1)})</Text>
+          <Text style={styles.ratingText}>
+            ({rating.toFixed(1)})
+          </Text>
         </View>
       </Animated.View>
     </Pressable>

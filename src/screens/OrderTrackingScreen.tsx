@@ -332,7 +332,7 @@ const OrderTrackingScreen = () => {
             </View>
           )}
 
-          {item.orderStatus === 'delivered' && (
+          {/* {item.orderStatus === 'delivered' && (
             <Pressable
               onPress={() =>
                 Alert.alert(
@@ -348,7 +348,7 @@ const OrderTrackingScreen = () => {
             >
               <Text style={{ color: '#fff' }}>Trả hàng</Text>
             </Pressable>
-          )}
+          )} */}
 
           {item.orderStatus === 'shipped' && (
             <Pressable
@@ -473,25 +473,25 @@ const OrderTrackingScreen = () => {
     }
   };
 
-  const handleReturnOrder = async (orderId: string) => {
-    try {
-      await API.put(`orders/${orderId}/status`, { status: 'returned' });
-      Alert.alert('Trả hàng thành công');
-      setSelectedOrder(null);
-      // Cập nhật trạng thái trong orders và productItems
-      setOrders(prevOrders => {
-        const updatedOrders = prevOrders.map(order =>
-          order._id === orderId ? { ...order, status: 'returned' } : order
-        );
-        const updatedItems = convertOrdersToProductItems(updatedOrders);
-        setProductItems(updatedItems);
-        return updatedOrders;
-      });
-    } catch (err) {
-      console.error('Return error:', err);
-      Alert.alert('Trả hàng thất bại');
-    }
-  };
+  // const handleReturnOrder = async (orderId: string) => {
+  //   try {
+  //     await API.put(`orders/${orderId}/status`, { status: 'returned' });
+  //     Alert.alert('Trả hàng thành công');
+  //     setSelectedOrder(null);
+  //     // Cập nhật trạng thái trong orders và productItems
+  //     setOrders(prevOrders => {
+  //       const updatedOrders = prevOrders.map(order =>
+  //         order._id === orderId ? { ...order, status: 'returned' } : order
+  //       );
+  //       const updatedItems = convertOrdersToProductItems(updatedOrders);
+  //       setProductItems(updatedItems);
+  //       return updatedOrders;
+  //     });
+  //   } catch (err) {
+  //     console.error('Return error:', err);
+  //     Alert.alert('Trả hàng thất bại');
+  //   }
+  // };
 
   const handleConfirmDelivered = async (orderId: string) => {
     try {
@@ -611,8 +611,8 @@ const translateStatus = (status: string) => {
       return 'Đã nhận hàng';
     case 'paid':
       return 'Đã thanh toán';
-    case 'returned':
-      return 'Trả hàng';
+    // case 'returned':
+    //   return 'Trả hàng';
     case 'cancelled':
       return 'Đã huỷ';
     default:
@@ -638,8 +638,8 @@ const getStatusColor = (status: string) => {
       return '#059669';
     case 'cancelled':
       return '#ef4444';
-    case 'returned':
-      return '#8b5cf6';
+    // case 'returned':
+    //   return '#8b5cf6';
     default:
       return '#6b7280';
   }
@@ -653,7 +653,7 @@ const statusTabs = [
   // { key: 'paid', label: 'Đã thanh toán' },
   { key: 'shipped', label: 'Đang giao hàng' },
   { key: 'delivered', label: 'Đã nhận hàng' },
-  { key: 'returned', label: 'Trả hàng' },
+  // { key: 'returned', label: 'Trả hàng' },
   { key: 'cancelled', label: 'Đã huỷ' },
 ];
 
