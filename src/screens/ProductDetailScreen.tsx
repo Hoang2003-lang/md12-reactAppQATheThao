@@ -321,7 +321,7 @@ const ProductDetailScreen = ({ route, navigation }: any) => {
             </Text>
           ))}
           <Text style={{ marginLeft: 6, color: '#555' }}>
-            ({product.totalReviews || 0} đánh giá)
+            ({comments.length || 0} đánh giá)
           </Text>
         </View>
 

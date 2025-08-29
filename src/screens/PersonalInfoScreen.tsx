@@ -85,6 +85,11 @@ const PersonalInfoScreen = () => {
       return;
     }
 
+    if (!address || address.trim() === '' || address.trim().toLowerCase() === 'chưa cập nhật') {
+      Alert.alert('Lỗi', 'Địa chỉ không hợp lệ, vui lòng nhập địa chỉ giao hàng');
+      return;
+    }
+
     try {
       await API.put(`/users/${user._id}`, {
         name,
