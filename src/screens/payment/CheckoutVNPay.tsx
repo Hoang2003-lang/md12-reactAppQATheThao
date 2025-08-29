@@ -202,7 +202,9 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
                         id_product: product._id,
                         name: product.name,
                         purchaseQuantity: item.quantity,
-                        price: getFinalPrice(product)   // ✅ giá sau giảm
+                        price: getFinalPrice(product),   // ✅ giá sau giảm
+                        size: item.size || null,         // ✅ thêm size
+                        color: item.color || null        // ✅ thêm color
                     };
                 }),
                 shippingFee,
@@ -293,6 +295,8 @@ const CheckoutVNPay = ({ route, navigation }: any) => {
                                 <Text style={styles.name}>{product.name}</Text>
                                 <Text>Số lượng: {item.quantity}</Text>
                                 {/* <Text>Đơn giá: {product.price.toLocaleString()}₫</Text> */}
+                                {item.size && <Text>Size: {item.size}</Text>}
+                                {item.color && <Text>Màu: {item.color}</Text>}
                                 {product.discount_percent > 0 ? (
                                     <>
                                         <Text style={{ color: "orange", fontWeight: "bold" }}>
